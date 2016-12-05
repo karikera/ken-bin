@@ -243,7 +243,6 @@ namespace kr
 				INHERIT_COMPONENT();
 
 			private:
-				void operator delete(void*) {}
 				InternalComponent* m_begin;
 
 			protected:

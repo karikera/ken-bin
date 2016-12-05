@@ -74,13 +74,6 @@ namespace kr
 					return *this;
 				}
 
-				static inline void* operator new(size_t, WrapImpl* _Where) noexcept
-				{
-					return _Where;
-				}
-				static inline void operator delete(void*, WrapImpl*) noexcept
-				{
-				}
 				WrapImpl & operator =(const WrapImpl & _copy)
 				{
 					this->~WrapImpl();

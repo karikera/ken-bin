@@ -2,7 +2,6 @@
 
 #include <errno.h>
 #include <stdlib.h>
-#include <emscripten.h>
 
 #ifdef _MSC_VER
 
@@ -57,7 +56,8 @@
 #define CT_VECTORCALL		
 
 #ifdef __EMSCRIPTEN__
-#define debug_force() EM_ASM(debugger;)
+extern "C" void vem__debug_break();
+#define debug_force() vem__debug_break();
 #else
 #define debug_force() raise(SIGTRAP)
 #endif
