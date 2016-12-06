@@ -171,6 +171,6 @@ namespace kr
 #define DEFINE_META_TEXT(varname, str) \
 	constexpr ::kr::meta::constexpr_text varname##_constexpr(str); \
 	template <size_t ... counter> \
-	struct varname##_expand { using type = ::kr::meta::text<ctext[counter] ...>; }; \
+	struct varname##_expand { using type = ::kr::meta::text<varname##_constexpr[counter] ...>; }; \
 	using varname = ::kr::meta::make_numlist_counter<varname##_constexpr.size>::expand<varname##_expand>::type;
 

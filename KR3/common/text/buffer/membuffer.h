@@ -428,40 +428,44 @@ namespace kr
 			{
 				size_t len2 = _v.size();
 				if (size() < len2) return -1;
-				return memm::pos(begin(), _v.begin(), size(), len2);
+				return memm::pos(data(), _v.data(), size(), len2);
 			}
 			size_t pos_y(Ref _v) const noexcept
 			{
-				return memm::pos_y(begin(), _v.begin(), size(), _v.size());
+				return memm::pos_y(data(), _v.data(), size(), _v.size());
 			}
 			size_t pos_r(const InternalComponent &_v) const noexcept
 			{
-				return memm::pos_r(begin(), _v, size());
+				return memm::pos_r(data(), _v, size());
 			}
 			size_t pos_ry(Ref _v) const noexcept
 			{
-				return memm::pos_ry(begin(), _v.begin(), size(), _v.size());
+				return memm::pos_ry(data(), _v.data(), size(), _v.size());
 			}
 			size_t pos_re(const InternalComponent &_v) const noexcept
 			{
-				return memm::pos_re(begin(), _v, size());
+				return memm::pos_re(data(), _v, size());
 			}
 			size_t pos_nry(Ref _v) const noexcept
 			{
-				return memm::pos_nry(begin(), _v.begin(), size(), _v.size());
+				return memm::pos_nry(data(), _v.data(), size(), _v.size());
 			}
 			size_t count(const InternalComponent &_v) const noexcept
 			{
-				return memm::count(begin(), _v, size());
+				return memm::count(data(), _v, size());
+			}
+			size_t count_y(Ref _v) const noexcept
+			{
+				return memm::count_y(data(), _v.data(), size(), _v.size());
 			}
 
 			const InternalComponentRef& front() const noexcept
 			{
-				return begin()[0];
+				return data()[0];
 			}
 			InternalComponentRef& front() noexcept
 			{
-				return begin()[0];
+				return data()[0];
 			}
 			const InternalComponentRef& back() const noexcept
 			{
@@ -837,20 +841,20 @@ namespace kr
 			}
 			intp operator -(const Component * ptr) const noexcept
 			{
-				return begin() - ptr;
+				return data() - ptr;
 			}
 			friend intp operator -(const Component * ptr, const MemBuffer& ori) noexcept
 			{
-				return ptr - ori.begin();
+				return ptr - ori.data();
 			}
 			template <typename _Derived, bool _szable, bool _readonly, typename _Parent> 
 			intp operator -(const MemBuffer<_Derived, BufferInfo<Component, true, _szable, _readonly, _Parent>>& ptr) const noexcept
 			{
-				return begin() - ptr.begin();
+				return data() - ptr.data();
 			}
 			intp operator -(const MemBuffer& ptr) const noexcept
 			{
-				return begin() - ptr.begin();
+				return data() - ptr.data();
 			}
 		};
 

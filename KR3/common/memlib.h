@@ -127,7 +127,8 @@ namespace kr
 
 		_RETURN_(bool) contains(cptr _src, atype _tar, size_t _srclen) noexcept;
 		_RETURN_(bool) filled(cptr _src, atype _tar, size_t _srclen) noexcept;
-		_RETURN_(size_t) count(cptr _src, atype _tar, size_t _len) noexcept;
+		_RETURN_(size_t) count(cptr _src, atype _tar, size_t _srclen) noexcept;
+		_RETURN_(size_t) count_y(cptr _src, cptr _tar, size_t _srclen, size_t _tarlen) noexcept;
 		_VOID_ change(ptr _src, atype _tar, atype _to, size_t _srclen) noexcept;
 		_VOID_ tolower(ptr _src, size_t _srclen) noexcept;
 		_VOID_ toupper(ptr _src, size_t _srclen) noexcept;

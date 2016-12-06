@@ -734,6 +734,31 @@ inline size_t kr::memt<BASE>::count(cptr _src, atype _tar, size_t _srclen) noexc
 	}
 	return count;
 }
+template<size_t BASE>
+inline size_t kr::memt<BASE>::count_y(cptr _src, cptr _tar, size_t _srclen, size_t _tarlen) noexcept
+{
+	size_t count = 0;
+	type* tar = (type*)_tar;
+	type* tarend = tar + _tarlen;
+	type* src = (type*)_src;
+	type* srcend = src + _srclen;
+	while (src != srcend)
+	{
+		type s = *src;
+		type * t = tar;
+		while (t != tarend)
+		{
+			if (s == *t)
+			{
+				count++;
+				break;
+			}
+			t++;
+		}
+		src++;
+	}
+	return count;
+}
 
 template <size_t BASE>
 inline void kr::memt<BASE>::change(ptr _src, atype _tar, atype _to, size_t _srclen) noexcept
