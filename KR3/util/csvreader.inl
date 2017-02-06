@@ -193,7 +193,7 @@ void kr::CSVReader<IS>::skip()
 }
 template <typename IS>
 template <typename Derived, typename C, typename _Info>
-void kr::CSVReader<IS>::next(OutStream<Derived, _Info>* dest)
+void kr::CSVReader<IS>::next(OutStream<Derived, C, _Info>* dest)
 {
 	switch (m_nLast)
 	{

@@ -156,7 +156,7 @@ namespace kr
 		void writeImpl(cptr buff, size_t len); // FileException
 		size_t readImpl(ptr buff, size_t len); // EofException
 
-		static filetime_t getLastModifiedTime(pcwstr filename) noexcept;
+		static filetime_t getLastModifiedTime(pcwstr filename); // FileException
 		filetime_t getLastModifiedTime() noexcept;
 		filetime_t getCreationTime() noexcept;
 		bool setModifyTime(filetime_t t) noexcept;
