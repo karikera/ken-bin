@@ -29,7 +29,6 @@ namespace kr
 #include "common/reference.h"
 #include "common/autovar.h"
 #include "common/exception.h"
-#include "common/error.h"
 #include <KRNew/alloc.h>
 #include "common/system.h"
 #include "common/finally.h"
@@ -42,4 +41,5 @@ namespace kr
 #include "common/temp.h"
 #include "common/text.h"
 #include "common/stdio.h"
+#include "common/error.h"
 #include "common/io/vstream.h"
