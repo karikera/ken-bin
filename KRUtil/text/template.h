@@ -17,12 +17,14 @@ namespace kr
 		using Super = io::FilterOStream<TemplateWriter<Base>, Base, autoClose>;
 		using Component = typename Base::Component;
 		using Text = RefArray<Component>;
+		using Super::base;
+
 		TemplateWriter(Base* _os, Text _open, Text _close) noexcept
 			:Super(_os), m_open(_open), m_close(_close)
 		{
 		}
 		TemplateWriter(typename Base::BaseStream * _os, Text _open, Text _close) noexcept
-			: Super(_os->retype<Component>()), m_open(_open), m_close(_close)
+			: Super(_os->template retype<Component>()), m_open(_open), m_close(_close)
 		{
 		}
 		void put(Text key, Text value) noexcept

@@ -81,6 +81,9 @@ namespace kr
 	class Searcher:public Cmp, public GetKey
 	{
 	public:
+		using Cmp::compare;
+		using GetKey::getKey;
+
 		using K = GetKeyType<T, GetKey>;
 		static T* searchPointer(T* L, size_t size, K key)
 		{

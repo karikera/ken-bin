@@ -52,6 +52,7 @@ namespace kr
 		static bool exists(pcwstr src) noexcept;
 		static bool copy(pcwstr dest, pcwstr src) noexcept;
 		static bool move(pcwstr dest, pcwstr src) noexcept;
+		static bool copyTree(pcwstr dest, pcwstr src) noexcept;
 		static bool toJunk(pcwstr src) noexcept;
 		static bool clearJunk() noexcept;
 		static bool remove(pcwstr str) noexcept;

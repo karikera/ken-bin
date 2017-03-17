@@ -11,15 +11,15 @@ namespace kr
 			return b == 0 ? 1 : pow(a*a, b>>1)*((b & 1) ? a : 1);
 		}
 
-		template <typename T, typename T2, typename ... ARGS>
-		constexpr T min(T v, T2 v2, ARGS ... vs) noexcept
-		{
-			return (T)min(v2, vs ...) < v ? (T)min(v2, vs ...) : v;
-		}
 		template <typename T>
 		constexpr T min(T v) noexcept
 		{
 			return v;
+		}
+		template <typename T, typename T2, typename ... ARGS>
+		constexpr T min(T v, T2 v2, ARGS ... vs) noexcept
+		{
+			return (T)min(v2, vs ...) < v ? (T)min(v2, vs ...) : v;
 		}
 		
 		/// sqrt

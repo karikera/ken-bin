@@ -13,17 +13,17 @@ namespace kr
 	public:
 		WebCanvas(int width, int height) noexcept;
 		~WebCanvas() noexcept;
-		int getScreenWidth() noexcept;
-		int getScreenHeight() noexcept;
+		int getWidth() noexcept;
+		int getHeight() noexcept;
 
 		virtual void onResize(int width, int height) noexcept;
+		virtual void onKeyDown(int key, bool repeat) noexcept;
+		virtual void onKeyUp(int key) noexcept;
 
 	protected:
 		EGLNativeWindowType m_window;
 		EGLNativeDisplayType m_display;
-#ifdef WIN32
 		int m_width, m_height;
-#endif
 	};
 }
 

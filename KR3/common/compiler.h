@@ -2,11 +2,13 @@
 
 #include <errno.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #ifdef _MSC_VER
 
 #include <sal.h>
 
+#define ATTR_FORMAT			_Printf_format_string_
 #define ATTR_NULL_TERMINATED	__nullterminated
 #define ATTR_CHECK_RETURN	_Check_return_
 #define ATTR_NULLABLE		_Ret_maybenull_
@@ -27,8 +29,10 @@
 #define ondebug(code) code
 #define debug()	debug_force()
 #define _assert(x)	do {if(!(x)) {\
-	if(::kr::checkDebugging())\
+	fputs("Assertion failed\nOperation:" #x "\n", stderr);\
+	if(::kr::checkDebugging()){\
 		__debugbreak();\
+	}\
 } } while(0,0)
 #else
 #define ondebug(code)
@@ -65,7 +69,9 @@ extern "C" void vem__debug_break();
 #ifndef NDEBUG
 #define ondebug(code) code
 #define debug() debug_force()
-#define _assert(x)	do { if(!(x)) { raise(SIGTRAP); } } while(0)
+#define _assert(x)	do { if(!(x)) { \
+	fputs("Assertion failed\nOperation:" #x "\n", stderr);\
+	debug_force(); } } while(0)
 #else
 #define ondebug(code)
 #define debug()	do {} while(0)

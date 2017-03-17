@@ -34,6 +34,9 @@ namespace kr
 			size_t getIndexByData(Component* ptr) noexcept;
 			void insertByIndex(size_t index, const Component &data) noexcept;
 			void makeEmptyField(size_t size) noexcept;
+			using Parent::begin;
+			using Parent::end;
+			using Parent::size;
 			using Parent::removeMatchAll;
 			using Parent::removeAll;
 
@@ -72,6 +75,10 @@ namespace kr
 			Component removeByIndexGet(size_t idx) noexcept;
 			Component get(K key) noexcept;
 
+			using Parent::begin;
+			using Parent::end;
+			using Parent::size;
+			using Parent::empty;
 			using Parent::resize;
 			using Parent::operator [];
 			void insertByIndex(size_t index, const Component &data) noexcept;

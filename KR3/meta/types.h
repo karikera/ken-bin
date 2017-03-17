@@ -67,8 +67,8 @@ namespace kr
 			using increase = numlist<numbers ..., sizeof ... (numbers)>;
 			using remove_back = typename _pri_::numlist_remove_back<numlist>::type;
 			using remove_front = typename _pri_::numlist_remove_front<numlist>::type;
-			static constexpr size_t front = _pri_::numlist_remove_back<numlist>::value;
-			static constexpr size_t back =  _pri_::numlist_remove_front<numlist>::value;
+			static constexpr size_t back = _pri_::numlist_remove_back<numlist>::value;
+			static constexpr size_t front =  _pri_::numlist_remove_front<numlist>::value;
 			template <size_t idx>
 			static constexpr size_t get() noexcept
 			{
@@ -479,7 +479,7 @@ namespace kr
 		template <typename LAMBDA, typename ... types_list>
 		void types<args ... >::value_loop_with(const LAMBDA & lambda, const types_list & ... types_args)
 		{
-			constexpr size_t minvalue = min(size, (types_args.size) ...);
+			constexpr size_t minvalue = min(size, (types_list::size) ...);
 			make_numlist_counter<minvalue>::loop(lambda, *this, types_args ...);
 		}
 		

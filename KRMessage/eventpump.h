@@ -97,6 +97,9 @@ namespace kr
 	public:
 		EventPump() noexcept;
 		~EventPump() noexcept;
+		
+		ThreadHandle * createThread() noexcept;
+
 		int start() noexcept;
 		void quit(int exitCode) noexcept;
 		void clear() noexcept;
@@ -169,6 +172,8 @@ namespace kr
 		}
 
 	private:
+		int _process() noexcept;
+		int _thread() noexcept;
 		void _regist(EventHandle * event, Event * callback) noexcept;
 		void _unregist(Event * event) noexcept;
 
@@ -187,7 +192,5 @@ namespace kr
 
 	private:
 		ThreadHandle * m_thread;
-
-		int _thread() noexcept;
 	};
 }

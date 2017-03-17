@@ -6,40 +6,32 @@
 namespace kr
 {
 	template <typename C>
-	class AddSlashes: public Bufferable<AddSlashes<C>,BufferInfo<C>>
+	class AddSlashes: public Printable<AddSlashes<C>,C>
 	{
 	private:
 		const RefArray<C> m_text;
-		size_t m_size;
 
 	public:
 		AddSlashes(RefArray<C> text) noexcept
 			:m_text(text)
 		{
-			static const auto SLASH_TARGET = meta::literal_as<C>("\r\n\t\'\"");
-			m_size = text.count_y(SLASH_TARGET) + text.size();
 		}
 
-		size_t copyTo(C * dest) const noexcept
+		template <class _Derived, typename _Info>
+		void writeTo(OutStream<_Derived, C, _Info> * os) const
 		{
-			C * d = dest;
 			for (C s : m_text)
 			{
 				switch (s)
 				{
-				case (C)'\r': *d++ = '\\'; *d++ = 'r'; break;
-				case (C)'\n': *d++ = '\\'; *d++ = 'n'; break;
-				case (C)'\t': *d++ = '\\'; *d++ = 't'; break;
-				case (C)'\'': *d++ = '\\'; *d++ = '\''; break;
-				case (C)'\"': *d++ = '\\'; *d++ = '\"'; break;
-				default: *d++ = s; break;
+				case (C)'\r': *os << '\\'; *os << 'r'; break;
+				case (C)'\n': *os << '\\'; *os << 'n'; break;
+				case (C)'\t': *os << '\\'; *os << 't'; break;
+				case (C)'\'': *os << '\\'; *os << '\''; break;
+				case (C)'\"': *os << '\\'; *os << '\"'; break;
+				default: *os << s; break;
 				}
 			}
-			return d - dest;
-		}
-		size_t size() const noexcept
-		{
-			return m_size;
 		}
 	};
 
@@ -56,7 +48,7 @@ namespace kr
 		}
 
 		template <class _Derived, typename _Info>
-		void writeTo(OutStream<_Derived, Component, _Info> * os) const
+		void writeTo(OutStream<_Derived, C, _Info> * os) const
 		{
 			RefArray<C> text = m_text;
 			while (!text.empty())

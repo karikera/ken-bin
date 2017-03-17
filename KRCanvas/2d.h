@@ -38,6 +38,8 @@ namespace kr
 		void fillRect(float x, float y, float width, float height) noexcept;
 		void strokeOval(float x, float y, float width, float height) noexcept;
 		void fillOval(float x, float y, float width, float height) noexcept;
+		void fillText(Text text, float x, float y) noexcept;
+		void fillText(TextW text, float x, float y) noexcept;
 
 		void beginPath() noexcept;
 		void closePath() noexcept;

@@ -18,6 +18,7 @@ class InFile
 public:
 	InFile();
 	void open(const string & fname);
+	void open(const wstring & fname);
 	void close();
 	bool fail();
 
@@ -45,6 +46,7 @@ class OutFile
 public:
 	OutFile();
 	void open(const string & fname);
+	void open(const wstring & fname);
 	void close();
 	bool fail();
 	void indent(int n);

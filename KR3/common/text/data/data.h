@@ -294,7 +294,7 @@ namespace kr
 				using Data = WritableData;
 				using Self = Wrap<WritableData>;
 
-				bool equals(const Self & self) noexcept = delete;
+				bool equals(Ref ref) const noexcept = delete;
 
 				WritableData() noexcept {}
 				WritableData(nullptr_t) noexcept : m_end(nullptr) {}

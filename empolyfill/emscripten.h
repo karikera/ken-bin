@@ -14,10 +14,10 @@ typedef char EM_UTF8;
 
 #ifdef __EMSCRIPTEN__
 #define EM_ASM(x)	
-#define EM_ASM_(x, ...)	
-#define EM_ASM_INT(x, ...)	((int)0)
+#define EM_ASM_(x, ...)	(__VA_ARGS__)
+#define EM_ASM_INT(x, ...)	((__VA_ARGS__),(int)0)
 #define EM_ASM_INT_V(x)	((int)0)
-#define EM_ASM_DOUBLE(x, ...)	((double)0)
+#define EM_ASM_DOUBLE(x, ...)	((__VA_ARGS__),(double)0)
 #define EM_ASM_DOUBLE_V(x)	((double)0)
 #else
 #define EM_ASM(x)		static_assert(false,"Cannot call EM_ASM!")

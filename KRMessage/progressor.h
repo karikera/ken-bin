@@ -34,8 +34,8 @@ namespace kr
 		Progressor() noexcept;
 		~Progressor() noexcept;
 
-		bool closed() noexcept;
 		void start() noexcept;
+		bool closed() noexcept;
 		template <typename LAMBDA>
 		bool postLambda(LAMBDA lambda)
 		{

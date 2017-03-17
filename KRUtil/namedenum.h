@@ -50,7 +50,7 @@ namespace kr
 			inline Names(Text names) noexcept
 			{
 				size_t index = 0;
-				for (Text item : names.splitIterating(','))
+				for (Text item : names.splitIterable(','))
 				{
 					this->names[index++] = item.trim();
 				}

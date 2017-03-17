@@ -27,16 +27,16 @@ namespace kr
 		template <typename C>
 		size_t sizeAs() const noexcept;
 
-		template <> size_t copyTo<char>(char * dest) const noexcept;
-		template <> size_t copyTo<wchar>(wchar * dest) const noexcept;
-
-		template <> size_t sizeAs<char>() const noexcept;
-		template <> size_t sizeAs<wchar>() const noexcept;
-
 	private:
 		HRESULT m_error;
 
 	};
+
+	template <> size_t ErrorCode::copyTo<char>(char * dest) const noexcept;
+	template <> size_t ErrorCode::copyTo<wchar>(wchar * dest) const noexcept;
+
+	template <> size_t ErrorCode::sizeAs<char>() const noexcept;
+	template <> size_t ErrorCode::sizeAs<wchar>() const noexcept;
 	
 	void errorBox(pcwstr str) noexcept;
 

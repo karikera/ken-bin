@@ -106,11 +106,11 @@ typename kr::map::IdMap<Parent, GetKey, Cmp>::Component* kr::map::IdMap<Parent, 
 
 template <typename Parent, typename GetKey, typename Cmp>
 template <typename LAMBDA> 
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old = [](Component) {}) noexcept
+typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
 {
 	return findAct(GetKey::getKey(data),
 		[&](Component* p) { Component old = move(p);  p->value = move(data); return old; },
-		[&](Component* p) { _shiftRight(p); _new(p) Component(move(data)); return (Component)nullptr; }
+		[&](Component* p) { _shiftRight(p); new(p) Component(move(data)); return (Component)nullptr; }
 	);
 }
 template <typename Parent, typename GetKey, typename Cmp>
@@ -128,7 +128,7 @@ auto kr::map::IdMap<Parent, GetKey, Cmp>::findAct(K key, LAMBDA found, LAMBDA2 n
 	return Search::search(Parent::begin(), Parent::size(), key, found, notfound);
 }
 template <typename Parent, typename GetKey, typename Cmp>
-typename const kr::map::IdMap<Parent, GetKey, Cmp>::Component& kr::map::IdMap<Parent, GetKey, Cmp>::getDataByIndex(size_t index) noexcept
+const typename kr::map::IdMap<Parent, GetKey, Cmp>::Component& kr::map::IdMap<Parent, GetKey, Cmp>::getDataByIndex(size_t index) noexcept
 {
 	return Parent::begin()[index];
 }
@@ -300,11 +300,11 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop_u(LAMBDA lambda) noe
 }
 template <typename Parent, typename GetKey, typename Cmp>
 template <typename LAMBDA>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old = [](Component) {}) noexcept
+typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
 {
 	return findAct(GetKey::getKey(data),
 		[&](Component* p) { Component old = move(p);  p->value = move(data); return old; },
-		[&](Component* p) { _shiftRight(p); _new(p) Component(move(data)); return (Component)nullptr; }
+		[&](Component* p) { _shiftRight(p); new(p) Component(move(data)); return (Component)nullptr; }
 	);
 }
 template <typename Parent, typename GetKey, typename Cmp>

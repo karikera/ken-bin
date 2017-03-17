@@ -7,6 +7,7 @@ using kr::AText;
 using kr::TText;
 using kr::Text;
 using kr::TSZ;
+using kr::TSZW;
 using kr::Keep;
 
 class Identity:public kr::Referencable<Identity>

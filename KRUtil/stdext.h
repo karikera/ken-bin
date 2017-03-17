@@ -6,20 +6,22 @@ namespace std
 {
 	namespace krext
 	{
-		bool isNumber(const string &str);
+		template <typename _Elem>
+		bool isNumber(const basic_string<_Elem> &str);
 
-		// throws
-		// invalid_argument: empty string or include not number
-		int toNumber(const string &str);
+		template <typename _Elem>
+		basic_string<_Elem> trim(const basic_string<_Elem> & s);
 
-		string trim(const std::string &s);
+		template <typename _Elem>
+		void toLowerCase(basic_string<_Elem> & str);
 
-		void toLowerCase(string &str);
-
-		string& replaceAll(string &str, char pattern, char replace);
-
-		string& replaceAll(string &str, const string &pattern, const string &replace);
+		template <typename _Elem>
+		basic_string<_Elem>& replaceAll(basic_string<_Elem> &str,
+			_Elem pattern, _Elem replace);
+		template <typename _Elem>
+		basic_string<_Elem>& replaceAll(basic_string<_Elem> &str,
+			const basic_string<_Elem> &pattern,
+			const basic_string<_Elem> &replace);
 
 	}
 }
-
