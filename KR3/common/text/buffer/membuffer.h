@@ -109,7 +109,6 @@ namespace kr
 				static_assert(&MemBuffer::empty != &Derived::empty, "This function need override");
 				return static_cast<const Derived*>(this)->empty();
 			}
-
 			template <typename T> size_t sizeAs() const noexcept
 			{
 				static_assert(is_same<T, Component>::value, "Need same type");

@@ -33,6 +33,9 @@
 	if(::kr::checkDebugging()){\
 		__debugbreak();\
 	}\
+	else{\
+		::kr::requestDebugger();\
+	}\
 } } while(0,0)
 #else
 #define ondebug(code)
@@ -102,6 +105,7 @@ extern "C" void vem__debug_break();
 namespace kr
 {
 	bool CT_FASTCALL checkDebugging() noexcept;
+	void CT_FASTCALL requestDebugger() noexcept;
 	ATTR_NORETURN ATTR_INLINE void noreturn() noexcept
 	{
 		abort();

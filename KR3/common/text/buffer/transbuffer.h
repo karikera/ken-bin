@@ -24,8 +24,9 @@ namespace kr
 				return static_cast<const Derived*>(this)->copyTo(dest);
 			}
 
-			template <typename T> size_t size() const noexcept
+			template <typename T> size_t sizeAs() const noexcept
 			{
+				static_assert(is_same<T, Component>::value, "Need same type");
 				return size();
 			}
 			

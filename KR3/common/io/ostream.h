@@ -110,7 +110,13 @@ namespace kr
 			{
 				meta::types<bufferize_t<ARGS, Component> ...> datas = { ((bufferize_t<ARGS, Component>)args) ... };
 				size_t size = 0;
-				datas.value_loop([&size](auto & data) { size += data.size(); });
+				datas.value_loop([&size](auto & data) { 
+#ifdef _MSC_VER
+					size += data.sizeAs<Component>();
+#else
+					size += data.template sizeAs<Component>();
+#endif
+				});
 				padding(size);
 				datas.value_loop([this](auto & data) { data.writeTo(derived()); });
 			}

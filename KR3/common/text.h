@@ -26,6 +26,7 @@ namespace kr
 		INHERIT_COMPONENT();
 
 		using Super::c_str;
+		using Super::prints;
 
 		TempSzText() noexcept
 			:Super((size_t)0, 1024)
@@ -47,11 +48,7 @@ namespace kr
 			: Super(move(_move))
 		{
 		}
-		template <typename ARG1, typename ... ARGS>
-		explicit TempSzText(const ARG1 & arg1, const ARGS & ... args) noexcept
-		{
-			prints(arg1, args ...);
-		}
+
 		TempSzText& operator = (const TempSzText &) noexcept = delete;
 
 		template <typename T> TempSzText& operator <<(const T& temp)
