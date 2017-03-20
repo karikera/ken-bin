@@ -13,30 +13,23 @@ typedef int32_t HRESULT;
 
 namespace kr
 {
-	class ErrorCode:public Bufferable<ErrorCode, BufferInfo<AutoComponent, false, true> >
+	class ErrorCode
 	{
 	public:
 		ErrorCode(HRESULT error) noexcept;
 		operator HRESULT() const noexcept;
 		void print() noexcept;
+		template <typename C>
+		TempSzText<C> getMessage() const noexcept;
 		static ErrorCode getLast() noexcept;
-
-		template <typename C>
-		size_t copyTo(C * dest) const noexcept;
-
-		template <typename C>
-		size_t sizeAs() const noexcept;
 
 	private:
 		HRESULT m_error;
 
 	};
 
-	template <> size_t ErrorCode::copyTo<char>(char * dest) const noexcept;
-	template <> size_t ErrorCode::copyTo<wchar>(wchar * dest) const noexcept;
-
-	template <> size_t ErrorCode::sizeAs<char>() const noexcept;
-	template <> size_t ErrorCode::sizeAs<wchar>() const noexcept;
+	template <> TempSzText<char> ErrorCode::getMessage<char>() const noexcept;
+	template <> TempSzText<wchar> ErrorCode::getMessage<wchar>() const noexcept;
 	
 	void errorBox(pcwstr str) noexcept;
 

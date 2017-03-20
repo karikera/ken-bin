@@ -220,6 +220,18 @@ namespace kr
 					return false;
 				return subarr(size() - _v.size()).equals_i(_v);
 			}
+			bool startsWith_y(Ref _v) const noexcept
+			{
+				if (empty())
+					return false;
+				return memm::find(_v.data(), front(), _v.size()) != nullptr;
+			}
+			bool endsWith_y(Ref _v) const noexcept
+			{
+				if (empty())
+					return false;
+				return memm::find(_v.data(), back(), _v.size()) != nullptr;
+			}
 			bool startsWith(const InternalComponent &_v) const noexcept
 			{
 				if (empty())
@@ -244,6 +256,7 @@ namespace kr
 					return false;
 				return memm::equals_i(back(), _v);
 			}
+
 
 			InternalComponentRef& operator [](size_t i) noexcept
 			{
@@ -279,14 +292,14 @@ namespace kr
 
 			bool contains(const InternalComponent &_v) const noexcept
 			{
-				return memm::contains(begin(), _v, size());
+				return memm::contains(data(), _v, size());
 			}
 			bool contains(Ref _v) const noexcept
 			{
 				size_t _len = size();
 				size_t _len2 = _v.size();
 				if (_len < _len2) return false;
-				return memm::find(begin(), _v.begin(), _len, _len2) != nullptr;
+				return memm::find(data(), _v.data(), _len, _len2) != nullptr;
 			}
 			Ref find_n(const InternalComponent &_v) const noexcept
 			{

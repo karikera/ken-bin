@@ -118,10 +118,18 @@ namespace kr
 		void writeTo(OutStream<_Derived, C, _Info> *str) const = delete;
 
 		template <typename C>
-		size_t copyTo(C * dest) const noexcept
+		size_t copyTo(C * dest) const
 		{
-			ArrayWriter<C> out(dest, dest + 50);
-			static_cast<Derived*>(this)->onWriteTo(&out);
+			ArrayWriter<C> out(dest, dest + 4096);
+			try
+			{
+				static_cast<Derived*>(this)->onWriteTo(&out);
+			}
+			catch (...)
+			{
+				out = ArrayWriter<C>(dest, dest + sizeAs<C>());
+				static_cast<Derived*>(this)->onWriteTo(&out);
+			}
 			return out.end() - dest;
 		}
 
@@ -135,7 +143,7 @@ namespace kr
 		template <class _Derived, typename _Info>
 		void onWriteTo(OutStream<_Derived, Component, _Info> * os) const
 		{
-			static_assert(&Derived::writeTo != &Super::writeTo, "Need to override writeTo Method");
+			static_assert(&Derived::writeTo != &Printable::writeTo, "Need to override writeTo Method");
 			return static_cast<const Derived*>(this)->writeTo(os);
 		}
 	};
