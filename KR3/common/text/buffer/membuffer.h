@@ -367,6 +367,10 @@ namespace kr
 			{
 				return Ref(memm::find_ry(begin(), _v.begin(), size(), _v.size()), end());
 			}
+			Ref find_rye(Ref _v) const noexcept
+			{
+				return Ref(memm::find_rye(begin(), _v.begin(), size(), _v.size()), end());
+			}
 			Ref find_re(const InternalComponent &_v) const noexcept
 			{
 				return Ref(memm::find_re(begin(), _v, size()), end());

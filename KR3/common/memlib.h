@@ -87,6 +87,8 @@ namespace kr
 		template <typename T>
 		_NOTNULL_(T*) find_re(T* _src, atype _tar, size_t _len) noexcept;
 		template <typename T>
+		_NOTNULL_(T*) find_rye(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept;
+		template <typename T>
 		_NULLABLE_(T*) find_y(T* _src,std::add_const_t<T>* _tar,size_t _tarlen) noexcept;
 		template <typename T>
 		_NULLABLE_(T*) find_y(T* _src,std::add_const_t<T>* _tar,size_t _srclen,size_t _tarlen) noexcept;

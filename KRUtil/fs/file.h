@@ -234,17 +234,6 @@ namespace kr
 		}
 	};
 
-	class CurrentDirectory : public Bufferable<CurrentDirectory, BufferInfo<AutoComponent, false, true>>
-	{
-	public:
-		template <typename CHR>
-		bool set(const CHR * text) const noexcept;
-		template <typename CHR>
-		size_t copyTo(CHR * dest) const noexcept;
-		template <typename CHR>
-		size_t sizeAs() const noexcept;
-	};
-	
 	class FindFile
 	{
 	public:
@@ -367,8 +356,4 @@ namespace kr
 		while (file->next());
 	}
 
-	static CurrentDirectory &currentDirectory = nullref;
-
-	void resolve(TSZW* dest, TextW path) noexcept;
-	TSZW resolve(TextW path) noexcept;
 }

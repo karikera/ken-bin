@@ -29,6 +29,7 @@ namespace kr
 				case (C)'\t': *os << '\\'; *os << 't'; break;
 				case (C)'\'': *os << '\\'; *os << '\''; break;
 				case (C)'\"': *os << '\\'; *os << '\"'; break;
+				case (C)'\\': *os << '\\'; *os << '\\'; break;
 				default: *os << s; break;
 				}
 			}

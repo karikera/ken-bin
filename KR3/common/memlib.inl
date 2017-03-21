@@ -498,6 +498,20 @@ inline T* kr::memt<BASE>::find_re(T* _src, atype _tar, size_t _len) noexcept
 }
 template <size_t BASE>
 template <typename T>
+inline T* kr::memt<BASE>::find_rye(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+{
+	type tar = _tar;
+	type* srcend = (type*)_src - 1;
+	type* src = srcend + _len;
+	while (src != srcend)
+	{
+		if (contains(_tar, *src, _tarlen)) break;
+		src--;
+	};
+	return (T*)src;
+}
+template <size_t BASE>
+template <typename T>
 inline T* kr::memt<BASE>::find_y(T* _src, std::add_const_t<T>* _tar, size_t _tarlen) noexcept
 {
 	type * src = (type*)_src;
