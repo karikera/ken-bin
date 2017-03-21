@@ -82,7 +82,7 @@ namespace kr
 			if (text.empty()) return false;
 			return isSeperator(text.back());
 		}
-		
+
 		// "dir/name/basename.ext" -> "dir/name/"
 		// "basename.ext" -> ""
 		static Text dirname(Text text) noexcept
@@ -101,7 +101,7 @@ namespace kr
 #else
 			pos = text.pos_r(sep);
 #endif
-			return text.subarr(pos+1);
+			return text.subarr(pos + 1);
 		}
 
 		// "dirname/basename.ext.name" -> ".ext.name"
@@ -111,68 +111,72 @@ namespace kr
 			return basename(text).find_e((C)'.');
 		}
 
-		// ("dir/", "/name" ,"basename.ext") -> "dir/name/basename.ext"
-		// ("/dir/", "/name" ,"nextdir/") -> "/dir/name/nextdir/"
 		template <typename ... T>
-		static TSZ join(const T & ... inputs) noexcept
+		static void joinAppend(TSZ * dest, const T & ... inputs) noexcept
 		{
-			std::initializer_list<Text> texts = {inputs ... };
+			std::initializer_list<Text> texts = { inputs ... };
 
-			TSZ tsz;
 			const Text * iter = texts.begin();
 			const Text * end = texts.end();
-			if (iter == end) return tsz;
+			if (iter == end) return;
 
 			Text text = *iter;
 			if (startsWithSeperator(text))
 			{
 				text++;
-				tsz << sep;
+				*dest << sep;
 			}
 			bool sep_end = false;
 			if (sep_end = endsWithSeperator(text))
 			{
 				text.cut_self(text.end() - 1);
 			}
-			tsz << text;
+			*dest << text;
 			iter++;
-			for (;iter != end; iter++)
+			for (; iter != end; iter++)
 			{
 				text = *iter;
 				if (startsWithSeperator(text))
 				{
 					text++;
 				}
-				tsz << sep;
+				*dest << sep;
 				if (sep_end = endsWithSeperator(text))
 				{
 					text.cut_self(text.end() - 1);
 				}
-				tsz << text;
+				*dest << text;
 			}
-			if (sep_end) tsz << sep;
-			return tsz;
+			if (sep_end) *dest << sep;
 		}
 
-		// "dirname/../../basename.ext" -> "absolute/path/basename.ext"
-		static TSZ resolve(Text path) noexcept
+		// ("dir/", "/name" ,"basename.ext") -> "dir/name/basename.ext"
+		// ("/dir/", "/name" ,"nextdir/") -> "/dir/name/nextdir/"
+		template <typename ... T>
+		static TSZ join(const T & ... inputs) noexcept
 		{
 			TSZ dest;
+			joinAppend(&dest, inputs...);
+			return dest;
+		}
+
+		static void resolveAppend(TSZ * dest, Text path) noexcept
+		{
 			switch (path.size())
 			{
-			case 0: dest << currentDirectory; break;
+			case 0: *dest << currentDirectory; break;
 			case 1:
 				switch (path[0])
 				{
 				case (C)'.':
 				case sep:
 #ifdef WIN32
-				case (C)'/': return true;
+				case (C)'/': return;
 #endif
-					dest << currentDirectory;
+					*dest << currentDirectory;
 					break;
 				default:
-					dest << currentDirectory << sep << path[0];
+					*dest << currentDirectory << sep << path[0];
 					break;
 				}
 				break;
@@ -185,7 +189,7 @@ namespace kr
 #ifdef WIN32
 				else if (path[1] == L':')
 				{
-					dest << path[0] << L':';
+					*dest << path[0] << L':';
 					read += 2;
 					if (read.empty()) break;
 					if (isSeperator(*read))
@@ -194,7 +198,7 @@ namespace kr
 #endif
 				else
 				{
-					dest << currentDirectory;
+					*dest << currentDirectory;
 				}
 				while (!read.empty())
 				{
@@ -213,16 +217,23 @@ namespace kr
 					case 2:
 						if (dir[0] == '.' && dir[1] == '.')
 						{
-							Text parent = dest.find_r(sep);
-							if (parent != nullptr) dest.cut_self(parent);
+							Text parent = dest->find_r(sep);
+							if (parent != nullptr) dest->cut_self(parent);
 							continue;
 						}
 						break;
 					}
-					dest << sep << dir;
+					*dest << sep << dir;
 				}
 				break;
 			}
+		}
+
+		// "dirname/../../basename.ext" -> "absolute/path/basename.ext"
+		static TSZ resolve(Text path) noexcept
+		{
+			TSZ dest;
+			resolveAppend(&dest, path);
 			return dest;
 		}
 	};
