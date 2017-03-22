@@ -127,7 +127,7 @@ namespace kr
 				*dest << sep;
 			}
 			bool sep_end = false;
-			if (sep_end = endsWithSeperator(text))
+			if ((sep_end = endsWithSeperator(text)))
 			{
 				text.cut_self(text.end() - 1);
 			}
@@ -141,7 +141,7 @@ namespace kr
 					text++;
 				}
 				*dest << sep;
-				if (sep_end = endsWithSeperator(text))
+				if ((sep_end = endsWithSeperator(text)))
 				{
 					text.cut_self(text.end() - 1);
 				}

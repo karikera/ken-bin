@@ -105,6 +105,7 @@ struct std::hash<kr::BArray<C, cap>>
 	}
 };
 
+#ifdef _MSC_VER
 extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AccessableData<char, kr::Empty>, char>;
 extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::ReadableData<char, kr::Empty>, char>;
 extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AllocatedData<char, kr::Empty>, char>;
@@ -116,3 +117,4 @@ extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::ReadableData<wchar
 extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AllocatedData<wchar, kr::Empty>, wchar>;
 //extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::TemporaryData<wchar, kr::Empty>, wchar>;
 //extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::WritableData<wchar, kr::Empty>, wchar>;
+#endif

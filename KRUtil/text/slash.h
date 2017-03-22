@@ -5,15 +5,47 @@
 
 namespace kr
 {
+	template <typename C, typename LAMBDA>
+	class CustomAddSlashes : public Printable<CustomAddSlashes<C, LAMBDA>, C>
+	{
+	private:
+		const RefArray<C> m_text;
+		const LAMBDA & m_lambda;
+
+	public:
+		CustomAddSlashes(RefArray<C> text, const LAMBDA & lambda) noexcept
+			: m_text(text), m_lambda(lambda)
+		{
+		}
+
+		template <class _Derived, typename _Info>
+		void writeTo(OutStream<_Derived, C, _Info> * os) const
+		{
+			for (C s : m_text)
+			{
+				C rep = m_lambda(s);
+				if (rep != (C)'\0')
+				{
+					*os << '\\';
+					*os << rep;
+				}
+				else
+				{
+					*os << s;
+				}
+			}
+		}
+	};
+
 	template <typename C>
-	class AddSlashes: public Printable<AddSlashes<C>,C>
+	class AddSlashes : public Printable<AddSlashes<C>, C>
 	{
 	private:
 		const RefArray<C> m_text;
 
 	public:
 		AddSlashes(RefArray<C> text) noexcept
-			:m_text(text)
+			: m_text(text)
 		{
 		}
 
@@ -24,6 +56,7 @@ namespace kr
 			{
 				switch (s)
 				{
+				case (C)'\0': *os << '\\'; *os << '0'; break;
 				case (C)'\r': *os << '\\'; *os << 'r'; break;
 				case (C)'\n': *os << '\\'; *os << 'n'; break;
 				case (C)'\t': *os << '\\'; *os << 't'; break;
@@ -37,7 +70,7 @@ namespace kr
 	};
 
 	template <typename C>
-	class StripSlashes : public Printable<StripSlashes<C>,C>
+	class StripSlashes : public Printable<StripSlashes<C>, C>
 	{
 	private:
 		const RefArray<C> m_text;
@@ -72,10 +105,32 @@ namespace kr
 				case '\\': *os << '\\'; break;
 				case '\'': *os << '\''; break;
 				case '\"': *os << '\"'; break;
+				case '0': *os << '\0'; break;
 				}
 			}
 		}
 	};
+
+	template <typename LAMBDA>
+	inline auto custom_addslashes(Text text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char, LAMBDA>
+	{
+		return CustomAddSlashes<char, LAMBDA>(text, lambda);
+	}
+	template <typename LAMBDA>
+	inline auto custom_addslashes(TextW text, const LAMBDA& lambda) noexcept->CustomAddSlashes<wchar, LAMBDA>
+	{
+		return CustomAddSlashes<wchar, LAMBDA>(text, lambda);
+	}
+	template <typename LAMBDA>
+	inline auto custom_addslashes(Text16 text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char16, LAMBDA>
+	{
+		return CustomAddSlashes<char16, LAMBDA>(text, lambda);
+	}
+	template <typename LAMBDA>
+	inline auto custom_addslashes(Text32 text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char32, LAMBDA>
+	{
+		return CustomAddSlashes<char32, LAMBDA>(text, lambda);
+	}
 
 	inline AddSlashes<char> addslashes(Text text) noexcept { return text; }
 	inline AddSlashes<wchar> addslashes(TextW text) noexcept { return text; }
