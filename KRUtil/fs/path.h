@@ -168,11 +168,11 @@ namespace kr
 			case 1:
 				switch (path[0])
 				{
-				case (C)'.':
 				case sep:
 #ifdef WIN32
 				case (C)'/': return;
 #endif
+				case (C)'.':
 					*dest << currentDirectory;
 					break;
 				default:
@@ -229,7 +229,7 @@ namespace kr
 			}
 		}
 
-		// "dirname/../../basename.ext" -> "absolute/path/basename.ext"
+		// "dirname/../../basename.ext" -> "/absolute/path/basename.ext"
 		static TSZ resolve(Text path) noexcept
 		{
 			TSZ dest;

@@ -502,7 +502,7 @@ inline T* kr::memt<BASE>::find_rye(T* _src, std::add_const_t<T>* _tar, size_t _s
 {
 	type tar = _tar;
 	type* srcend = (type*)_src - 1;
-	type* src = srcend + _len;
+	type* src = srcend + _srclen;
 	while (src != srcend)
 	{
 		if (contains(_tar, *src, _tarlen)) break;
