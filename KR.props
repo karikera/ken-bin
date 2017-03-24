@@ -16,13 +16,6 @@
     <ExecutablePath>$(OutDir);$(KEN_DIR)batch;$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(KEN_DIR);$(KEN_DIR)KRThird\zext-angle-bin\include;$(KEN_DIR)empolyfill;$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(KEN_DIR)lib\$(PlatformShortName)\$(Configuration);$(KEN_DIR)KRThird\zext-angle-bin\lib\$(PlatformShortName)\$(Configuration);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
-    <LinkIncremental>true</LinkIncremental>
-    <NMakeBuildCommandLine>embuild</NMakeBuildCommandLine>
-    <NMakeReBuildCommandLine>embuild rebuild</NMakeReBuildCommandLine>
-    <NMakeCleanCommandLine>embuild clean</NMakeCleanCommandLine>
-    <NMakeOutput>$(OutDir)$(ProjectName).js</NMakeOutput>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
@@ -33,15 +26,15 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <Link>
-      <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+      <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
       <AdditionalDependencies>libEGL.lib;libGLESv2.lib;ws2_32.lib;gdiplus.lib;comctl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <LinkStatus>
-      </LinkStatus>
     </Link>
     <Lib>
       <TargetMachine>MachineX64</TargetMachine>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -87,21 +80,16 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)' != 'emscripten'">
     <ClCompile>
       <PreprocessorDefinitions>WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-    </ClCompile>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Platform)' != 'emscripten' and '$(Configuration)' == 'Release'">
-    <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
   </ItemDefinitionGroup>

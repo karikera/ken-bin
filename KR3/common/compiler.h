@@ -36,6 +36,7 @@
 	else{\
 		::kr::requestDebugger();\
 	}\
+	::kr::terminate(-1);\
 } } while(0,0)
 #else
 #define ondebug(code)
@@ -106,17 +107,13 @@ namespace kr
 {
 	bool CT_FASTCALL checkDebugging() noexcept;
 	void CT_FASTCALL requestDebugger() noexcept;
-	ATTR_NORETURN ATTR_INLINE void noreturn() noexcept
-	{
-		abort();
-	}
+	ATTR_NORETURN void CT_FASTCALL terminate(int err) noexcept;
+	ATTR_NORETURN void CT_FASTCALL notEnoughMemory() noexcept;
 	ATTR_NORETURN ATTR_INLINE void unreachable()
 	{
 		_assert(!"unreachable code");
-		noreturn();
+		abort();
 	}
-	ATTR_NORETURN void CT_FASTCALL terminate(int err) noexcept;
-	ATTR_NORETURN void CT_FASTCALL notEnoughMemory() noexcept;
 
 	unsigned long long CT_FASTCALL rdtsc() noexcept;
 }

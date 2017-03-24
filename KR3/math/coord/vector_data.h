@@ -12,7 +12,8 @@ namespace kr
 		using __ivector4 = int __attribute__((ext_vector_type(4)));
 
 #else 
-#include <xmmintrin.h>
+#include <emmintrin.h>
+#include <smmintrin.h>
 		using __vector4 = __m128;
 		using __ivector4 = __m128i;
 

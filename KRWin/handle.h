@@ -99,10 +99,10 @@ namespace kr
 		class Window:public Handle<HWND__>
 		{
 		public:
-			static constexpr Window * TOP = ((Window*)0);
-			static constexpr Window * BOTTOM = ((Window*)1);
-			static constexpr Window * TOPMOST = ((Window*)-1);
-			static constexpr Window * NOTOPMOST = ((Window*)-2);
+			static const Window * TOP;
+			static const Window * BOTTOM;
+			static const Window * TOPMOST;
+			static const Window * NOTOPMOST;
 
 			class WindowText : public Bufferable<WindowText, BufferInfo<AutoComponent, false, true, true, Empty>>
 			{

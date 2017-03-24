@@ -485,19 +485,19 @@ namespace kr
 		
 		template<typename ...args>
 		template <size_t from>
-		typename types<args ... >::template subarr_t<from>& types<args ... >::subarr() noexcept
+		auto types<args ... >::subarr() noexcept->subarr_t<from>&
 		{
 			return *static_cast<subarr_t<from>*>(this);
 		}
 		template<typename ...args>
 		template <size_t from>
-		const typename types<args ... >::template subarr_t<from>& types<args ... >::subarr() const noexcept
+		auto types<args ... >::subarr() const noexcept->const subarr_t<from>&
 		{
 			return *static_cast<const subarr_t<from>*>(this);
 		}
 		template<typename ...args>
 		template <size_t count>
-		const typename types<args ... >::template cut_t<count> types<args ... >::cut_copy() const noexcept
+		auto types<args ... >::cut_copy() const noexcept->const cut_t<count>
 		{
 			cut_t<count> values;
 			values.value_loop_with([](auto & dest, const auto &src) { dest = src;  }, *this);
@@ -505,7 +505,7 @@ namespace kr
 		}
 		template<typename ...args>
 		template <size_t from, size_t count>
-		const typename types<args ... >::template subarr_t<from, count> types<args ... >::subarr_copy() const noexcept
+		auto types<args ... >::subarr_copy() const noexcept->const subarr_t<from, count>
 		{
 			return subarr<from>().template cut_copy<count>();
 		}
