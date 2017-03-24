@@ -1,7 +1,7 @@
 #pragma once
 
 #include <KR3/main.h>
-#include <KRThird/lzma/Types.h>
+#include <KRThird/lzma-sdk/C/7zTypes.h>
 
 inline ATTR_NORETURN void lzmaError(int res)
 {

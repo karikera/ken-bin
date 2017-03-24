@@ -6,7 +6,7 @@
 #include <KR3/io/selfbufferedstream.h>
 #include <tchar.h>
 
-#include <KRThird/lzma/LzmaDec.h>
+#include <KRThird/lzma-sdk/C/LzmaDec.h>
 
 namespace kr
 {

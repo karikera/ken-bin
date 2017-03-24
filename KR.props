@@ -16,6 +16,9 @@
     <ExecutablePath>$(OutDir);$(KEN_DIR)batch;$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(KEN_DIR);$(KEN_DIR)KRThird\zext-angle-bin\include;$(KEN_DIR)empolyfill;$(IncludePath)</IncludePath>
     <LibraryPath>$(OutDir);$(KEN_DIR)lib\$(PlatformShortName)\$(Configuration);$(KEN_DIR)KRThird\zext-angle-bin\lib\$(PlatformShortName)\$(Configuration);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemGroup>
@@ -26,7 +29,6 @@
   </ItemGroup>
   <ItemDefinitionGroup>
     <Link>
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
@@ -34,7 +36,6 @@
     </Link>
     <Lib>
       <TargetMachine>MachineX64</TargetMachine>
-      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
     </Lib>
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -81,11 +82,16 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <MinimalRebuild>false</MinimalRebuild>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <Link>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
+    <Lib>
+      <LinkTimeCodeGeneration>true</LinkTimeCodeGeneration>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)' != 'emscripten'">
     <ClCompile>
