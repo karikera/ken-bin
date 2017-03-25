@@ -103,7 +103,8 @@
     <ClCompile>
       <CallingConvention>FastCall</CallingConvention>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
-      <TreatSpecificWarningsAsErrors>4180;4101;4316;4715;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
+      <DisableSpecificWarnings>4180</DisableSpecificWarnings>
+      <TreatSpecificWarningsAsErrors>4018;4101;4316;4715;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
       <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>
     <Lib>
