@@ -109,6 +109,11 @@ namespace kr
 	void CT_FASTCALL requestDebugger() noexcept;
 	ATTR_NORETURN void CT_FASTCALL terminate(int err) noexcept;
 	ATTR_NORETURN void CT_FASTCALL notEnoughMemory() noexcept;
+	ATTR_NORETURN ATTR_INLINE void notImplemented() noexcept
+	{
+		_assert(!"not implemented yet");
+		abort();
+	}
 	ATTR_NORETURN ATTR_INLINE void unreachable()
 	{
 		_assert(!"unreachable code");

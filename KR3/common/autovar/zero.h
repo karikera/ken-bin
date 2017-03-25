@@ -34,7 +34,7 @@ namespace kr
 
 	template <> void zerovar_t::value<void>() const noexcept;
 	
-	class zeroptr_t final // TODO: shifter apply
+	class zeroptr_t final
 	{
 	public:
 		zeroptr_t() noexcept;

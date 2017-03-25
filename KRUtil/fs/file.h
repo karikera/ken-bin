@@ -29,13 +29,13 @@ namespace kr
 
 		File() = delete;
 		template <typename CHR>
-		static File* createT(const CHR * str); // FileException
+		static File* createT(const CHR * str); // Error
 		template <typename CHR>
-		static File* openT(const CHR * str); // FileException
+		static File* openT(const CHR * str); // Error
 		template <typename CHR>
-		static File* openAndWriteT(const CHR * str); // FileException
+		static File* openAndWriteT(const CHR * str); // Error
 		template <typename CHR>
-		static File* createAndReadT(const CHR * str); // FileException
+		static File* createAndReadT(const CHR * str); // Error
 
 		static File* create(const char * str) { return createT(str); }
 		static File* create(const wchar * str) { return createT(str); }
@@ -81,50 +81,50 @@ namespace kr
 			return arr;
 		}
 		template <typename T, typename CHR>
-		static inline Array<T> openAsArrayT(const CHR * name) // TooBigException, FileException
+		static inline Array<T> openAsArrayT(const CHR * name) // TooBigException, Error
 		{
 			Must<File> file = open(name);
 			return file->readAll<T>();
 		}
 		template <typename T>
-		static inline Array<T> openAsArray(const char * name) // TooBigException, FileException
+		static inline Array<T> openAsArray(const char * name) // TooBigException, Error
 		{
 			return openAsArrayT<T,char>(name);
 		}
 		template <typename T>
-		static inline Array<T> openAsArray(const wchar * name) // TooBigException, FileException
+		static inline Array<T> openAsArray(const wchar * name) // TooBigException, Error
 		{
 			return openAsArrayT<T, wchar>(name);
 		}
 		template <typename T, typename CHR>
-		static inline Array<T> openAsArrayTempT(const CHR * name) // TooBigException, FileException
+		static inline Array<T> openAsArrayTempT(const CHR * name) // TooBigException, Error
 		{
 			Must<File> file = open(name);
 			return file->readAllTemp<T>();
 		}
 		template <typename T>
-		static inline Array<T> openAsArrayTemp(const char * name) // TooBigException, FileException
+		static inline Array<T> openAsArrayTemp(const char * name) // TooBigException, Error
 		{
 			return openAsArrayTempT<T, char>(name);
 		}
 		template <typename T>
-		static inline Array<T> openAsArrayTemp(const wchar * name) // TooBigException, FileException
+		static inline Array<T> openAsArrayTemp(const wchar * name) // TooBigException, Error
 		{
 			return openAsArrayTempT<T, wchar>(name);
 		}
 		template <typename T, typename CHR>
-		static inline void writeAsArrayT(const CHR * name, RefArray<T> & arr) // TooBigException, FileException
+		static inline void writeAsArrayT(const CHR * name, RefArray<T> & arr) // TooBigException, Error
 		{
 			Must<File> file = create(name);
 			return file->write(arr.begin(), arr.sizeBytes());
 		}
 		template <typename T>
-		static inline void writeFromArray(const char * name, RefArray<T> & arr) // FileException
+		static inline void writeFromArray(const char * name, RefArray<T> & arr) // Error
 		{
 			return writeAsArrayT(name, arr);
 		}
 		template <typename T>
-		static inline void writeFromArray(const wchar * name, RefArray<T> & arr) // FileException
+		static inline void writeFromArray(const wchar * name, RefArray<T> & arr) // Error
 		{
 			return writeAsArrayT(name, arr);
 		}
@@ -141,23 +141,23 @@ namespace kr
 		bool testSignature(dword signature) noexcept;
 		dword findChunk(dword signature); // EofException
 		ptr allocAll(size_t *pSize) noexcept;
-		Mapping beginMapping(filesize_t off, size_t read); // FileException
+		Mapping beginMapping(filesize_t off, size_t read); // Error
 		void endMapping(const Mapping& map) noexcept;
 		void readStructure(ptr value, uintp size); // EofException
 		void readStructure(ptr value, uintp size, uintp srcsize); // EofException
 
 		// 사용 후 파일이 닫힌다.
-		void md5All(byte _dest[16]); // FileException
+		void md5All(byte _dest[16]); // Error
 
 		// 지정된 크기만큼 md5 해시를 생성하고 파일 포인터를 읽기 전 위치로 돌려놓는다.
-		void md5(size_t sz, byte _dest[16]); // FileException
+		void md5(size_t sz, byte _dest[16]); // Error
 
 		dword size32(); // TooBigException
 		filesize_t size() noexcept;
-		void writeImpl(cptr buff, size_t len); // FileException
+		void writeImpl(cptr buff, size_t len); // Error
 		size_t readImpl(ptr buff, size_t len); // EofException
 
-		static filetime_t getLastModifiedTime(pcwstr filename); // FileException
+		static filetime_t getLastModifiedTime(pcwstr filename); // Error
 		filetime_t getLastModifiedTime() noexcept;
 		filetime_t getCreationTime() noexcept;
 		bool setModifyTime(filetime_t t) noexcept;
@@ -197,8 +197,8 @@ namespace kr
 
 	private:
 #ifdef WIN32
-		static File * _createFile(pcstr str, dword Access, dword ShareMode, dword Disposition); // FileException
-		static File * _createFile(pcwstr str, dword Access, dword ShareMode, dword Disposition); // FileException
+		static File * _createFile(pcstr str, dword Access, dword ShareMode, dword Disposition); // Error
+		static File * _createFile(pcwstr str, dword Access, dword ShareMode, dword Disposition); // Error
 		void _movePointer(dword Method, int Move) noexcept;
 		void _movePointer(dword Method, llong Move) noexcept;
 #endif
@@ -274,8 +274,8 @@ namespace kr
 	class MappedFile:public Bufferable<MappedFile, BufferInfo<void, true, false, false, Empty>>
 	{
 	public:
-		MappedFile(File * file); // FileException, TooBigException
-		MappedFile(const wchar * filename); // FileException, TooBigException
+		MappedFile(File * file); // Error, TooBigException
+		MappedFile(const wchar * filename); // Error, TooBigException
 		~MappedFile() noexcept;
 		size_t size() const noexcept;
 		void * begin() noexcept;

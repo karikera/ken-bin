@@ -12,7 +12,7 @@ namespace kr
 	public:
 		DirectoryObserver() noexcept;
 		~DirectoryObserver() noexcept;
-		void start(const wchar * dir); // FileException
+		void start(const wchar * dir); // Error
 		void quit(int exitCode) noexcept;
 		int thread() noexcept;
 		virtual void onCreate(TextW name) noexcept = 0;

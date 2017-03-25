@@ -30,6 +30,6 @@ inline ATTR_NORETURN void lzmaError(int res)
 	case SZ_ERROR_PROGRESS:
 		throw kr::ThrowAbort();
 	default:
-		throw kr::FileException();
+		throw kr::Error();
 	}
 }

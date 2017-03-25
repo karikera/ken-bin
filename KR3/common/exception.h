@@ -15,7 +15,7 @@ namespace kr
 	struct InvalidSourceException:Exception {};
 	struct TooBigException:Exception {};
 
-	struct FileException:Exception {};
+	struct Error:Exception {};
 	struct QuitException:Exception
 	{
 		int exitCode;

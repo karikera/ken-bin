@@ -34,8 +34,8 @@ namespace kr
 		void linkSzBuf(Text name, char (&buf)[sz]) noexcept;
 		template <size_t sz>
 		void linkSzBuf(Text name, wchar(&buf)[sz]) noexcept;
-		void save(pcwstr filename); // FileException
-		void load(pcwstr filename); // EofException, InvalidSourceException, FileException
+		void save(pcwstr filename); // Error
+		void load(pcwstr filename); // EofException, InvalidSourceException, Error
 	};
 
 

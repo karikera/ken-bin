@@ -151,8 +151,7 @@ namespace kr
 		template <typename T, bool aligned>
 		inline const matrix<T, 4, 4, aligned> matrix_method<T, 4, 4, aligned>::inverse() const noexcept
 		{
-			_assert(!"TODO: implement");
-			return matrix<T, 4, 4, aligned>();
+			notImplemented();
 		}
 		template <typename T, bool aligned>
 		ATTR_INLINE void matrix_method<T, 4, 4, aligned>::scaling(T scale) noexcept

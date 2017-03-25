@@ -50,8 +50,8 @@ namespace kr
 	{
 	public:
 		MemoryPage() noexcept;
-		MemoryPage(pcwstr path); // FileException, TooBigException
-		MemoryPage(Text header, pcwstr path); // FileException
+		MemoryPage(pcwstr path); // Error, TooBigException
+		MemoryPage(Text header, pcwstr path); // Error
 		MemoryPage(const MemoryPage& _copy) noexcept;
 		MemoryPage(MemoryPage&& _move) noexcept;
 		~MemoryPage() noexcept;

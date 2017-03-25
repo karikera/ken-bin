@@ -94,7 +94,7 @@ namespace kr
 		void close() noexcept;
 		Text get() noexcept;
 		bool next(); // SocketException
-		void download(pcwstr filename); // FileException
+		void download(pcwstr filename); // Error
 
 		size_t readImpl(char * dest, size_t size);
 	

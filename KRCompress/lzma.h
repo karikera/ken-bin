@@ -127,7 +127,7 @@ namespace kr
 	void getLZMAProperty(LZMA_PROP * pDest);
 
 	/**
-	@throws {FileException}
+	@throws {Error}
 	*/
 	void compressFile(pcwstr strDest, pcwstr strSource);
 
