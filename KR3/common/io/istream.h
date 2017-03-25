@@ -29,6 +29,12 @@ namespace kr
 			{
 				return static_cast<Derived*>(this)->skipImpl(sz);
 			}
+			inline Alc readAll() noexcept
+			{
+				Alc out;
+				static_cast<Derived*>(this)->readAll(&out);
+				return out;
+			}
 
 			template <typename T> T readas() // EofException
 			{
@@ -245,21 +251,21 @@ namespace kr
 		INHERIT_COMPONENT();
 		using Super::Super;
 		using Super::read;
+		using Super::readAll;
 
-		inline Alc readAll() noexcept
+		template <class _Derived, class _Parent>
+		inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) noexcept
 		{
-			Alc out;
 			try
 			{
 				for (;;)
 				{
-					read(&out, 4096);
+					read(os, 4096);
 				}
 			}
 			catch (EofException&)
 			{
 			}
-			return out;
 		}
 		template <class _Derived, class _Parent>
 		inline size_t read(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os, size_t size)

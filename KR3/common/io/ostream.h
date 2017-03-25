@@ -133,7 +133,101 @@ namespace kr
 
 		template <class Derived, class Parent>
 		class OStream_cmpComponent<Derived, AutoComponent, StreamInfo<false, Parent>>;
+
+		template <typename OS, typename IS, bool os_buffered, bool is_buffered, size_t BSIZE>
+		class Pipe
+		{
+		public:
+			static constexpr size_t BUFFER_SIZE = BSIZE != -1 ? BSIZE : 8192;
+			static_assert(is_same<typename IS::Component, typename OS::Component>::value, "Is not same type");
+			using Component = typename OS::Component;
+
+			Pipe(OS * os, IS * is) noexcept
+				:m_buffer(_new byte[BUFFER_SIZE])
+			{
+				m_is = is;
+				m_os = os;
+				m_readp = m_writep = (Component*)(byte*)m_buffer;
+			}
+
+			void streaming()
+			{
+				if (m_writep == m_readp)
+				{
+					m_readp = m_writep = (Component*)(byte*)m_buffer;
+					size_t readed = m_is->read(m_writep, BUFFER_SIZE / sizeof(Component));
+					m_writep += readed;
+				}
+				m_os->write(m_readp, m_writep - m_readp);
+				m_readp = m_writep;
+			}
+
+		private:
+			IS* m_is;
+			OS* m_os;
+			Must<byte> m_buffer;
+			Component * m_writep;
+			Component * m_readp;
+
+		};
+
+		template <typename OS, typename IS, bool os_buffered>
+		class Pipe<OS, IS, os_buffered, true, -1>
+		{
+		public:
+			static_assert(is_same<typename IS::Component, typename OS::Component>::value, "Is not same type");
+			using Component = typename OS::Component;
+
+			Pipe(OS * os, IS * is) noexcept
+			{
+				m_is = is;
+				m_os = os;
+			}
+			bool streaming()
+			{
+				const Component * src = m_is->read(&size);
+				m_os->write(src, size);
+			}
+		private:
+			IS* m_is;
+			OS* m_os;
+		};
+
+		template <typename OS, typename IS>
+		class Pipe<OS, IS, true, false, -1>
+		{
+		public:
+			static_assert(is_same<typename IS::Component, typename OS::Component>::value, "Is not same type");
+			using Component = typename OS::Component;
+			static constexpr size_t MINIMUM_BUFFER = 2048;
+
+			Pipe(OS * os, IS * is) noexcept
+			{
+				m_is = is;
+				m_os = os;
+			}
+			bool streaming()
+			{
+				if (m_os->left() < MINIMUM_BUFFER) m_os->padding(MINIMUM_BUFFER);
+				size_t sz = m_is->read(m_os->end(), m_os->left());
+				m_os->commit(sz);
+				return true;
+			}
+		private:
+			IS* m_is;
+			OS* m_os;
+		};
 	}
+
+	template <typename OS, typename IS, size_t BSIZE = -1> class Pipe
+		: public _pri_::Pipe<OS, IS, OS::accessable, IS::accessable, BSIZE>
+	{
+		static_assert(IsIStream<IS>::value, "IS is not InStream");
+		static_assert(IsOStream<OS>::value, "OS is not OutStream");
+		CLASS_HEADER(Pipe, _pri_::Pipe<OS, IS, OS::accessable, IS::accessable, BSIZE>);
+	public:
+		using Super::Super;
+	};
 
 	template <class Derived, typename Component, typename Info>
 	class OutStream :public _pri_::OStream_cmpComponent<Derived, Component, Info>
@@ -157,6 +251,19 @@ namespace kr
 		void write(Ref data) // NotEnoughSpaceException
 		{
 			write(data.begin(), data.size());
+		}
+
+		template <typename _Derived, typename _Info>
+		void passThrough(InStream<_Derived, Component, _Info> * is)
+		{
+			try
+			{
+				Pipe<OutStream, InStream<_Derived, Component, _Info>> pipe(this, is);
+				for (;;) pipe.streaming();
+			}
+			catch (EofException&)
+			{
+			}
 		}
 
 		template <typename T>
@@ -213,4 +320,5 @@ namespace kr
 			}
 		};
 	}
+
 }

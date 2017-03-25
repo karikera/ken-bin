@@ -28,8 +28,31 @@ namespace kr
 	using DebugOutput16 = DebugOutputT<char16>;
 	using DebugOutputW = DebugOutputT<wchar>;
 
+
+	template <typename Derived, typename Component, typename Info = StreamInfo<false, Empty> >
+	class FlushOutStream : public OutStream<Derived, Component, Info>
+	{
+	public:
+		template <typename _Derived, typename _Info>
+		void passThrough(InStream<_Derived, Component, _Info> * is)
+		{
+			try
+			{
+				Pipe<FlushOutStream, InStream<_Derived, Component, _Info>> pipe(this, is);
+				for (;;)
+				{
+					pipe.streaming();
+					static_cast<Derived*>(this)->flush();
+				}
+			}
+			catch (EofException&)
+			{
+			}
+		}
+	};
+
 	template <ConsoleType type, typename C>
-	class ConsoleOutputStream: public OutStream<ConsoleOutputStream<type, C>, C>
+	class ConsoleOutputStream: public FlushOutStream<ConsoleOutputStream<type, C>, C>
 	{
 	public:
 		void flush() noexcept;
@@ -40,7 +63,7 @@ namespace kr
 
 	template <typename C>
 	class ConsoleOutputStream<ConsoleType::Debug, C> :
-		public OutStream<ConsoleOutputStream<ConsoleType::Debug, C>, C>
+		public FlushOutStream<ConsoleOutputStream<ConsoleType::Debug, C>, C>
 	{
 	public:
 		void writeImpl(const C *chr, size_t sz) noexcept;
@@ -52,7 +75,7 @@ namespace kr
 #ifdef WIN32
 	template <>
 	class ConsoleOutputStream<ConsoleType::Debug, wchar> :
-		public OutStream<ConsoleOutputStream<ConsoleType::Debug, wchar>, wchar>
+		public FlushOutStream<ConsoleOutputStream<ConsoleType::Debug, wchar>, wchar>
 	{
 	public:
 		ConsoleOutputStream() noexcept;

@@ -15,6 +15,7 @@ namespace kr
 			using Component = typename Base::Component;
 			using m = memt<sizeof(Component)>;
 			using Ref = RefArray<Component>;
+			using TSZ = TempSzText<Component>;
 
 			using Super::read;
 			using Super::base;
@@ -47,7 +48,6 @@ namespace kr
 			{
 				resetStream(p->template retype<Component>());
 			}
-
 
 			Component peek()
 			{
@@ -111,6 +111,12 @@ namespace kr
 				dest->write(m_read, copylen);
 				m_read += len + 1;
 				return readed + len;
+			}
+			TSZ readLine()
+			{
+				TSZ tsz;
+				readLine(&tsz);
+				return tsz;
 			}
 			size_t skipLine()
 			{
@@ -376,41 +382,51 @@ namespace kr
 			{
 				return RefArray<Component>(m_read, m_filled);
 			}
-			size_t readImpl(Component * data, size_t sz)
+			size_t readImpl(Component * dest, size_t need)
 			{
-				Component* dest = data;
-				Component* destto = dest + sz;
+				{
+					Component* readto = m_read + need;
+					if (m_filled >= readto)
+					{
+						mema::copy(dest, m_read, need);
+						m_read = readto;
+						return need;
+					}
+				}
+
+				size_t left = m_filled - m_read;
+				mema::copy(dest, m_read, left);
+				dest += left;
+				size_t neednext = need - left;
+				if (neednext >= BUFFER_SIZE)
+				{
+					m_filled = m_read = m_buffer;
+					size_t readed = base()->read(dest, BUFFER_SIZE);
+					return left + readed;
+				}
 
 				try
 				{
-					for (;;)
+					size_t readed = base()->read(m_buffer, BUFFER_SIZE);
+					if (readed >= neednext)
 					{
-						{
-							size_t need = destto - dest;
-							Component* readto = m_read + need;
-							if (m_filled >= readto)
-							{
-								mema::copy(dest, m_read, need);
-								m_read = readto;
-								dest = destto;
-								break;
-							}
-						}
-
-						size_t left = m_filled - m_read;
-						mema::copy(dest, m_read, left);
-						dest += left;
-						m_read = m_buffer;
-
-						size_t res = base()->read(m_buffer, BUFFER_SIZE);
-						m_filled = m_read + res;
+						mema::copy(dest, m_buffer, neednext);
+						m_read = m_buffer + neednext;
+						m_filled = m_buffer + readed;
+						return need;
+					}
+					else
+					{
+						mema::copy(dest, m_buffer, readed);
+						m_filled = m_read = m_buffer;
+						return left + readed;
 					}
 				}
 				catch (EofException&)
 				{
-					if (dest == data) throw;
+					if (left == 0) throw;
+					return left;
 				}
-				return dest - data;
 			}
 
 		private:

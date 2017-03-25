@@ -6,10 +6,11 @@
 
 #include <KR3/main.h>
 #include <KR3/wl/windows.h>
+#include <KR3/io/bufferedstream.h>
 
 namespace kr
 {
-	class Process
+	class Process: public InStream<Process, char>
 	{
 	public:
 		enum Shell_t { Shell };
@@ -22,22 +23,13 @@ namespace kr
 		void close() noexcept;
 		void shell(TextW command, pcwstr curdir = nullptr) noexcept;
 		void exec(pcwstr fileName, pwstr parameter, pcwstr curdir = nullptr) noexcept;
-		void skipTo(char chr) noexcept;
-		void printTo(char chr) noexcept;
-		TSZ readTo(char chr) noexcept;
-		void passThrough() noexcept;
-		bool eof() noexcept;
+		size_t readImpl(char * dest, size_t sz);
 
 		DWORD getExitCode() noexcept;
 
 	private:
-		bool _read() noexcept;
-
 		HANDLE m_process;
 		HANDLE m_stdout_read;
-		char m_buffer[4096];
-		char * m_readed;
-		bool m_eof;
 
 	};
 }

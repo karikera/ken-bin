@@ -2,7 +2,6 @@
 
 #include <KRMessage/net/wsevent.h>
 #include <KR3/io/protocol.h>
-#include <KR3/io/pipe.h>
 #include <KR3/io/selfbufferedstream.h>
 #include <KR3/data/map.h>
 #include <KR3/data/crypt.h>
