@@ -35,6 +35,7 @@
 	}\
 	else{\
 		::kr::requestDebugger();\
+		__debugbreak();\
 	}\
 	::kr::terminate(-1);\
 } } while(0,0)
@@ -103,23 +104,21 @@ extern "C" void vem__debug_break();
 #define NEED_FILESYSTEM
 #endif
 
+#define debugOrDie() {\
+		if (::kr::requestDebugger())\
+			debug();\
+		::kr::terminate(-1);\
+	} while(0,0)
+
+#define notImplementedYet()	debugOrDie()
+#define unreachable()		debugOrDie()
+
 namespace kr
 {
 	bool CT_FASTCALL checkDebugging() noexcept;
-	void CT_FASTCALL requestDebugger() noexcept;
+	bool CT_FASTCALL requestDebugger() noexcept;
 	ATTR_NORETURN void CT_FASTCALL terminate(int err) noexcept;
 	ATTR_NORETURN void CT_FASTCALL notEnoughMemory() noexcept;
-	ATTR_NORETURN ATTR_INLINE void notImplemented() noexcept
-	{
-		_assert(!"not implemented yet");
-		abort();
-	}
-	ATTR_NORETURN ATTR_INLINE void unreachable()
-	{
-		_assert(!"unreachable code");
-		abort();
-	}
-
 	unsigned long long CT_FASTCALL rdtsc() noexcept;
 }
 

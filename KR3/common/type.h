@@ -45,11 +45,7 @@ namespace kr
 	using char32 = char32_t;
 	using pstr32 = ATTR_NULL_TERMINATED char32*;
 	using pcstr32 = ATTR_NULL_TERMINATED const char32*;
-
-	using wchar = wchar_t;
-	using pwstr = ATTR_NULL_TERMINATED wchar*;
-	using pcwstr = ATTR_NULL_TERMINATED const wchar*;
-
+	
 	template <size_t sz>
 	struct size_to_unicode;
 
@@ -63,11 +59,14 @@ namespace kr
 	template <size_t sz>
 	using size_to_unicode_t = typename size_to_unicode<sz>::type;
 
-	using unicode_wchar = size_to_unicode_t<sizeof(wchar)>;
-
+	template <typename T, size_t if_void>
+	struct sizeof_with_void { static constexpr size_t value = sizeof(T);  };
+	template <size_t if_void>
+	struct sizeof_with_void<void, if_void> { static constexpr size_t value = if_void; };
+	
 	#undef ptr_def
 	#undef ptr_typedef
-	
+
 	constexpr int eof = -1;
 		
 	class nullref_t final
@@ -117,7 +116,6 @@ namespace kr
 using std::nullptr_t;
 using kr::char16;
 using kr::char32;
-using kr::wchar;
 
 namespace kr
 {
@@ -138,7 +136,6 @@ namespace kr
 		using ::kr::pstr;	using ::kr::pcstr;
 		using ::kr::pstr16;	using ::kr::pcstr16;
 		using ::kr::pstr32;	using ::kr::pcstr32;
-		using ::kr::pwstr;	using ::kr::pcwstr;
 		using ::kr::filesize_t;
 	}
 }

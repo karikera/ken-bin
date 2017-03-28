@@ -21,17 +21,14 @@ using remove_constptr_t = remove_const_t<remove_pointer_t<T>>;
 	extern template class tclass##T<char>;\
 	extern template class tclass##T<char16>;\
 	extern template class tclass##T<char32>;\
-	extern template class tclass##T<wchar>;\
 	using tclass = tclass##T<char>;\
 	using tclass##16 = tclass##T<char16>;\
-	using tclass##32 = tclass##T<char32>;\
-	using tclass##W = tclass##T<wchar>;
+	using tclass##32 = tclass##T<char32>;
 
 #define DEFINE_FULL_CHAR_CLASS(tclass) \
 	template class tclass##T<char>;\
 	template class tclass##T<char16>;\
-	template class tclass##T<char32>;\
-	template class tclass##T<wchar>;
+	template class tclass##T<char32>;
 
 
 namespace kr

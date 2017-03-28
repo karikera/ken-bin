@@ -90,6 +90,46 @@ namespace kr
 		{
 			return Derived::decode(dest, m_data);
 		}
+
+		template <typename T>
+		class PassEncoder
+			: public Encoder<PassEncoder<T>, T, T>
+		{
+			using Super = Encoder<PassEncoder<T>, T, T>;
+		public:
+			using Super::Super;
+			using typename Super::Decoder;
+			using Text = typename Super::ToText;
+			using Writer = typename Super::ToWriter;
+
+			static size_t length(Text text) noexcept
+			{
+				return text.size();
+			}
+			static size_t encode(T * out, Text text) noexcept
+			{
+				mema::subs_copy(out, text.data(), text.size());
+				return text.size();
+			}
+			static void encode(Writer * out, Text * text) noexcept
+			{
+				out->passThrough(text);
+			}
+			static size_t delength(Text text) noexcept
+			{
+				return text.size();
+			}
+			static size_t decode(T * out, Text text) noexcept
+			{
+				mema::subs_copy(out, text.data(), text.size());
+				return text.size();
+			}
+			static void decode(Writer * out, Text * text) noexcept
+			{
+				out->passThrough(text);
+			}
+		};;
+
 	}
 	
 	namespace io

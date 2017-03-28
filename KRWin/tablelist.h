@@ -29,13 +29,13 @@ namespace kr
 			Edit(win::Window* pParent);
 			~Edit();
 			virtual void wndProc(win::Window* pWindow, uint Msg, WPARAM wParam, LPARAM lParam) override;
-			void open(const irect &rc, TextW strText);
+			void open(const irect &rc, Text16 strText);
 			void close();
 		};
 
 		struct ColumnHeader
 		{
-			TextW name;
+			Text16 name;
 			int right;
 			int width;
 
@@ -81,7 +81,7 @@ namespace kr
 
 		void resize(ivec2 sz) noexcept;
 		void setItemCount(size_t count);
-		void setColumnHeader(uint id, TextW text, int width) noexcept;
+		void setColumnHeader(uint id, Text16 text, int width) noexcept;
 		void setColumn(uint id, urectwh pos, ColumnType type, bool readonly) noexcept;
 		void setColumnCount(size_t sz) noexcept;
 
@@ -92,12 +92,12 @@ namespace kr
 		void draw(win::PaintStruct &dc) noexcept;
 
 		virtual void onGetItemInfo(ItemInfo * info) noexcept;
-		virtual void onGetItemText(upvec2 pos, WriterW * writer) noexcept;
+		virtual void onGetItemText(upvec2 pos, Writer16 * writer) noexcept;
 		virtual void onPreviousCursor() noexcept;
 		virtual void onNextCursor() noexcept;
 		virtual void onHeaderClick(uintp column, int sortdir) noexcept;
 		virtual void onSelect(upvec2 cursor) noexcept;
-		virtual void onChange(upvec2 cursor, TextW text) noexcept;
+		virtual void onChange(upvec2 cursor, Text16 text) noexcept;
 		virtual void onChangeBoolean(upvec2 cursor, bool v) noexcept;
 		virtual void onRButtonClick(upvec2 cursor, ivec2 mouse) noexcept;
 		void wndProc(win::Window* pWindow, uint Msg, WPARAM wParam, LPARAM lParam) override;

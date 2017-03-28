@@ -260,15 +260,17 @@ namespace kr
 				{
 					m_exp.exp = -len;
 					m_exp.explen = math::cipher(m_exp.exp, 10);
-					int decimal = (dword)lround(v * pow((T)10, -floored + max_size - 4 - m_exp.explen));
-					int size = max_size;
+					int declen_approxy = max_size - 4 - m_exp.explen;
+					if (declen_approxy < 3) declen_approxy = 3;
+					int decimal = (dword)lround(v * pow((T)10, declen_approxy - floored));
+					int declen = math::cipher(decimal, 10);
+					int size = declen + m_exp.explen + 2; // negative sign & e
 					while (decimal % 10 == 0)
 					{
 						decimal /= 10;
 						size--;
 					}
-					if (decimal < 10)
-						size--;
+					if (decimal >= 10) size++; // dot
 					m_exp.decimal = decimal;
 					m_mode = ExpMinus;
 					m_size = size;
@@ -331,15 +333,17 @@ namespace kr
 				{
 					m_exp.exp = len;
 					m_exp.explen = math::cipher(m_exp.exp, 10);
-					int decimal = (dword)lround(v * pow((T)10, -floored + max_size - 3 - m_exp.explen));
-					int size = max_size;
+					int declen_approxy = max_size - 3 - m_exp.explen;
+					if (declen_approxy < 3) declen_approxy = 3;
+					int decimal = (dword)lround(v * pow((T)10, -floored + declen_approxy));
+					int declen = math::cipher(decimal, 10);
+					int size = declen + m_exp.explen + 1; // e
 					while (decimal % 10 == 0)
 					{
 						decimal /= 10;
 						size--;
 					}
-					if (decimal < 10)
-						size--;
+					if (decimal >= 10) size++; // dot
 					m_exp.decimal = decimal;
 					m_mode = ExpPlus;
 					m_size = size;
@@ -370,70 +374,38 @@ namespace kr
 
 			switch (m_mode)
 			{
+			case ExpPlus:
 			case ExpMinus:
 			{
 				dword value = m_exp.exp;
 				C * to = end - m_exp.explen;
+				_assert(to <= end);
 				while (end != to)
 				{
-					end--;
-					*end = (C)(value % 10 + '0');
+					*--end = (C)(value % 10 + '0');
 					value /= 10;
 				}
-				end--;
-				*end = (C)'-';
-				end--;
-				*end = (C)'e';
+				if (m_mode == ExpMinus) *--end = (C)'-';
+				*--end = (C)'e';
 				value = m_exp.decimal;
 				if (m_exp.decimal < 10)
-					to = dest + 1;
+				{
+					*dest = (C)(value + '0');
+				}
 				else
-					to = dest + 2;
-				while (end != to)
 				{
-					end--;
-					*end = (C)(value % 10 + '0');
-					value /= 10;
+					to = dest + 2; // major and dot
+					_assert(to <= end);
+					while (end != to)
+					{
+						end--;
+						*end = (C)(value % 10 + '0');
+						value /= 10;
+					}
+					_assert(dest == to - 2);
+					dest[0] = (C)(value + '0');
+					dest[1] = (C)'.';
 				}
-				if (m_exp.decimal >= 10)
-				{
-					end--;
-					*end = '.';
-				}
-				end--;
-				*end = (C)(value + '0');
-				break;
-			}
-			case ExpPlus:
-			{
-				dword value = m_exp.exp;
-				C * to = end - m_exp.explen;
-				while (end != to)
-				{
-					end--;
-					*end = (C)(value % 10 + '0');
-					value /= 10;
-				}
-				end--;
-				*end = (C)'e';
-				value = m_exp.decimal;
-				if (m_exp.decimal < 10)
-					to = dest + 1;
-				else
-					to = dest + 2;
-				while (end != to)
-				{
-					end--;
-					*end = (C)(value % 10 + '0');
-					value /= 10;
-				}
-				if (m_exp.decimal >= 10)
-				{
-					end--;
-					*end = '.';
-				}
-				end--;
-				*end = (C)(value + '0');
 				break;
 			}
 			case Decimal:

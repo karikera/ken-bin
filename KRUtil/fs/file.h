@@ -38,31 +38,31 @@ namespace kr
 		static File* createAndReadT(const CHR * str); // Error
 
 		static File* create(const char * str) { return createT(str); }
-		static File* create(const wchar * str) { return createT(str); }
+		static File* create(const char16 * str) { return createT(str); }
 		static File* open(const char * str) { return openT(str); }
-		static File* open(const wchar * str) { return openT(str); }
+		static File* open(const char16 * str) { return openT(str); }
 		static File* openAndWrite(const char * str) { return openAndWriteT(str); }
-		static File* openAndWrite(const wchar * str) { return openAndWriteT(str); }
+		static File* openAndWrite(const char16 * str) { return openAndWriteT(str); }
 		static File* createAndRead(const char * str) { return createAndReadT(str); }
-		static File* createAndRead(const wchar * str) { return createAndReadT(str); }
+		static File* createAndRead(const char16 * str) { return createAndReadT(str); }
 		static void operator delete(ptr p) noexcept;
 
 		//DefineWritablePropertySZ(File, name, GetName, CPUTF16);
 
-		static bool exists(pcwstr src) noexcept;
-		static bool copy(pcwstr dest, pcwstr src) noexcept;
-		static bool move(pcwstr dest, pcwstr src) noexcept;
-		static bool copyTree(pcwstr dest, pcwstr src) noexcept;
-		static bool toJunk(pcwstr src) noexcept;
+		static bool exists(pcstr16 src) noexcept;
+		static bool copy(pcstr16 dest, pcstr16 src) noexcept;
+		static bool move(pcstr16 dest, pcstr16 src) noexcept;
+		static bool copyTree(pcstr16 dest, pcstr16 src) noexcept;
+		static bool toJunk(pcstr16 src) noexcept;
 		static bool clearJunk() noexcept;
-		static bool remove(pcwstr str) noexcept;
-		static bool isFile(pcwstr str) noexcept;
-		static bool isDirectory(pcwstr str) noexcept;
-		static bool isDirectoryModified(TextW dir, filetime_t axis) noexcept;
-		static bool createDirectory(pcwstr str) noexcept;
-		static bool createFullDirectory(TextW str) noexcept;
-		static bool removeFullDirectory(TextW path) noexcept;
-		static bool removeShell(TextW path) noexcept;
+		static bool remove(pcstr16 str) noexcept;
+		static bool isFile(pcstr16 str) noexcept;
+		static bool isDirectory(pcstr16 str) noexcept;
+		static bool isDirectoryModified(Text16 dir, filetime_t axis) noexcept;
+		static bool createDirectory(pcstr16 str) noexcept;
+		static bool createFullDirectory(Text16 str) noexcept;
+		static bool removeFullDirectory(Text16 path) noexcept;
+		static bool removeShell(Text16 path) noexcept;
 
 		template <typename T>
 		inline Array<T> readAll() // TooBigException
@@ -92,9 +92,9 @@ namespace kr
 			return openAsArrayT<T,char>(name);
 		}
 		template <typename T>
-		static inline Array<T> openAsArray(const wchar * name) // TooBigException, Error
+		static inline Array<T> openAsArray(const char16 * name) // TooBigException, Error
 		{
-			return openAsArrayT<T, wchar>(name);
+			return openAsArrayT<T, char16>(name);
 		}
 		template <typename T, typename CHR>
 		static inline Array<T> openAsArrayTempT(const CHR * name) // TooBigException, Error
@@ -108,9 +108,9 @@ namespace kr
 			return openAsArrayTempT<T, char>(name);
 		}
 		template <typename T>
-		static inline Array<T> openAsArrayTemp(const wchar * name) // TooBigException, Error
+		static inline Array<T> openAsArrayTemp(const char16 * name) // TooBigException, Error
 		{
-			return openAsArrayTempT<T, wchar>(name);
+			return openAsArrayTempT<T, char16>(name);
 		}
 		template <typename T, typename CHR>
 		static inline void writeAsArrayT(const CHR * name, RefArray<T> & arr) // TooBigException, Error
@@ -124,7 +124,7 @@ namespace kr
 			return writeAsArrayT(name, arr);
 		}
 		template <typename T>
-		static inline void writeFromArray(const wchar * name, RefArray<T> & arr) // Error
+		static inline void writeFromArray(const char16 * name, RefArray<T> & arr) // Error
 		{
 			return writeAsArrayT(name, arr);
 		}
@@ -157,7 +157,7 @@ namespace kr
 		void writeImpl(cptr buff, size_t len); // Error
 		size_t readImpl(ptr buff, size_t len); // EofException
 
-		static filetime_t getLastModifiedTime(pcwstr filename); // Error
+		static filetime_t getLastModifiedTime(pcstr16 filename); // Error
 		filetime_t getLastModifiedTime() noexcept;
 		filetime_t getCreationTime() noexcept;
 		bool setModifyTime(filetime_t t) noexcept;
@@ -198,7 +198,7 @@ namespace kr
 	private:
 #ifdef WIN32
 		static File * _createFile(pcstr str, dword Access, dword ShareMode, dword Disposition); // Error
-		static File * _createFile(pcwstr str, dword Access, dword ShareMode, dword Disposition); // Error
+		static File * _createFile(pcstr16 str, dword Access, dword ShareMode, dword Disposition); // Error
 		void _movePointer(dword Method, int Move) noexcept;
 		void _movePointer(dword Method, llong Move) noexcept;
 #endif
@@ -239,12 +239,12 @@ namespace kr
 	public:
 		FindFile() noexcept;
 		~FindFile() noexcept;
-		FindFile(pcwstr file) noexcept;
+		FindFile(pcstr16 file) noexcept;
 		FindFile(FindFile && o) noexcept;
 		FindFile& operator =(FindFile && o) noexcept;
 
 		bool exists() noexcept;
-		const wchar * getFileName() noexcept;
+		const char16 * getFileName() noexcept;
 		bool isDirectory() noexcept;
 		bool next() noexcept;
 		filetime_t getLastModifiedTime() noexcept;
@@ -254,7 +254,7 @@ namespace kr
 		public:
 			Iterator(FindFile * ff) noexcept;
 			Iterator& operator ++() noexcept;
-			const wchar * operator *() noexcept;
+			const char16 * operator *() noexcept;
 			bool operator == (const Iterator & o) noexcept;
 			bool operator != (const Iterator & o) noexcept;
 		private:
@@ -275,7 +275,7 @@ namespace kr
 	{
 	public:
 		MappedFile(File * file); // Error, TooBigException
-		MappedFile(const wchar * filename); // Error, TooBigException
+		MappedFile(const char16 * filename); // Error, TooBigException
 		~MappedFile() noexcept;
 		size_t size() const noexcept;
 		void * begin() noexcept;
@@ -296,34 +296,34 @@ namespace kr
 	public:
 		DirectoryScanner() noexcept;
 		template <typename LAMBDA>
-		void scan(TextW path, const LAMBDA &lambda) noexcept;
+		void scan(Text16 path, const LAMBDA &lambda) noexcept;
 		template <typename LAMBDA>
-		void scanWithThis(TextW path, const LAMBDA &lambda) noexcept;
-		pcwstr getSzName() noexcept;
-		TextW getPathText() noexcept;
-		TextW getRelativeText(TextW path) noexcept;
-		pcwstr getRelativeSzName(TextW path) noexcept;
+		void scanWithThis(Text16 path, const LAMBDA &lambda) noexcept;
+		pcstr16 getSzName() noexcept;
+		Text16 getPathText() noexcept;
+		Text16 getRelativeText(Text16 path) noexcept;
+		pcstr16 getRelativeSzName(Text16 path) noexcept;
 
 	private:
 		template <typename LAMBDA>
-		void _scanOpen(TextW path, const LAMBDA &lambda) noexcept;
+		void _scanOpen(Text16 path, const LAMBDA &lambda) noexcept;
 
-		BTextW<File::NAMELEN> m_path;
-		pcwstr m_dircut;
+		BText16<File::NAMELEN> m_path;
+		pcstr16 m_dircut;
 	};
 
 	template <typename LAMBDA>
-	void DirectoryScanner::scan(TextW path, const LAMBDA &lambda) noexcept
+	void DirectoryScanner::scan(Text16 path, const LAMBDA &lambda) noexcept
 	{
-		pcwstr olddircut = m_dircut;
+		pcstr16 olddircut = m_dircut;
 		_scanOpen(path, lambda);
 		m_dircut = olddircut;
 	}
 
 	template <typename LAMBDA>
-	void DirectoryScanner::scanWithThis(TextW path, const LAMBDA &lambda) noexcept
+	void DirectoryScanner::scanWithThis(Text16 path, const LAMBDA &lambda) noexcept
 	{
-		pcwstr olddircut = m_dircut;
+		pcstr16 olddircut = m_dircut;
 		_scanOpen(path, lambda);
 		m_path.cut_self(m_dircut - 1);
 		lambda(m_path);
@@ -331,25 +331,25 @@ namespace kr
 	}
 
 	template <typename LAMBDA>
-	void DirectoryScanner::_scanOpen(TextW path, const LAMBDA &lambda) noexcept
+	void DirectoryScanner::_scanOpen(Text16 path, const LAMBDA &lambda) noexcept
 	{
 		m_path.cut_self(m_dircut);
 		m_path << path;
 
 		m_dircut = m_path.end() + 1;
-		m_path << L"/*.*" << nullterm;
+		m_path << u"/*.*" << nullterm;
 		Temp<FindFile> file(m_path.begin());
 
 		if (file->exists()) do
 		{
 			if (file->isDirectory())
 			{
-				scanWithThis((TextW)file->getFileName(), lambda);
+				scanWithThis((Text16)file->getFileName(), lambda);
 			}
 			else
 			{
 				m_path.cut_self(m_dircut);
-				m_path << (TextW)file->getFileName();
+				m_path << (Text16)file->getFileName();
 				lambda(m_path);
 			}
 		}

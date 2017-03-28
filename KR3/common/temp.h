@@ -12,7 +12,10 @@ namespace kr
 		{
 			AllocHead * next;
 			AllocHead * previous;
-			byte * use;
+			byte * usefrom;
+			byte * useto;
+
+			static AllocHead * get(void * p) noexcept;
 		};
 
 		struct Node
@@ -32,7 +35,7 @@ namespace kr
 			ATTR_CHECK_RETURN size_t msize(void * data) noexcept;
 
 		private:
-			ATTR_CHECK_RETURN autoptr _allocate(AllocHead * head, byte * useto) noexcept;
+			ATTR_CHECK_RETURN autoptr _allocate(AllocHead * head, byte * usefrom, byte * useto) noexcept;
 			ATTR_CHECK_RETURN bool _expandTo(pbyte to) noexcept;
 		};
 

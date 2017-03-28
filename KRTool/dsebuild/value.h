@@ -7,7 +7,7 @@ class Value: public Identity
 public:
 	Value(Class * type, AText name);
 	virtual ~Value();
-	Keep<Identity> find(Text str) override; // Error
+	Keep<Identity> find(Text str) override; // ErrMessage
 	virtual Class* getType() noexcept;
 	virtual Value* getMaxValue();
 	Keep<Value> getSizeOf(Function * szof) override;

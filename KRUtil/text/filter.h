@@ -30,16 +30,16 @@ public:
 
 	ChatFilter() noexcept;
 
-	ChatFilter(initializer_list<TextW> texts) noexcept;
+	ChatFilter(initializer_list<Text16> texts) noexcept;
 
 	// 필터에 문자열 추가
-	ChatFilter& operator <<(TextW text) noexcept;
+	ChatFilter& operator <<(Text16 text) noexcept;
 
 	// 필터된 문자열 범위 가져오기
-	Array<Range> check(TextW text, size_t offset = 0) const noexcept;
+	Array<Range> check(Text16 text, size_t offset = 0) const noexcept;
 
 	// 필터된 문자열 범위 가져오기
-	Array<Range> check(TextW text, Context * ctx, size_t offset = 0) const noexcept;
+	Array<Range> check(Text16 text, Context * ctx, size_t offset = 0) const noexcept;
 
 private:
 	// Node::children에서 index 마스크
@@ -57,5 +57,5 @@ private:
 	// 자식 노드 생성
 	Node* _makeChild(Node * node, size_t index) noexcept;
 
-	const Node* _check(Array<Range> *out, TextW text, const Node * startNode, size_t offset) const noexcept;
+	const Node* _check(Array<Range> *out, Text16 text, const Node * startNode, size_t offset) const noexcept;
 };

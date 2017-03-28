@@ -10,7 +10,7 @@ namespace kr
 	{
 		struct EMPTY_MEM_STRUCT
 		{
-			byte temp[16];
+			size_t buffer[16/sizeof(size_t)];
 		};
 		extern const EMPTY_MEM_STRUCT ZERO_MEMORY;
 		template <typename T> struct ZeroVarValueRef

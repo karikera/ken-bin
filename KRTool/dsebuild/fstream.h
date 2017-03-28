@@ -4,7 +4,7 @@
 #include "common.h"
 #include <fstream>
 
-class Error;
+class ErrMessage;
 class InFile;
 class OutFile;
 
@@ -69,7 +69,7 @@ template <typename LAMBDA, size_t size> char filter(LAMBDA lambda, const char(&_
 	char det = lambda();
 	if(memchr(_mask, det, size-1) == nullptr)
 	{
-		throw Error("Invalid character \'%c\' need '%s'", det, _mask);
+		throw ErrMessage("Invalid character \'%c\' need '%s'", det, _mask);
 	}
 	return det;
 }

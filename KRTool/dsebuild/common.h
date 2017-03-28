@@ -6,20 +6,27 @@
 #include <list>
 #include <unordered_map>
 
+using namespace kr;
+using std::bad_alloc;
+using std::unordered_map;
+using std::list;
+using std::string;
+using std::wstring;
+using std::hash;
+using std::ifstream;
+using std::ofstream;
 
-using namespace std;
-
-class Error
+class ErrMessage
 {
 public:
-	Error(ATTR_FORMAT const char * msg, ...);
-	void print();
+	ErrMessage(ATTR_FORMAT const char * msg, ...) noexcept;
+	void print() noexcept;
 
 private:
 	char m_message[1024];
 };
 
-extern wstring g_filename;
+extern AText16 g_filename;
 extern int g_line;
 
 void must(char chr, char must);

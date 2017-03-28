@@ -1,6 +1,5 @@
 #pragma once
 
-#include <stdint.h>
 #include "canvas.h"
 
 namespace kr
@@ -39,7 +38,7 @@ namespace kr
 		void strokeOval(float x, float y, float width, float height) noexcept;
 		void fillOval(float x, float y, float width, float height) noexcept;
 		void fillText(Text text, float x, float y) noexcept;
-		void fillText(TextW text, float x, float y) noexcept;
+		void fillText(Text16 text, float x, float y) noexcept;
 
 		void beginPath() noexcept;
 		void closePath() noexcept;

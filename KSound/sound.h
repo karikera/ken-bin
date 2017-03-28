@@ -34,9 +34,9 @@ namespace kr
 			using Keep::operator =;
 
 			bool createMonotone(dword dwSize, dword uVolume, dword uFrequency, int lPan) noexcept;
-			dword loadFromWaveFile(pcwstr str) noexcept;
-			dword loadFromOggFile(pcwstr str) noexcept;
-			dword loadFromFileAuto(pcwstr str) noexcept;
+			dword loadFromWaveFile(pcstr16 str) noexcept;
+			dword loadFromOggFile(pcstr16 str) noexcept;
+			dword loadFromFileAuto(pcstr16 str) noexcept;
 
 			bool play() noexcept;
 			bool dupPlay() noexcept;

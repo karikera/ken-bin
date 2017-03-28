@@ -19,8 +19,8 @@ namespace kr
 			};;
 		}
 
-		template <bool b, typename A, typename B> using if_type = typename _pri_::if_type_impl<b,A,B>::type;
-		template <typename A, typename B, typename RA, typename RB> using if_same = if_type<is_same<A,B>::value, RA, RB>;
-		template <typename Base, typename Der, typename RA, typename RB> using if_base_of = if_type<is_base_of<Base, Der>::value, RA, RB>;
+		template <bool b, typename A, typename B> using if_t = typename _pri_::if_type_impl<b,A,B>::type;
+		template <typename A, typename B, typename RA, typename RB> using if_same_t = if_t<is_same<A,B>::value, RA, RB>;
+		template <typename Base, typename Der, typename RA, typename RB> using if_base_of_t = if_t<is_base_of<Base, Der>::value, RA, RB>;
 	}
 }

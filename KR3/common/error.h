@@ -28,9 +28,9 @@ namespace kr
 
 	};
 
-	template <> TempSzText<char> ErrorCode::getMessage<char>() const noexcept;
-	template <> TempSzText<wchar> ErrorCode::getMessage<wchar>() const noexcept;
+	template <> TSZ ErrorCode::getMessage<char>() const noexcept;
+	template <> TSZ16 ErrorCode::getMessage<char16>() const noexcept;
 	
-	void errorBox(pcwstr str) noexcept;
+	void errorBox(pcstr16 str) noexcept;
 
 }

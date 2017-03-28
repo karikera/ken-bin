@@ -86,7 +86,7 @@ namespace kr
 		public:
 			GDIObject() = delete;
 			static Font* create(const char* name, int height, int weight = FW_NORMAL) noexcept;
-			static Font* create(const wchar* name, int height, int weight = FW_NORMAL) noexcept;
+			static Font* create(const char16* name, int height, int weight = FW_NORMAL) noexcept;
 			static Font* create(const LOGFONTA & font) noexcept;
 			static Font* create(const LOGFONTW & font) noexcept;
 			static Font* createSystemFont() noexcept;
@@ -94,7 +94,7 @@ namespace kr
 			bool getObject(LOGFONTA * lf) noexcept;
 			bool getObject(LOGFONTW * lf) noexcept;
 			int getHeight() noexcept;
-			void getName(WriterW * writer) noexcept;
+			void getName(Writer16 * writer) noexcept;
 
 		};
 		template <> class GDIObject<HBITMAP__>:public GDIObjectBase<HBITMAP__>
@@ -103,7 +103,7 @@ namespace kr
 			GDIObject() = delete;
 			static Bitmap * create(HDC hDC,int w,int h) noexcept;
 			static Bitmap * load(const char * strFileName, uint fuLoad = LR_LOADFROMFILE) noexcept;
-			static Bitmap * load(const wchar * strFileName, uint fuLoad = LR_LOADFROMFILE) noexcept;
+			static Bitmap * load(const char16 * strFileName, uint fuLoad = LR_LOADFROMFILE) noexcept;
 
 			bool getObject(BITMAP *bmp) noexcept;
 		};
@@ -142,9 +142,9 @@ namespace kr
 			int clip(RGN * rgn) noexcept;
 
 			int getTextWidth(pcstr str,size_t len) noexcept;
-			int getTextWidth(pcwstr str,size_t len) noexcept;
+			int getTextWidth(pcstr16 str,size_t len) noexcept;
 			int getTextWidth(Text str) noexcept;
-			int getTextWidth(TextW str) noexcept;
+			int getTextWidth(Text16 str) noexcept;
 			int getTextHeight() noexcept;
 			bool getTextMetrics(TEXTMETRICA * metric) noexcept;
 			bool getTextMetrics(TEXTMETRICW * metric) noexcept;
@@ -157,7 +157,7 @@ namespace kr
 			template <typename T> void textWrite(RefArray<T> str, ivec2* pt) noexcept;
 			template <typename T> void textWrite(RefArray<T> str, ivec2* pt, irectwh* rc, bool nodraw = false) noexcept;
 			int drawText(Text text, irect* lprc, uint format) noexcept;
-			int drawText(TextW text, irect* lprc, uint format) noexcept;
+			int drawText(Text16 text, irect* lprc, uint format) noexcept;
 			dword getGlyphOutlineA(
 				uint uChar,
 				uint fuFormat,
@@ -200,6 +200,7 @@ namespace kr
 			int getROP2() noexcept;
 			int setMapMode(int nMode) noexcept;
 			int getMapMode() noexcept;
+			void setWorldTransform() noexcept;
 			bool setInputRange(ivec2 pt, ivec2 * pPrevious = nullptr) noexcept;
 			bool setInputOffset(ivec2 pt, ivec2 * pPrevious = nullptr) noexcept;
 			bool setOutputRange(ivec2 pt, ivec2 * pPrevious = nullptr) noexcept;
@@ -211,7 +212,7 @@ namespace kr
 			bool setInputRect(const irectwh &rc) noexcept;
 			bool setOutputRect(const irectwh &rc) noexcept;
 	
-			void drawOutline(ivec2 wpt, wchar chr, const fixedmatrix2 &mat=fixedmatrix2(1, 0, 0, 1)) noexcept;
+			void drawOutline(ivec2 wpt, char16 chr, const fixedmatrix2 &mat=fixedmatrix2(1, 0, 0, 1)) noexcept;
 			JOB startDoc(const DOCINFOW* pInfo) noexcept;
 			bool startPage() noexcept;
 			bool endPage() noexcept;
@@ -261,10 +262,10 @@ namespace kr
 		extern template void DrawContext::textOut<char>(RefArray<char> str, ivec2 pt) noexcept;
 		extern template void DrawContext::textWrite<char>(RefArray<char> str, ivec2* pt) noexcept;
 		extern template void DrawContext::textWrite<char>(RefArray<char> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
-		extern template void DrawContext::textOut<wchar>(const wchar * str, size_t len, ivec2 pt) noexcept;
-		extern template void DrawContext::textOut<wchar>(RefArray<wchar> str, ivec2 pt) noexcept;
-		extern template void DrawContext::textWrite<wchar>(RefArray<wchar> str, ivec2* pt) noexcept;
-		extern template void DrawContext::textWrite<wchar>(RefArray<wchar> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
+		extern template void DrawContext::textOut<char16>(const char16 * str, size_t len, ivec2 pt) noexcept;
+		extern template void DrawContext::textOut<char16>(RefArray<char16> str, ivec2 pt) noexcept;
+		extern template void DrawContext::textWrite<char16>(RefArray<char16> str, ivec2* pt) noexcept;
+		extern template void DrawContext::textWrite<char16>(RefArray<char16> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
 
 		class ObjectSelector
 		{

@@ -33,9 +33,9 @@ namespace kr
 		template <size_t sz>
 		void linkSzBuf(Text name, char (&buf)[sz]) noexcept;
 		template <size_t sz>
-		void linkSzBuf(Text name, wchar(&buf)[sz]) noexcept;
-		void save(pcwstr filename); // Error
-		void load(pcwstr filename); // EofException, InvalidSourceException, Error
+		void linkSzBuf(Text name, char16(&buf)[sz]) noexcept;
+		void save(pcstr16 filename); // Error
+		void load(pcstr16 filename); // EofException, InvalidSourceException, Error
 	};
 
 
@@ -196,7 +196,7 @@ namespace kr
 		}
 	};
 	template <typename GET, typename SET>
-	class JsonConfig::ValLinkLambda<ATextW, GET, SET> :public ValLink
+	class JsonConfig::ValLinkLambda<AText16, GET, SET> :public ValLink
 	{
 	private:
 		GET m_get;
@@ -214,7 +214,7 @@ namespace kr
 		void save(io::FOStream<char> * fout) override
 		{
 			*fout << "\"" << name << "\": \"";
-			m_get().replace<WideToUtf8>(fout, L"\"", "\\\"");
+			m_get().replace<WideToUtf8>(fout, u"\"", "\\\"");
 			*fout << "\"";
 		}
 		void load(JsonParser * parser) override
@@ -251,7 +251,7 @@ namespace kr
 	};
 
 	template <typename GET, typename SET>
-	class JsonConfig::ValLinkLambda<TextW, GET, SET> :public ValLink
+	class JsonConfig::ValLinkLambda<Text16, GET, SET> :public ValLink
 	{
 	private:
 		GET m_get;
@@ -269,7 +269,7 @@ namespace kr
 		void save(io::FOStream<char> * fout) override
 		{
 			*fout << "\"" << name << "\": \"";
-			m_get().replace<WideToUtf8>(fout, L"\"", "\\\"");
+			m_get().replace<WideToUtf8>(fout, u"\"", "\\\"");
 			*fout << "\"";
 		}
 		void load(JsonParser * parser) override
@@ -358,14 +358,14 @@ namespace kr
 		});
 	}
 	template <size_t sz>
-	void JsonConfig::linkSzBuf(Text name, wchar(&buf)[sz]) noexcept
+	void JsonConfig::linkSzBuf(Text name, char16(&buf)[sz]) noexcept
 	{
 		link(name,
-			[&buf]()->TextW { return (TextW)(const char *)buf; },
-			[&buf](TextW text) {
+			[&buf]()->Text16 { return (Text16)(const char *)buf; },
+			[&buf](Text16 text) {
 			try
 			{
-				ArrayWriter<wchar>(buf) << text << nullterm;
+				ArrayWriter<char16>(buf) << text << nullterm;
 			}
 			catch (NotEnoughSpaceException&)
 			{

@@ -10,28 +10,28 @@ namespace kr
 	public:
 		enum Shell_t { Shell };
 		Process() noexcept;
-		Process(Shell_t, TextW command) noexcept;
-		Process(pcwstr fileName, pwstr parameter) noexcept;
+		Process(Shell_t, Text16 command) noexcept;
+		Process(pcstr16 fileName, pstr16 parameter) noexcept;
 		~Process() noexcept;
 
 		void close() noexcept;
-		void shell(TextW command, pcwstr curdir = nullptr);
-		void exec(pcwstr fileName, pwstr parameter, pcwstr curdir = nullptr);
+		void shell(Text16 command, pcstr16 curdir = nullptr);
+		void exec(pcstr16 fileName, pstr16 parameter, pcstr16 curdir = nullptr);
 		size_t readImpl(char * dest, size_t sz);
 
 		int getExitCode() noexcept;
 
 #ifdef WIN32
-		void executeOpen(pcwstr path) noexcept;
+		void executeOpen(pcstr16 path) noexcept;
 #else
 		void executeOpen(pcstr path) noexcept;
 #endif
 
 		// 0을 반환하면 성공.
-		static int execute(pwstr pszstr) noexcept;
+		static int execute(pstr16 pszstr) noexcept;
 
 		// 0을 반환하면 성공.
-		static int detachedExecute(pwstr pszstr) noexcept;
+		static int detachedExecute(pstr16 pszstr) noexcept;
 
 	private:
 #ifdef WIN32

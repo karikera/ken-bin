@@ -18,7 +18,7 @@ namespace kr
 #undef _struct
 	};
 
-	template <> struct __WINAPI_T<wchar>
+	template <> struct __WINAPI_T<char16>
 	{
 #define _struct(x) using x##_ = x##W;
 		WINAPI_STRUCTS();

@@ -41,11 +41,11 @@ namespace kr
 
 #ifdef WIN32
 	template <>
-	EnviromentVariableT<wchar>::EnviromentVariableT(const wchar * szname) noexcept;
+	EnviromentVariableT<char16>::EnviromentVariableT(const char16 * szname) noexcept;
 	template <>
-	bool EnviromentVariableT<wchar>::set(const wchar * dest) noexcept;
+	bool EnviromentVariableT<char16>::set(const char16 * dest) noexcept;
 	template <>
-	size_t EnviromentVariableT<wchar>::copyTo(wchar * dest) const noexcept;
-	using EnviromentVariableW = EnviromentVariableT<wchar>;
+	size_t EnviromentVariableT<char16>::copyTo(char16 * dest) const noexcept;
+	using EnviromentVariable16 = EnviromentVariableT<char16>;
 #endif
 }

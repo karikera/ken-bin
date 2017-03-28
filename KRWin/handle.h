@@ -33,7 +33,7 @@ namespace kr
 		class Library:public Handle<HINSTANCE__>
 		{
 		public:
-			static Library* load(pcwstr str) noexcept;
+			static Library* load(pcstr16 str) noexcept;
 			void operator delete(ptr library) noexcept;
 			const autovar<sizeof(ptr)> get(pcstr str) noexcept;
 
@@ -47,7 +47,8 @@ namespace kr
 		public:
 			void operator delete(void * p);
 			static Cursor* load(pcstr name);
-			static Cursor* load(pcwstr name);
+			static Cursor* load(pcstr16 name);
+			static Cursor* load(const wchar_t * name);
 			static Cursor* load(uintp id);
 			static Cursor* load(HINSTANCE hInstance, uintp id);
 			class Current
@@ -63,7 +64,8 @@ namespace kr
 		public:
 			void operator delete(void * p);
 			static Icon* load(pcstr name);
-			static Icon* load(pcwstr name);
+			static Icon* load(pcstr16 name);
+			static Icon* load(const wchar_t * name);
 			static Icon* load(uintp id);
 			static Icon* load(HINSTANCE hInstance, uintp id);
 		};
@@ -190,15 +192,15 @@ namespace kr
 			BOOL enable(bool bEnable) noexcept;
 
 			int msgBox(pcstr strMessage, pcstr strTitle, uint flags) noexcept;
-			int msgBox(pcwstr strMessage, pcwstr strTitle, uint flags) noexcept;
+			int msgBox(pcstr16 strMessage, pcstr16 strTitle, uint flags) noexcept;
 			int errorBox(pcstr strMessage) noexcept;
-			int errorBox(pcwstr strMessage) noexcept;
-			int informationBox(pcwstr strMessage) noexcept;
+			int errorBox(pcstr16 strMessage) noexcept;
+			int informationBox(pcstr16 strMessage) noexcept;
 
 			template <typename T> size_t getText(T* dest, size_t capacity) noexcept;
 			template <typename T> size_t getTextLength() noexcept;
 			int setText(pcstr src) noexcept;
-			int setText(pcwstr src) noexcept;
+			int setText(pcstr16 src) noexcept;
 
 			bool isCaptured() noexcept;
 			Window* setCapture() noexcept;
@@ -266,19 +268,19 @@ namespace kr
 				return static_cast<T*>(getParent());
 			}
 
-			Static * insertStatic(pcwstr pszText, irectwh rc) noexcept;
+			Static * insertStatic(pcstr16 pszText, irectwh rc) noexcept;
 			static Window * getForeground() noexcept;
-			static Window* createPrimary(pcwstr pszClass, pcwstr pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimary(pcwstr pszClass, pcwstr pszTitle, dword style, dword width, dword height, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimary(pcwstr pszClass, pcwstr pszTitle, dword style, irectwh rect, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimaryEx(dword nExStyle, pcwstr pszClass, pcwstr pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimaryEx(dword nExStyle, pcwstr pszClass, pcwstr pszTitle, dword style, dword width, dword height, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimaryEx(dword nExStyle, pcwstr pszClass, pcwstr pszTitle, dword style, irectwh rect, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createPrimaryAsFull(pcwstr pszClass, pcwstr pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createEx(dword nExStyle, pcwstr pszClass, pcwstr pszTitle, dword nStyle, irectwh rc = { { 0, 0 },{ 0, 0 } }, Window* pParent = nullptr, intp nID = 0, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* createEx(dword nExStyle, pcwstr pszClass, pcwstr pszTitle, dword nStyle, irectwh rc , Window* pParent, HMENU hMenu, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* create(pcwstr pszClass, pcwstr pszTitle, dword nStyle, irectwh rc = { {0, 0},{ 0, 0 } }, Window* pParent = nullptr, intp nID = 0, WindowProgram * pProgram = nullptr) noexcept;
-			static Window* create(pcwstr pszClass, pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent, HMENU hMenu, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimary(pcstr16 pszClass, pcstr16 pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimary(pcstr16 pszClass, pcstr16 pszTitle, dword style, dword width, dword height, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimary(pcstr16 pszClass, pcstr16 pszTitle, dword style, irectwh rect, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimaryEx(dword nExStyle, pcstr16 pszClass, pcstr16 pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimaryEx(dword nExStyle, pcstr16 pszClass, pcstr16 pszTitle, dword style, dword width, dword height, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimaryEx(dword nExStyle, pcstr16 pszClass, pcstr16 pszTitle, dword style, irectwh rect, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createPrimaryAsFull(pcstr16 pszClass, pcstr16 pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createEx(dword nExStyle, pcstr16 pszClass, pcstr16 pszTitle, dword nStyle, irectwh rc = { { 0, 0 },{ 0, 0 } }, Window* pParent = nullptr, intp nID = 0, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* createEx(dword nExStyle, pcstr16 pszClass, pcstr16 pszTitle, dword nStyle, irectwh rc , Window* pParent, HMENU hMenu, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* create(pcstr16 pszClass, pcstr16 pszTitle, dword nStyle, irectwh rc = { {0, 0},{ 0, 0 } }, Window* pParent = nullptr, intp nID = 0, WindowProgram * pProgram = nullptr) noexcept;
+			static Window* create(pcstr16 pszClass, pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent, HMENU hMenu, WindowProgram * pProgram = nullptr) noexcept;
 		};
 
 		class Dialog :public Window
@@ -291,7 +293,7 @@ namespace kr
 			static intp modalA(int id, DlgProc proc, Window * parent, LPARAM param) noexcept;
 			bool endDialog(intp retcode) noexcept;
 			bool setItemText(int id, pcstr text) noexcept;
-			bool setItemText(int id, pcwstr text) noexcept;
+			bool setItemText(int id, pcstr16 text) noexcept;
 			Window* getItem(int id) noexcept;
 			template <typename T>
 			T* getItem(int id) noexcept
@@ -303,9 +305,9 @@ namespace kr
 		class Button:public Window
 		{
 		public:
-			static const wchar CLASS_NAME[];
-			static Button* createEx(dword nExStyle, pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
-			static Button* create(pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
+			static const char16 CLASS_NAME[];
+			static Button* createEx(dword nExStyle, pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
+			static Button* create(pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 
 			bool isChecked() noexcept;
 			void setCheck(bool checked) noexcept;
@@ -316,33 +318,33 @@ namespace kr
 		class Static:public Window
 		{
 		public:
-			static const wchar CLASS_NAME[];
-			static Static* createEx(dword nExStyle, pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent) noexcept;
-			static Static* create(pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent) noexcept;
+			static const char16 CLASS_NAME[];
+			static Static* createEx(dword nExStyle, pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent) noexcept;
+			static Static* create(pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent) noexcept;
 		};
 
 		class EditBox:public Window
 		{
 		public:
-			static const wchar CLASS_NAME[];
+			static const char16 CLASS_NAME[];
 			static EditBox* createEx(dword nExStyle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 			static EditBox* create(dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
-			static EditBox* createEx(dword nExStyle, pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
-			static EditBox* create(pcwstr pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
+			static EditBox* createEx(dword nExStyle, pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
+			static EditBox* create(pcstr16 pszTitle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 
 			void setSelect(size_t from, size_t to) noexcept;
 			void setSelect(size_t sel) noexcept;
-			void replaceSelect(pcwstr text, bool canBeUndone = false);
+			void replaceSelect(pcstr16 text, bool canBeUndone = false);
 		};
 
 		class ComboBox :public Window
 		{
 		public:
-			static const wchar CLASS_NAME[];
+			static const char16 CLASS_NAME[];
 			static ComboBox* createEx(dword nExStyle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 			static ComboBox* create(dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 
-			void addString(pcwstr text) noexcept;
+			void addString(pcstr16 text) noexcept;
 			void setCursor(int idx) noexcept;
 			int getCursor() noexcept;
 		};
@@ -350,12 +352,12 @@ namespace kr
 		class ListBox:public Window
 		{
 		public:
-			static const wchar CLASS_NAME[];
+			static const char16 CLASS_NAME[];
 			static ListBox* createEx(dword nExStyle, dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 			static ListBox* create(dword nStyle, irectwh rc, Window* pParent, intp nID = 0) noexcept;
 		
 			size_t addString(pcstr str) noexcept;
-			size_t addString(pcwstr str) noexcept;
+			size_t addString(pcstr16 str) noexcept;
 		};
 
 		static class g_cursor_t

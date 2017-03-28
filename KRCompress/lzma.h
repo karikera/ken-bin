@@ -129,7 +129,7 @@ namespace kr
 	/**
 	@throws {Error}
 	*/
-	void compressFile(pcwstr strDest, pcwstr strSource);
+	void compressFile(pcstr16 strDest, pcstr16 strSource);
 
 	void compressStream(LzmaVOStream vo, LzmaVIStream vi);
 

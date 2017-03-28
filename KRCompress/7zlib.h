@@ -14,6 +14,6 @@ namespace kr
 	private:
 	};
 	void unzip7z(pcstr filename, Progressor * prog);
-	void unzip7z(pcwstr filename, Progressor * prog);
+	void unzip7z(pcstr16 filename, Progressor * prog);
 	void unzip7z(File * file, Progressor * prog);
 }

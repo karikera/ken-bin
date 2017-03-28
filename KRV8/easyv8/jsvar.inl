@@ -515,7 +515,7 @@ inline void kr::JsString::rawAlloc(size_t sz) noexcept
 	void * str = ezv8_malloc(sz * sizeof(char16) + sizeof(char16) + sizeof(size_t));
 	*(size_t*)str = sz;
 	m_data = (char16*)((size_t*)str + 1);
-	m_data[sz] = L'\0';
+	m_data[sz] = u'\0';
 }
 
 

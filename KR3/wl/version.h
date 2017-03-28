@@ -8,7 +8,7 @@
 
 namespace kr
 {
-	TSZW getWindowsVersionText() noexcept;
+	TSZ16 getWindowsVersionText() noexcept;
 }
 
 

@@ -249,6 +249,8 @@ namespace kr
 				static internal_component_t<C>* const null;
 				
 			public:
+				static constexpr size_t MINIMAL_EXPAND_SIZE = (32 + sizeof(InternalComponent) + 1) / sizeof(InternalComponent);
+
 				void _setSize(size_t nsize) noexcept
 				{
 					((size_t*)m_begin)[-1] = nsize;
@@ -274,28 +276,26 @@ namespace kr
 				}
 				void _realloc(size_t nsize, size_t ncap) // NotEnoughSpaceException
 				{
-					size_t osize = size();
-					if (capacity() >= ncap)
+					_assert(nsize <= ncap);
+					if (m_begin == null)
 					{
-						if (m_begin == null) return;
-						if (osize > nsize)
-							mema::dtor(m_begin + nsize, osize - nsize);
+						if (ncap == 0) return;
+						m_begin = (InternalComponent*)Allocator::_mem_alloc(ncap);
 					}
 					else
 					{
-						if (m_begin != null)
+						size_t osize = size();
+						if (Allocator::_mem_expand(m_begin, ncap))
 						{
-							if (Allocator::_mem_expand(m_begin, ncap))
-								goto _end;
-							m_begin = (InternalComponent*)Allocator::_obj_move(m_begin, ncap,
-								[&](InternalComponent * to) { mema::ctor_move_d(to, m_begin, osize); });
+							if (osize > nsize)
+								mema::dtor(m_begin + nsize, osize - nsize);
 						}
 						else
 						{
-							m_begin = (InternalComponent*)Allocator::_mem_alloc(ncap);
+							m_begin = (InternalComponent*)Allocator::_obj_move(m_begin, ncap,
+								[&](InternalComponent * to) { mema::ctor_move_d(to, m_begin, osize); });
 						}
 					}
-				_end:
 					_setSize(nsize);
 				}
 				void _free() noexcept
@@ -310,57 +310,57 @@ namespace kr
 				}
 				void _shiftRight(size_t idx) // NotEnoughSpaceException
 				{
-					size_t cap = capacity();
 					size_t sz = size();
-					InternalComponent* beg = (InternalComponent*)begin();
-					InternalComponent* axis = beg + idx;
-					if (sz < cap || Allocator::_mem_expand(m_begin, cap + 1))
+					InternalComponent* beg = m_begin;
+					if (beg != null)
 					{
-						kr::mema::ctor_move_rd(axis + 1, axis, sz - idx);
-					}
-					else
-					{
-						cap = cap * 3 / 2 + 1;
-						if (m_begin != null)
+						InternalComponent* axis = beg + idx;
+						if (Allocator::_mem_expand(m_begin, sz + 1))
 						{
+							kr::mema::ctor_move_rd(axis + 1, axis, sz - idx);
+						}
+						else
+						{
+							size_t cap = capacity() * 3 / 2 + 1;
+							if (cap < MINIMAL_EXPAND_SIZE) cap = MINIMAL_EXPAND_SIZE;
 							m_begin = Allocator::_obj_move(m_begin, cap, [&](C * to) {
 								mema::ctor_move_d(to, beg, idx);
 								mema::ctor_move_d(to + idx + 1, axis, sz - idx);
 							});
 						}
-						else
-						{
-							m_begin = Allocator::_mem_alloc(cap);
-						}
+					}
+					else
+					{
+						m_begin = Allocator::_mem_alloc(MINIMAL_EXPAND_SIZE);
 					}
 					_setSize(sz + 1);
 				}
 				void _shiftRight(size_t idx, size_t count) // NotEnoughSpaceException
 				{
-					size_t cap = capacity();
 					size_t sz = size();
 					size_t nsz = sz + count;
 					InternalComponent* beg = (InternalComponent*)begin();
 					InternalComponent* axis = beg + idx;
-					if (nsz <= cap || Allocator::_mem_expand(m_begin, nsz))
+					if (m_begin != null)
 					{
-						kr::mema::ctor_move_rd(axis + count, axis, sz - idx);
-					}
-					else
-					{
-						cap = cap * 3 / 2 + 1;
-						if (cap < nsz) cap = nsz;
-						if (m_begin != null)
+						if (Allocator::_mem_expand(m_begin, nsz))
 						{
+							kr::mema::ctor_move_rd(axis + count, axis, sz - idx);
+						}
+						else
+						{
+							size_t cap = capacity() * 3 / 2 + 1;
+							if (cap < MINIMAL_EXPAND_SIZE) cap = MINIMAL_EXPAND_SIZE;
+							if (cap < nsz) cap = nsz;
 							m_begin = Allocator::_obj_move(m_begin, cap, [&](C * to) {
 								mema::ctor_move_d(to, beg, idx);
 								mema::ctor_move_d(to + idx + count, axis, sz - idx);
 							});
 						}
-						else
-						{
-							m_begin = Allocator::_mem_alloc(cap);
-						}
+					}
+					else
+					{
+						m_begin = Allocator::_mem_alloc(MINIMAL_EXPAND_SIZE);
 					}
 					_setSize(sz + count);
 				}
@@ -449,7 +449,7 @@ namespace kr
 				}
 			};
 			template <typename C, class Allocator, class Parent>
-			internal_component_t<C>* const AllocatedForm<C, Allocator, Parent>::null = (internal_component_t<C>*)((size_t*)&kr::_pri_::ZERO_MEMORY + 1);
+			internal_component_t<C>* const AllocatedForm<C, Allocator, Parent>::null = (internal_component_t<C>*)(kr::_pri_::ZERO_MEMORY.buffer + 1);
 			
 		}
 	}

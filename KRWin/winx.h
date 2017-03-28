@@ -57,16 +57,16 @@ namespace kr
 		virtual ~WindowProgram() noexcept;
 		win::Window* detachWindow() noexcept;
 		win::Window* getWindow() noexcept;
-		void createPrimary(pcwstr title, int style, const irectwh & rc) noexcept;
-		void createPrimary(pcwstr title, int style, int width, int height) noexcept;
-		void createPrimary(pcwstr title, int style) noexcept;
-		void create(pcwstr title, int style, const irectwh & rc) noexcept;
+		void createPrimary(pcstr16 title, int style, const irectwh & rc) noexcept;
+		void createPrimary(pcstr16 title, int style, int width, int height) noexcept;
+		void createPrimary(pcstr16 title, int style) noexcept;
+		void create(pcstr16 title, int style, const irectwh & rc) noexcept;
 		void destroy() noexcept;
 
 		static ATOM registerClass(HICON icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
 		static ATOM registerClass(int icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
-		static ATOM registerClass(pcwstr className, HICON icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
-		static ATOM registerClass(pcwstr className, int icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
+		static ATOM registerClass(pcstr16 className, HICON icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
+		static ATOM registerClass(pcstr16 className, int icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
 		template <typename T, typename... ARGS> T* changeTo(ARGS... args) noexcept
 		{
 			MUST_BASE_OF(T, WindowProgram);
@@ -103,18 +103,18 @@ namespace kr
 	{
 	public:
 		WindowClass() noexcept;
-		WindowClass(pcwstr pszClassName, WndProc pfnWndProc, HICON hIcon, uint style = CS_HREDRAW | CS_VREDRAW, int wndExt = 0, int clsExt = 0) noexcept;
-		WindowClass(pcwstr pszClassName, WndProc pfnWndProc, int nIcon, uint style = CS_HREDRAW | CS_VREDRAW, int wndExt = 0, int clsExt = 0) noexcept;
+		WindowClass(pcstr16 pszClassName, WndProc pfnWndProc, HICON hIcon, uint style = CS_HREDRAW | CS_VREDRAW, int wndExt = 0, int clsExt = 0) noexcept;
+		WindowClass(pcstr16 pszClassName, WndProc pfnWndProc, int nIcon, uint style = CS_HREDRAW | CS_VREDRAW, int wndExt = 0, int clsExt = 0) noexcept;
 
 		ATOM registerClass() const noexcept;
 
-		static bool unregister(pcwstr name) noexcept;
+		static bool unregister(pcstr16 name) noexcept;
 
 	private:
 		WNDCLASSEXW m_wc;
 	};
 
-	const wchar_t * makeIntResource(int res);
+	const wchar_t * makeIntResource(int res) noexcept;
 
 	irect getCursoredMonitorRect() noexcept;
 	irectwh calculateWindowPos(dword style, dword w, dword h);

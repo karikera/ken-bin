@@ -39,7 +39,7 @@ namespace kr
 
 		void connect(Ipv4Address add,word port); // SocketException
 		void connect(pcstr url,word port); // SocketException
-		void connect(pcwstr url,word port); // SocketException
+		void connect(pcstr16 url,word port); // SocketException
 		void connectAsync(Ipv4Address add,word port); // SocketException
 		void setTimeout(long sec,long usec) noexcept;
 		void open(word port); // SocketException

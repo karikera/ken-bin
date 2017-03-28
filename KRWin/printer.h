@@ -36,10 +36,10 @@ namespace kr
 
 		static win::Window* createPreview(dword style, int x,int y, vec2 paper, int width, PreviewCallback ondraw, void * param = nullptr) noexcept;
 		void clearState() noexcept;
-		void setFont(TextW strName, float pt, int weight = FW_NORMAL) noexcept;
+		void setFont(Text16 strName, float pt, int weight = FW_NORMAL) noexcept;
 		float setWidth(float width, Mode mode) noexcept;
 		float setLineHeight(float rate) noexcept;
-		void text(TextW text) noexcept;
+		void text(Text16 text) noexcept;
 		vec2 getPosition() noexcept;
 		vec2 moveTo(vec2 point) noexcept;
 		void lineTo(vec2 point) noexcept;
@@ -58,7 +58,7 @@ namespace kr
 		Keep<win::DrawContext> m_pDC;
 
 	private:
-		template <typename LAMBDA> void _textLoop(TextW text, LAMBDA &lambda) noexcept;
+		template <typename LAMBDA> void _textLoop(Text16 text, LAMBDA &lambda) noexcept;
 		void _setTool(bool fill) noexcept;
 
 		win::Font * m_fontOld;
@@ -92,7 +92,7 @@ namespace kr
 		GDIPrinter();
 		~GDIPrinter();
 
-		bool beginPrint(pcwstr strDocName);
+		bool beginPrint(pcstr16 strDocName);
 		void endPrint();
 
 		bool startPage();

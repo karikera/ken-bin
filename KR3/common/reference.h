@@ -395,9 +395,6 @@ namespace kr
 	// 참조하는 UTF-32 텍스트(읽기 전용), 근원이 사라지면 안된다.
 	using Text32 = RefArray<char32>;
 
-	// 참조하는 Wide 텍스트(읽기 전용), 근원이 사라지면 안된다.
-	using TextW = RefArray<wchar>;
-
 	// 텍스트 라이터, char 배열등에 기록시킨다.
 	using Writer = ArrayWriter<char>;
 
@@ -407,9 +404,6 @@ namespace kr
 	// UTF-32 텍스트 라이터, char32 배열등에 기록시킨다.
 	using Writer32 = ArrayWriter<char32>;
 
-	// Wide 텍스트 라이터, wchar 배열등에 기록시킨다.
-	using WriterW = ArrayWriter<wchar>;
-
 	// 할당된 텍스트, 복사시 메모리가 할당되어진다.
 	using AText = Array<char>;
 
@@ -418,9 +412,6 @@ namespace kr
 
 	// 할당된 UTF-32 텍스트, 복사시 메모리가 할당되어진다.
 	using AText32 = Array<char32>;
-
-	// 할당된 Wide 텍스트, 복사시 메모리가 할당되어진다.
-	using ATextW = Array<wchar>;
 
 	// 임시 텍스트, 메모리가 스택형 임시 버퍼에 할당된다.
 	// 임시 메모리 끼리는 할당과 삭제 순서가 스택 순서여야한다.
@@ -433,11 +424,7 @@ namespace kr
 	// 임시 UTF-32 텍스트, 메모리가 스택형 임시 버퍼에 할당된다.
 	// 임시 메모리 끼리는 할당과 삭제 순서가 스택 순서여야한다.
 	using TText32 = TmpArray<char32>;
-
-	// 임시 Wide 텍스트, 메모리가 스택형 임시 버퍼에 할당된다.
-	// 임시 메모리 끼리는 할당과 삭제 순서가 스택 순서여야한다.
-	using TTextW = TmpArray<wchar>;
-
+	
 	// 정적 버퍼, 최대 CAP 바이트를 담을 수 있다.
 	template <size_t size> using BBuffer = BArray<void, size>;
 
@@ -450,9 +437,6 @@ namespace kr
 	// 정적 UTF-32 텍스트, 최대 CAP 개의 char32를 담을 수 있다.
 	template <size_t size> using BText32 = BArray<char32, size>;
 
-	// 정적 Wide 텍스트, 최대 CAP 개의 wchar를 담을 수 있다.
-	template <size_t size> using BTextW = BArray<wchar, size>;
-
 	// 임시 텍스트, 스택형 메모리에 동적할당 되며, 스택 규칙에 따라 할당/해제 되어야한다.
 	using TSZ = TempSzText<char>;
 
@@ -461,10 +445,7 @@ namespace kr
 
 	// 임시 UTF-32 텍스트, 스택형 메모리에 동적할당 되며, 스택 규칙에 따라 할당/해제 되어야한다.
 	using TSZ32 = TempSzText<char32>;
-
-	// 임시 Wide 텍스트, 스택형 메모리에 동적할당 되며, 스택 규칙에 따라 할당/해제 되어야한다.
-	using TSZW = TempSzText<wchar>;
-
+	
 	// 버퍼
 	template <typename T> class Number;
 	template <typename T> class NumberFixed;

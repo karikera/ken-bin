@@ -40,12 +40,12 @@ namespace kr
 	public:
 		ResourceFile(HINSTANCE hModule, int id, int type) noexcept;
 		~ResourceFile() noexcept;
-		bool toFile(pcwstr str, bool temp=false); // Error
-		int execute(TextW param) noexcept;
+		bool toFile(pcstr16 str, bool temp=false); // Error
+		int execute(Text16 param) noexcept;
 
 	protected:
 		static int m_nTempNo;
-		BTextW<File::NAMELEN> m_strFileName;
+		BText16<File::NAMELEN> m_strFileName;
 		bool m_isTemp;
 	};
 

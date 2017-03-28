@@ -19,10 +19,10 @@ namespace kr
 			~DragFileList() noexcept;
 
 			uint size() noexcept;
-			TextW operator [](uint i) noexcept;
+			Text16 operator [](uint i) noexcept;
 
 		private:
-			wchar m_fileName[MAX_PATH];
+			char16 m_fileName[MAX_PATH];
 			uint m_count;
 			HDROP m_drop;
 		};

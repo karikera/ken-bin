@@ -172,7 +172,7 @@ namespace kr
 		};
 
 		template <typename OS, typename IS, bool os_buffered>
-		class Pipe<OS, IS, os_buffered, true, -1>
+		class Pipe<OS, IS, os_buffered, true, (size_t)-1>
 		{
 		public:
 			static_assert(is_same<typename IS::Component, typename OS::Component>::value, "Is not same type");
@@ -185,6 +185,7 @@ namespace kr
 			}
 			bool streaming()
 			{
+				size_t size = 8192;
 				const Component * src = m_is->read(&size);
 				m_os->write(src, size);
 			}
@@ -194,7 +195,7 @@ namespace kr
 		};
 
 		template <typename OS, typename IS>
-		class Pipe<OS, IS, true, false, -1>
+		class Pipe<OS, IS, true, false, (size_t)-1>
 		{
 		public:
 			static_assert(is_same<typename IS::Component, typename OS::Component>::value, "Is not same type");
@@ -219,7 +220,7 @@ namespace kr
 		};
 	}
 
-	template <typename OS, typename IS, size_t BSIZE = -1> class Pipe
+	template <typename OS, typename IS, size_t BSIZE = (size_t)-1> class Pipe
 		: public _pri_::Pipe<OS, IS, OS::accessable, IS::accessable, BSIZE>
 	{
 		static_assert(IsIStream<IS>::value, "IS is not InStream");

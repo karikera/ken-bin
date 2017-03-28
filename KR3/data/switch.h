@@ -33,7 +33,6 @@ namespace kr
 	using TextSwitch = TextSwitchT<char>;
 	using TextSwitch16 = TextSwitchT<char16>;
 	using TextSwitch32 = TextSwitchT<char32>;
-	using TextSwitchW = TextSwitchT<wchar>;
 }
 
 #define  text_switcht(type,value, ...) \
@@ -43,4 +42,3 @@ namespace kr
 #define  text_switch(value, ...) text_switcht(char, value, __VA_ARGS__)
 #define  text_switch16(value, ...) text_switcht(::kr::char16, value, __VA_ARGS__)
 #define  text_switch32(value, ...) text_switcht(::kr::char32, value, __VA_ARGS__)
-#define  text_switchw(value, ...) text_switcht(::kr::wchar, value, __VA_ARGS__)

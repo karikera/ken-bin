@@ -117,11 +117,6 @@ namespace kr
 		return CustomAddSlashes<char, LAMBDA>(text, lambda);
 	}
 	template <typename LAMBDA>
-	inline auto custom_addslashes(TextW text, const LAMBDA& lambda) noexcept->CustomAddSlashes<wchar, LAMBDA>
-	{
-		return CustomAddSlashes<wchar, LAMBDA>(text, lambda);
-	}
-	template <typename LAMBDA>
 	inline auto custom_addslashes(Text16 text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char16, LAMBDA>
 	{
 		return CustomAddSlashes<char16, LAMBDA>(text, lambda);
@@ -133,11 +128,9 @@ namespace kr
 	}
 
 	inline AddSlashes<char> addslashes(Text text) noexcept { return text; }
-	inline AddSlashes<wchar> addslashes(TextW text) noexcept { return text; }
 	inline AddSlashes<char16> addslashes(Text16 text) noexcept { return text; }
 	inline AddSlashes<char32> addslashes(Text32 text) noexcept { return text; }
 	inline StripSlashes<char> stripslashes(Text text) noexcept { return text; }
-	inline StripSlashes<wchar> stripslashes(TextW text) noexcept { return text; }
 	inline StripSlashes<char16> stripslashes(Text16 text) noexcept { return text; }
 	inline StripSlashes<char32> stripslashes(Text32 text) noexcept { return text; }
 }

@@ -7,7 +7,7 @@ using kr::AText;
 using kr::TText;
 using kr::Text;
 using kr::TSZ;
-using kr::TSZW;
+using kr::TSZ16;
 using kr::Keep;
 
 class Identity:public kr::Referencable<Identity>
@@ -29,7 +29,7 @@ template <typename T, typename T2> T* cast(T2* o)
 	if(n == nullptr)
 	{
 		o->noneed();
-		throw Error("Type not match");
+		throw ErrMessage("Type not match");
 	}
 	return n;
 }
@@ -39,7 +39,7 @@ template <typename T, typename T2> T* cast(Keep<T2>& o)
 	T* n = dynamic_cast<T*>((T2*)o);
 	if(n == nullptr)
 	{
-		throw Error("Type not match");
+		throw ErrMessage("Type not match");
 	}
 	return n;
 }

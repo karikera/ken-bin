@@ -70,8 +70,9 @@ void CT_CDECL operator delete[](void * data) noexcept;
 #define kr_free(ptr)			(::kr::_pri_::free_impl(ptr))
 #define kr_expand(ptr,sz)		(::kr::_pri_::expand_impl(ptr,sz))
 #define kr_msize(ptr)			(::kr::_pri_::msize_impl(ptr))
-#define kr_aligned_free(ptr)	(::kr::_pri_::aligned_free_impl(ptr))
-#define kr_aligned_msize(ptr, ...) (::kr::_pri_::aligned_msize_impl(ptr, __VA_ARGS__))
+#define kr_aligned_free(ptr)		(::kr::_pri_::aligned_free_impl(ptr))
+#define kr_aligned_expand(ptr, sz, ...)	(::kr::_pri_::aligned_expand_impl(ptr, sz, __VA_ARGS__))
+#define kr_aligned_msize(ptr, ...)	(::kr::_pri_::aligned_msize_impl(ptr, __VA_ARGS__))
 
 namespace kr
 {
@@ -84,8 +85,8 @@ namespace kr
 
 		ATTR_CHECK_RETURN void* CT_FASTCALL aligned_alloc_impl(size_t sz, size_t aligned) noexcept;
 		ATTR_CHECK_RETURN void* CT_FASTCALL aligned_alloc_impl(size_t sz, size_t aligned, size_t offset) noexcept;
-		ATTR_CHECK_RETURN size_t CT_FASTCALL aligned_msize_impl(const void * ptr, size_t aligned) noexcept;
-		ATTR_CHECK_RETURN size_t CT_FASTCALL aligned_msize_impl(const void * ptr, size_t aligned, size_t offset) noexcept;
+		ATTR_CHECK_RETURN bool CT_FASTCALL aligned_expand_impl(void * data, size_t nsize, size_t aligned, size_t offset = 0) noexcept;
+		ATTR_CHECK_RETURN size_t CT_FASTCALL aligned_msize_impl(const void * ptr, size_t aligned, size_t offset = 0) noexcept;
 		void CT_FASTCALL aligned_free_impl(void * ptr) noexcept;
 
 		template <typename T, typename ... ARGS> T * newAligned(const ARGS &... args)

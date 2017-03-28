@@ -24,7 +24,7 @@ namespace kr
 		int integer(); // kr::InvalidSourceException
 		qword getQword(); // kr::InvalidSourceException
 		bool boolean(); // kr::InvalidSourceException
-		ATextW text16(); // InvalidSourceException
+		AText16 text16(); // InvalidSourceException
 		AText text(); // InvalidSourceException
 		TText ttext(); // InvalidSourceException
 		void skipValue(); // InvalidSourceException

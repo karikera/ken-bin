@@ -26,7 +26,7 @@ namespace kr
 	class TemplatePage:public Page
 	{
 	public:
-		TemplatePage(pcwstr filename) noexcept;
+		TemplatePage(pcstr16 filename) noexcept;
 		~TemplatePage() noexcept override;
 		void parseQuery(Array<Text> &arr, Text prefix, Text query) noexcept;
 		void sendTo(HttpClient * client, Text query, Text postdata) override; // SocketException
@@ -50,8 +50,8 @@ namespace kr
 	{
 	public:
 		MemoryPage() noexcept;
-		MemoryPage(pcwstr path); // Error, TooBigException
-		MemoryPage(Text header, pcwstr path); // Error
+		MemoryPage(pcstr16 path); // Error, TooBigException
+		MemoryPage(Text header, pcstr16 path); // Error
 		MemoryPage(const MemoryPage& _copy) noexcept;
 		MemoryPage(MemoryPage&& _move) noexcept;
 		~MemoryPage() noexcept;
@@ -74,9 +74,9 @@ namespace kr
 
 		void open(word port = 80); // SocketException
 		void close() noexcept;
-		void setDefaultHeader(pcwstr filename) noexcept;
-		void setErrorPage(HttpStatus exception, pcwstr filename) noexcept;
-		void setTemplatePage(Text url, pcwstr filename) noexcept;
+		void setDefaultHeader(pcstr16 filename) noexcept;
+		void setErrorPage(HttpStatus exception, pcstr16 filename) noexcept;
+		void setTemplatePage(Text url, pcstr16 filename) noexcept;
 		void setMIMEType(Text type, Text mime) noexcept;
 		void attachPage(Text url, Page * page) noexcept;
 		int process() noexcept;

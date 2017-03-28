@@ -25,7 +25,7 @@ namespace kr
 					}
 					else if (offset == 0)
 					{
-						return (InternalComponent*)((pbyte)allocator->allocate(sz, align) + offset);
+						return (InternalComponent*)((pbyte)allocator->allocate(sz, align));
 					}
 					else
 					{
@@ -105,7 +105,7 @@ namespace kr
 					}
 					else if (offset == 0)
 					{
-						return (InternalComponent*)((pbyte)kr_aligned_alloc(sz + offset, align) + offset);
+						return (InternalComponent*)((pbyte)kr_aligned_alloc(sz, align));
 					}
 					else
 					{
@@ -143,7 +143,7 @@ namespace kr
 					}
 					else
 					{
-						return false;
+						return kr_aligned_expand((pbyte)p - offset, sz * sizeof(InternalComponent) + offset, align, offset);
 					}
 				}
 				static void _mem_reduce(InternalComponent * p, size_t sz) noexcept

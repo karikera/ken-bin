@@ -35,24 +35,19 @@ namespace kr
 		static void decode(FromWriter * out, ToText * text) noexcept;
 	};
 
-	template <typename To, typename From> class UnicodeConvert
-		: public encoder::Encoder<UnicodeConvert<To, From>, To, From>
+	class Utf16ToUtf32
+		: public encoder::Encoder<Utf16ToUtf32, char32, char16>
 	{
-		using Super = encoder::Encoder<UnicodeConvert<To, From>, To, From>;
+		using Super = encoder::Encoder<Utf16ToUtf32, char32, char16>;
 	public:
 		using Super::Super;
-		using typename Super::Decoder;
-		using typename Super::FromText;
-		using typename Super::ToText;
-		using typename Super::FromWriter;
-		using typename Super::ToWriter;
 
-		static size_t length(FromText text) noexcept;
-		static size_t encode(To * out, FromText text) noexcept;
-		static void encode(ToWriter * out, FromText * text) noexcept;
-		static size_t delength(ToText text) noexcept;
-		static size_t decode(From * out, ToText text) noexcept;
-		static void decode(FromWriter * out, ToText * text) noexcept;
+		static size_t length(Text16 text) noexcept;
+		static size_t encode(char32 * out, Text16 text) noexcept;
+		static void encode(Writer32 * out, Text16 * text) noexcept;
+		static size_t delength(Text32 text) noexcept;
+		static size_t decode(char16 * out, Text32 text) noexcept;
+		static void decode(Writer16 * out, Text32 * text) noexcept;
 	};;
 
 	template <Charset charset, typename To> class ToConvert
@@ -264,18 +259,49 @@ namespace kr
 		return txt;
 	}
 
+	namespace _pri_
+	{
+		template <typename To, typename From>
+		struct UnicodeConverterImpl
+		{
+			static_assert(is_same<To, From>::value, "Unknown encoding time");
+			using type = encoder::PassEncoder<To>;
+		};
+
+		template <typename To>
+		struct UnicodeConverterImpl<To, char>
+		{
+			using type = ToConvert<Charset::Utf8, To>;
+		};
+		template <typename From>
+		struct UnicodeConverterImpl<char, From>
+		{
+			using type = typename ToConvert<Charset::Utf8, From>::Decoder;
+		};
+		template <>
+		struct UnicodeConverterImpl<char32, char16>
+		{
+			using type = Utf16ToUtf32;
+		};
+		template <>
+		struct UnicodeConverterImpl<char16, char32>
+		{
+			using type = Utf16ToUtf32::Decoder;
+		};
+	}
+	template <typename To, typename From>
+	using UnicodeConverter = typename _pri_::UnicodeConverterImpl<To, From>::type;
+
+	using Utf32ToUtf16 = Utf16ToUtf32::Decoder;
+
 	template <Charset charset>
 	using MultiByteToUtf32 = ToConvert<charset, char32>;
 	template <Charset charset>
 	using MultiByteToUtf16 = ToConvert<charset, char16>;
 	template <Charset charset>
-	using MultiByteToWide = ToConvert<charset, wchar>;
-	template <Charset charset>
 	using Utf32ToMultiByte = typename MultiByteToUtf32<charset>::Decoder;
 	template <Charset charset>
 	using Utf16ToMultiByte = typename MultiByteToUtf16<charset>::Decoder;
-	template <Charset charset>
-	using WideToMultiByte = typename MultiByteToWide<charset>::Decoder;
 	template <typename T>
 	using FromAcp = ToConvert<Charset::Default, T>;
 	template <typename T>
@@ -285,121 +311,65 @@ namespace kr
 	template <typename T>
 	using ToUtf8 = typename FromAcp<T>::Decoder;
 	
-	using WideToUtf8 = WideToMultiByte<Charset::Utf8>;
-	using Utf8ToWide = MultiByteToWide<Charset::Utf8>;
 	using Utf16ToUtf8 = Utf16ToMultiByte<Charset::Utf8>;
 	using Utf8ToUtf16 = MultiByteToUtf16<Charset::Utf8>;
 	using Utf32ToUtf8 = Utf32ToMultiByte<Charset::Utf8>;
 	using Utf8ToUtf32 = MultiByteToUtf32<Charset::Utf8>;
-	using WideToAcp = WideToMultiByte<Charset::Default>;
-	using AcpToWide = MultiByteToWide<Charset::Default>;
 	using Utf16ToAcp = Utf16ToMultiByte<Charset::Default>;
 	using AcpToUtf16 = MultiByteToUtf16<Charset::Default>;
 	using Utf32ToAcp = Utf32ToMultiByte<Charset::Default>;
 	using AcpToUtf32 = MultiByteToUtf32<Charset::Default>;
 
-#ifdef WIN32
-	inline TextW toWide(Text16 tx) noexcept
-	{
-		static_assert(sizeof(wchar) == sizeof(char16), "char type unmatch");
-		return (TextW&)tx;
-	};
-	inline Text16 toUtf16(TextW tx) noexcept
-	{
-		static_assert(sizeof(wchar) == sizeof(char16), "char type unmatch");
-		return (Text16&)tx;
-	};
-	inline TextW utf8ToWide(Text16 tx) noexcept
-	{
-		return toWide(tx);
-	};
-	inline TextW acpToWide(Text16 tx) noexcept
-	{
-		return toWide(tx);
-	};
-	inline Text16 utf8ToUtf16(TextW tx) noexcept
-	{
-		return toUtf16(tx);
-	};
-	inline Text16 acpToUtf16(TextW tx) noexcept
-	{
-		return toUtf16(tx);
-	};
-#else
-	inline TextW toWide(Text16 tx) noexcept = delete;
-	inline Text16 toUtf16(TextW tx) noexcept = delete;
-	inline TextW utf8ToWide(Text16 tx) noexcept = delete;
-	inline TextW acpToWide(Text16 tx) noexcept = delete;
-	inline Text16 utf8ToUtf16(TextW tx) noexcept = delete;
-	inline Text16 acpToUtf16(TextW tx) noexcept = delete;
-#endif
-
-	inline TextW toWide(TextW tx) noexcept
-	{
-		return tx;
-	};
 	inline Text16 toUtf16(Text16 tx) noexcept
 	{
 		return tx;
 	}
+	inline Utf32ToUtf16 toUtf16(Text32 tx) noexcept
+	{
+		return tx;
+	}
 
-	inline Utf8ToWide utf8ToWide(Text tx) noexcept
-	{
-		return (Utf8ToWide)tx;
-	};
-	inline TextW utf8ToWide(TextW tx) noexcept
+	inline Text32 toUtf32(Text32 tx) noexcept
 	{
 		return tx;
-	};
-	inline AcpToWide acpToWide(Text tx) noexcept
-	{
-		return (AcpToWide)tx;
-	};
-	inline TextW acpToWide(TextW tx) noexcept
+	}
+	inline Utf16ToUtf32 toUtf32(Text16 tx) noexcept
 	{
 		return tx;
-	};
-	
+	}
+
 	inline Utf8ToUtf16 utf8ToUtf16(Text tx) noexcept
 	{
 		return (Utf8ToUtf16)tx;
-	};
+	}
 	inline Text16 utf8ToUtf16(Text16 tx) noexcept
 	{
 		return tx;
-	};
+	}
 	inline AcpToUtf16 acpToUtf16(Text tx) noexcept
 	{
 		return (AcpToUtf16)tx;
-	};
+	}
 	inline Text16 acpToUtf16(Text16 tx) noexcept
 	{
 		return tx;
-	};
+	}
 
 	inline Text toUtf8(Text tx) noexcept
 	{
 		return tx;
-	};
+	}
 	inline Utf16ToUtf8 toUtf8(Text16 tx) noexcept
 	{
 		return (Utf16ToUtf8)tx;
-	};
-	inline WideToUtf8 toUtf8(TextW tx) noexcept
-	{
-		return (WideToUtf8)tx;
-	};
+	}
 	
 	inline Text toAcp(Text tx) noexcept
 	{
 		return tx;
-	};
+	}
 	inline Utf16ToAcp toAcp(Text16 tx) noexcept
 	{
 		return (Utf16ToAcp)tx;
-	};
-	inline WideToAcp toAcp(TextW tx) noexcept
-	{
-		return (WideToAcp)tx;
-	};
+	}
 }

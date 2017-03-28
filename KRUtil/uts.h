@@ -50,12 +50,12 @@ namespace kr
 		UnixTimeStamp(time_t uts) noexcept;
 		UnixTimeStamp(filetime_t filetime) noexcept;
 		UnixTimeStamp(Text strGMT); // OutOfRangeException, InvalidSourceException
-		UnixTimeStamp(TextW strGMT); // OutOfRangeException, InvalidSourceException
+		UnixTimeStamp(Text16 strGMT); // OutOfRangeException, InvalidSourceException
 		time_t getUTS() noexcept;
 		filetime_t getFileTime() noexcept;
 		UnixTimeStamp & operator =(time_t uts) noexcept;
 		UnixTimeStamp & operator =(Text strGMT); // OutOfRangeException, InvalidSourceException
-		UnixTimeStamp & operator =(TextW strGMT); // OutOfRangeException, InvalidSourceException
+		UnixTimeStamp & operator =(Text16 strGMT); // OutOfRangeException, InvalidSourceException
 
 		bool operator <= (UnixTimeStamp uts) const noexcept;
 		bool operator >= (UnixTimeStamp uts) const noexcept;

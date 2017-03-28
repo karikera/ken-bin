@@ -46,15 +46,14 @@ namespace kr
 	{
 	public:
 		static constexpr bool readonly = rdonly;
-		static constexpr bool is_string = 
+		static constexpr bool is_string =
 			is_same<C, char>::value ||
 			is_same<C, char16>::value ||
-			is_same<C, char32>::value ||
-			is_same<C, wchar>::value;
+			is_same<C, char32>::value;
 		using Component = C;
-		using ComponentRef = meta::if_type<rdonly, const C, C>;
+		using ComponentRef = meta::if_t<rdonly, const C, C>;
 		using InternalComponent = internal_component_t<C>;
-		using InternalComponentRef = meta::if_type<rdonly, const InternalComponent, InternalComponent>;
+		using InternalComponentRef = meta::if_t<rdonly, const InternalComponent, InternalComponent>;
 		using memm = memt<sizeof(internal_component_t<C>)>;
 
 		using Alc = Array<C>;
@@ -72,7 +71,7 @@ namespace kr
 		static constexpr bool is_string = true;
 		using Component = AutoComponent;
 		using InternalComponent = AutoComponent;
-		using ComponentRef = meta::if_type<rdonly, const AutoComponent, AutoComponent>;
+		using ComponentRef = meta::if_t<rdonly, const AutoComponent, AutoComponent>;
 		using InternalComponentRef = ComponentRef;
 		using memm = void;
 

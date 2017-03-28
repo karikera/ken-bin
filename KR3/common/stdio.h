@@ -20,13 +20,10 @@ namespace kr
 	using DebugOutputT = ConsoleOutputStream<ConsoleType::Debug, C>;
 	using StandardOutput = StandardOutputT<char>;
 	using StandardOutput16 = StandardOutputT<char16>;
-	using StandardOutputW = StandardOutputT<wchar>;
 	using StandardErrorOutput = StandardErrorOutputT<char>;
 	using StandardErrorOutput16 = StandardErrorOutputT<char16>;
-	using StandardErrorOutputW = StandardErrorOutputT<wchar>;
 	using DebugOutput = DebugOutputT<char>;
 	using DebugOutput16 = DebugOutputT<char16>;
-	using DebugOutputW = DebugOutputT<wchar>;
 
 
 	template <typename Derived, typename Component, typename Info = StreamInfo<false, Empty> >
@@ -74,17 +71,17 @@ namespace kr
 	};
 #ifdef WIN32
 	template <>
-	class ConsoleOutputStream<ConsoleType::Debug, wchar> :
-		public FlushOutStream<ConsoleOutputStream<ConsoleType::Debug, wchar>, wchar>
+	class ConsoleOutputStream<ConsoleType::Debug, char16> :
+		public FlushOutStream<ConsoleOutputStream<ConsoleType::Debug, char16>, char16>
 	{
 	public:
 		ConsoleOutputStream() noexcept;
 		~ConsoleOutputStream() noexcept;
-		void writeImpl(const wchar * chr, size_t sz) noexcept;
-		void putSourceLine(pcwstr src, int line) noexcept;
+		void writeImpl(const char16 * chr, size_t sz) noexcept;
+		void putSourceLine(pcstr16 src, int line) noexcept;
 		void flush() noexcept;
 
-		static ConsoleOutputStream<ConsoleType::Debug, wchar> out;
+		static ConsoleOutputStream<ConsoleType::Debug, char16> out;
 
 	private:
 #ifndef NDEBUG
@@ -101,13 +98,10 @@ namespace kr
 
 	extern StandardOutput &cout;
 	extern StandardOutput16 &ucout;
-	extern StandardOutputW &wcout;
 	extern StandardErrorOutput &cerr;
 	extern StandardErrorOutput16 &ucerr;
-	extern StandardErrorOutputW &wcerr;
 	extern DebugOutput &dout;
 	extern DebugOutput16 &udout;
-	extern DebugOutputW &wdout;
 
 	template <ConsoleType type, typename C>
 	ConsoleOutputStream<type,C> ConsoleOutputStream<type, C>::out;
@@ -122,17 +116,17 @@ namespace kr
 	template <>
 	void StandardOutput::writeImpl(const char * chr, size_t sz) noexcept;
 	template <>
-	void StandardOutputW::flush() noexcept;
+	void StandardOutput16::flush() noexcept;
 	template <>
-	void StandardOutputW::writeImpl(const wchar * chr, size_t sz) noexcept;
+	void StandardOutput16::writeImpl(const char16 * chr, size_t sz) noexcept;
 	template <>
 	void StandardErrorOutput::flush() noexcept;
 	template <>
 	void StandardErrorOutput::writeImpl(const char * chr, size_t sz) noexcept;
 	template <>
-	void StandardErrorOutputW::flush() noexcept;
+	void StandardErrorOutput16::flush() noexcept;
 	template <>
-	void StandardErrorOutputW::writeImpl(const wchar * chr, size_t sz) noexcept;
+	void StandardErrorOutput16::writeImpl(const char16 * chr, size_t sz) noexcept;
 
 	template <ConsoleType type, typename C>
 	inline void ConsoleOutputStream<type, C>::flush() noexcept
@@ -148,8 +142,8 @@ namespace kr
 	inline void ConsoleOutputStream<ConsoleType::Debug, C>::writeImpl(const C *chr, size_t sz) noexcept
 	{
 #ifdef WIN32
-		if (sizeof(C) == sizeof(wchar))
-			wdout << TextW((const wchar*)chr, sz);
+		if (sizeof(C) == sizeof(char16))
+			udout << Text16((const char16*)chr, sz);
 		else
 			dout << toAcp(RefArray<C>(chr, sz));
 #else
@@ -165,7 +159,7 @@ namespace kr
 	inline void ConsoleOutputStream<ConsoleType::Debug, C>::flush() noexcept
 	{
 #ifdef WIN32
-		wdout.flush();
+		udout.flush();
 #else
 		dout.flush();
 #endif

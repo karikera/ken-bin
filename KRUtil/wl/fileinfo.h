@@ -22,7 +22,7 @@ namespace kr
 		ProgramVersion(qword abcd) noexcept;
 		ProgramVersion(dword ab, dword cd) noexcept;
 		ProgramVersion(word a, word b, word c, word d) noexcept;
-		static ProgramVersion fromFile(pcwstr filename) noexcept;
+		static ProgramVersion fromFile(pcstr16 filename) noexcept;
 
 		template <typename C>
 		void copyTo(ArrayWriter<C> * dest) const noexcept

@@ -10,7 +10,7 @@ namespace kr
 	{
 	public:
 		virtual ~EmbeddedBrowser() =0;
-		virtual void navigate(TextW _url) =0;
+		virtual void navigate(Text16 _url) =0;
 		virtual void setRect(const irect& _rc) =0;
 		static EmbeddedBrowser* newInstance(win::Window * pWindow); // ErrorCode
 	};

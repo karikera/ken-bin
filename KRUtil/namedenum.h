@@ -98,7 +98,7 @@ inline kr::Text kr::EnumClass<name>::getText() const noexcept { \
 template <> \
 struct kr::Bufferize<name, char> { using type = name##Class; };\
 template <> \
-struct kr::Bufferize<name, wchar> { using type = meta::Caster<name##Class,AcpToWide>; };
+struct kr::Bufferize<name, char16> { using type = meta::Caster<name##Class,AcpToUtf16>; };
 
 #define named_enum(name, ...) \
 enum name{__VA_ARGS__} ;  \

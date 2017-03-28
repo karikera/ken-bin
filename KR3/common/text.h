@@ -74,10 +74,6 @@ namespace kr
 	{
 		return kr::Text32(tx, sz);
 	}
-	inline kr::TextW operator ""_tx(const wchar * tx, size_t sz)
-	{
-		return kr::TextW(tx, sz);
-	}
 }
 
 template <typename C>
@@ -112,9 +108,9 @@ extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AllocatedData<char
 //extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::TemporaryData<char, kr::Empty>, char>;
 //extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::WritableData<char, kr::Empty>, char>;
 
-extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AccessableData<wchar, kr::Empty>, wchar>;
-extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::ReadableData<wchar, kr::Empty>, wchar>;
-extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AllocatedData<wchar, kr::Empty>, wchar>;
-//extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::TemporaryData<wchar, kr::Empty>, wchar>;
-//extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::WritableData<wchar, kr::Empty>, wchar>;
+extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AccessableData<char16, kr::Empty>, char16>;
+extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::ReadableData<char16, kr::Empty>, char16>;
+extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::AllocatedData<char16, kr::Empty>, char16>;
+//extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::TemporaryData<char16, kr::Empty>, char16>;
+//extern template class kr::ary::_pri_::WrapImpl<kr::ary::data::WritableData<char16, kr::Empty>, char16>;
 #endif

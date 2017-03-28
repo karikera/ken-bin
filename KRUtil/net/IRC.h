@@ -68,7 +68,7 @@ namespace kr
 		using UserList = Chain<User>;
 		using InUserList = Chain<InUser>;
 		using ParameterA = ParameterT<char>;
-		using ParameterW = ParameterT<wchar>;
+		using ParameterW = ParameterT<char16>;
 		using Parameter16 = ParameterT<char16>;
 		using Parameter32 = ParameterT<char32>;
 

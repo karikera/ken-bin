@@ -23,15 +23,15 @@ namespace kr
 		constexpr static size_t MAX_LEN = 512;
 
 		Path() noexcept;
-		TextW get(TextW filename); // NotEnoughSpaceException
-		pcwstr getsz(TextW filename); // NotEnoughSpaceException
-		wchar * enter(TextW name); // NotEnoughSpaceException
-		void leave(wchar * path) noexcept;
-		pcwstr getCurrentDirectorySz() noexcept;
+		Text16 get(Text16 filename); // NotEnoughSpaceException
+		pcstr16 getsz(Text16 filename); // NotEnoughSpaceException
+		char16 * enter(Text16 name); // NotEnoughSpaceException
+		void leave(char16 * path) noexcept;
+		pcstr16 getCurrentDirectorySz() noexcept;
 
 	private:
-		wchar * m_path;
-		wchar m_buffer[MAX_LEN];
+		char16 * m_path;
+		char16 m_buffer[MAX_LEN];
 	};
 
 	template <typename C>
@@ -187,9 +187,9 @@ namespace kr
 					read++;
 				}
 #ifdef WIN32
-				else if (path[1] == L':')
+				else if (path[1] == (C)':')
 				{
-					*dest << path[0] << L':';
+					*dest << path[0] << (C)':';
 					read += 2;
 					if (read.empty()) break;
 					if (isSeperator(*read))
@@ -244,7 +244,7 @@ namespace kr
 #endif
 
 	extern template class path_t<char>;
-	extern template class path_t<wchar>;
+	extern template class path_t<char16>;
 	static path_t<char> & path = nullref;
-	static path_t<wchar> & wpath = nullref;
+	static path_t<char16> & wpath = nullref;
 }

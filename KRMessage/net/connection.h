@@ -40,7 +40,7 @@ namespace kr
 		}
 
 	protected:
-		void _download(const wchar * filename, size_t size); // NotEnoughSpaceException, SocketException, Error
+		void _download(const char16 * filename, size_t size); // NotEnoughSpaceException, SocketException, Error
 
 		AText m_host;
 		int m_port;

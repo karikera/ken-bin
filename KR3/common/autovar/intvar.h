@@ -11,7 +11,7 @@ namespace kr
 	{
 		template <size_t size> struct __INTFROMSIZE{};
 		template <> struct __INTFROMSIZE<1>{ using stype = char;	using utype = byte;		using ctype = char; };
-		template <> struct __INTFROMSIZE<2>{ using stype = short;	using utype = word;		using ctype = wchar; };
+		template <> struct __INTFROMSIZE<2>{ using stype = short;	using utype = word;		using ctype = char16; };
 		template <> struct __INTFROMSIZE<4>{ using stype = long;	using utype = dword;	using ctype = char32; };
 		template <> struct __INTFROMSIZE<8>{ using stype = llong;	using utype = qword;	using ctype = qword;};
 	}

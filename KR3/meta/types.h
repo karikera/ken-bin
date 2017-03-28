@@ -172,7 +172,7 @@ namespace kr
 					using type = itypes;
 				};
 				template <typename TARGET> struct _findcls
-					:if_same<TARGET, front_t, _findcls_return_this, typename next::template _findcls<TARGET> >
+					:if_same_t<TARGET, front_t, _findcls_return_this, typename next::template _findcls<TARGET> >
 				{
 				};
 				itypes() = default;
