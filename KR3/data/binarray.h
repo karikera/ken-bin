@@ -10,7 +10,7 @@ namespace kr
 	class BinArrayMethod
 	{
 	private:
-		uintp * _data() noexcept
+		uintptr_t * _data() noexcept
 		{
 			return static_cast<Derived*>(this)->data();
 		}
@@ -24,7 +24,7 @@ namespace kr
 		}
 
 	public:
-		static constexpr size_t bitsize = sizeof(uintp) * 8;
+		static constexpr size_t bitsize = sizeof(uintptr_t) * 8;
 		static constexpr size_t bitmask = bitsize - 1;
 		static constexpr size_t bitshift = meta::ilog2(bitsize);
 
@@ -49,41 +49,41 @@ namespace kr
 		}
 		void enableRange(size_t n, size_t len) noexcept
 		{
-			uintp* p = _data() + (n >> bitshift);
-			uintp left = n & bitmask;
+			uintptr_t* p = _data() + (n >> bitshift);
+			uintptr_t left = n & bitmask;
 			if (left != 0)
 			{
 				len += left - bitsize;
-				uintp v = 0;
+				uintptr_t v = 0;
 				while (left < bitsize)
 				{
-					v |= ((uintp)1 << left);
+					v |= ((uintptr_t)1 << left);
 					left++;
 				}
 				*p |= v;
 				p++;
 			}
 
-			uintp* end = p + (len >> bitshift);
-			memset(p, 0xff, (pbyte)end - (pbyte)p);
+			uintptr_t* end = p + (len >> bitshift);
+			memset(p, 0xff, (byte*)end - (byte*)p);
 
 			left = len & bitmask;
 			if (left != 0)
 			{
-				uintp v = 0;
+				uintptr_t v = 0;
 				for (size_t i = 0; i<left; i++)
-					v |= ((uintp)1 << i);
+					v |= ((uintptr_t)1 << i);
 				*end |= v;
 			}
 		}
 		void disableRange(size_t n, size_t len) noexcept
 		{
-			uintp* p = _data() + (n >> bitshift);
-			uintp left = n & bitmask;
+			uintptr_t* p = _data() + (n >> bitshift);
+			uintptr_t left = n & bitmask;
 			if (left != 0)
 			{
 				len += left - bitsize;
-				uintp v = 0;
+				uintptr_t v = 0;
 				while (left < bitsize)
 				{
 					v |= (1 << left);
@@ -93,13 +93,13 @@ namespace kr
 				p++;
 			}
 
-			uintp* end = p + (len >> bitshift);
-			memset(p, 0, (pbyte)end - (pbyte)p);
+			uintptr_t* end = p + (len >> bitshift);
+			memset(p, 0, (byte*)end - (byte*)p);
 
 			left = len & bitmask;
 			if (left != 0)
 			{
-				uintp v = 0;
+				uintptr_t v = 0;
 				for (size_t i = 0; i<left; i++)
 					v |= (1 << i);
 				*end &= ~v;
@@ -107,16 +107,16 @@ namespace kr
 		}
 		void enableAll() noexcept
 		{
-			mem::set(_data(), 0xff, _sizep() * sizeof(uintp));
+			mem::set(_data(), 0xff, _sizep() * sizeof(uintptr_t));
 		}
 		void disableAll() noexcept
 		{
-			mem::zero(_data(), _sizep() * sizeof(uintp));
+			mem::zero(_data(), _sizep() * sizeof(uintptr_t));
 		}
 		void set(size_t n, bool v) noexcept
 		{
 			_assert(n < _size());
-			puintp pmap = (_data() + (n >> 5));
+			uintptr_t* pmap = (_data() + (n >> 5));
 			n = v << (n & bitmask);
 			*pmap = (*pmap & ~n) | n;
 		}
@@ -127,18 +127,18 @@ namespace kr
 		}
 		size_t findEnabled(size_t index) noexcept
 		{
-			uintp * data = _data();
-			uintp * end = data + _sizep();
-			uintp * p = data + (index >> bitshift);
+			uintptr_t * data = _data();
+			uintptr_t * end = data + _sizep();
+			uintptr_t * p = data + (index >> bitshift);
 			if (p >= end) return -1;
 
 			uint left = index  & bitmask;
 			if (left > 0)
 			{
-				uintp v = *p;
+				uintptr_t v = *p;
 				while (left < bitsize)
 				{
-					if (v & ((uintp)1 << left))
+					if (v & ((uintptr_t)1 << left))
 						return index;
 					left++;
 					index++;
@@ -151,10 +151,10 @@ namespace kr
 				if (*p == 0) continue;
 
 				left = 0;
-				uintp v = *p;
+				uintptr_t v = *p;
 				while (left < bitsize)
 				{
-					if (v & ((uintp)1 << left))
+					if (v & ((uintptr_t)1 << left))
 						return (p - data)*bitsize + left;
 					left++;
 				}
@@ -173,7 +173,7 @@ namespace kr
 		using BinArrayMethod<BBinArray<SIZE> >::bitsize;
 		static constexpr size_t _sizep = (SIZE + bitsize - 1) / bitsize;
 	public:
-		uintp * data() noexcept
+		uintptr_t * data() noexcept
 		{
 			return m_map;
 		}
@@ -187,7 +187,7 @@ namespace kr
 		}
 
 	private:
-		uintp m_map[_sizep];
+		uintptr_t m_map[_sizep];
 	};
 
 	class BinArray : public BinArrayMethod<BinArray>
@@ -197,15 +197,15 @@ namespace kr
 		BinArray(size_t size) noexcept;
 		~BinArray() noexcept;
 		void alloc(size_t size) noexcept;
-		uintp * data() noexcept;
+		uintptr_t * data() noexcept;
 		size_t size() noexcept;
 		size_t sizep() noexcept;
 		void resizeAsFalse(size_t to) noexcept;
 		void free() noexcept;
 
 	private:
-		static constexpr size_t bitsize = sizeof(uintp) * 8;
-		puintp m_map;
+		static constexpr size_t bitsize = sizeof(uintptr_t) * 8;
+		uintptr_t* m_map;
 
 	};
 }

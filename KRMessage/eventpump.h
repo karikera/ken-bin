@@ -27,6 +27,7 @@ namespace kr
 		public:
 			Timer(timepoint at) noexcept;
 			virtual ~Timer() noexcept;
+			bool isPosted() noexcept;
 			timepoint getTime() const noexcept;
 			void AddRef() noexcept;
 			size_t Release() noexcept;
@@ -34,7 +35,19 @@ namespace kr
 			template <typename LAMBDA>
 			static Timer * create(timepoint at, LAMBDA lambda) noexcept
 			{
-				return _new LambdaTimer<LAMBDA>(move(lambda), at);
+				struct LambdaWrap :public Timer
+				{
+					LAMBDA m_lambda;
+					LambdaWrap(LAMBDA lambda, timepoint at) noexcept
+						: Timer(at), m_lambda(move(lambda))
+					{
+					}
+					void call() noexcept override
+					{
+						m_lambda(this);
+					}
+				};
+				return _new LambdaWrap(move(lambda), at);
 			}
 		protected:
 			virtual void call() noexcept = 0;
@@ -49,6 +62,27 @@ namespace kr
 		public:
 			Event() noexcept;
 
+			template <typename LAMBDA>
+			static Event * create(LAMBDA lambda) noexcept
+			{
+				class LambdaEvent :public Event
+				{
+				public:
+					LambdaEvent(LAMBDA lambda) noexcept
+						: m_lambda(move(lambda))
+					{
+					}
+					void call() noexcept override
+					{
+						m_lambda(this);
+					}
+
+				private:
+					LAMBDA m_lambda;
+				};
+				return _new LambdaEvent(move(lambda));
+			}
+
 		protected:
 			virtual void call() noexcept = 0;
 
@@ -58,41 +92,6 @@ namespace kr
 			size_t m_index;
 		};
 	private:
-		template <typename LAMBDA>
-		class LambdaTimer :public Timer
-		{
-		public:
-			LambdaTimer(LAMBDA lambda, timepoint at) noexcept
-				: Timer(at), m_lambda((LAMBDA&&)lambda)
-			{
-			}
-			~LambdaTimer() noexcept override
-			{
-				m_prev = nullptr;
-			}
-			void call() noexcept override
-			{
-				m_lambda(this);
-			}
-		private:
-			LAMBDA m_lambda;
-		};
-		template <typename LAMBDA>
-		class LambdaEvent :public Event
-		{
-		public:
-			LambdaEvent(LAMBDA lambda) noexcept
-				:m_lambda(move(lambda))
-			{
-			}
-			void call() noexcept override
-			{
-				m_lambda(this);
-			}
-
-		private:
-			LAMBDA m_lambda;
-		};
 
 	public:
 		EventPump() noexcept;
@@ -100,6 +99,7 @@ namespace kr
 		
 		ThreadHandle * createThread() noexcept;
 
+		void reserveThread() noexcept;
 		int start() noexcept;
 		void quit(int exitCode) noexcept;
 		void clear() noexcept;
@@ -122,9 +122,8 @@ namespace kr
 		template <typename LAMBDA>
 		Event * registLambda(EventHandle * event, LAMBDA lambda) noexcept
 		{
-			Event * ev = _new LambdaEvent<LAMBDA>(move(lambda));
-			if (regist(event, ev))
-				return ev;
+			Event * ev = Event::create(move(lambda));
+			if (regist(event, ev)) return ev;
 			delete ev;
 			return nullptr;
 		}
@@ -133,21 +132,21 @@ namespace kr
 		template <typename LAMBDA>
 		bool postLambda(LAMBDA lambda) noexcept
 		{
-			return post(Timer::create(timepoint::now(), lambda));
+			return post(Timer::create(timepoint::now(), move(lambda)));
 		}
 
 		// return: 이벤트 펌프가 아직 준비되지 않았거나, 없어졌을 경우 false
 		template <typename LAMBDA>
 		bool postLambda(timepoint at, LAMBDA lambda) noexcept
 		{
-			return post(Timer::create(at, lambda));
+			return post(Timer::create(at, move(lambda)));
 		}
 
 		// return: 이벤트 펌프가 아직 준비되지 않았거나, 없어졌을 경우 nullptr
 		template <typename LAMBDA>
 		Timer* makePost(timepoint at, LAMBDA lambda) noexcept
 		{
-			Timer * node = _new LambdaTimer<LAMBDA>(move(lambda), at);
+			Timer * node = Timer::create(at, move(lambda));
 			node->AddRef();
 			if (post(node))
 			{

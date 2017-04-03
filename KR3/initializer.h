@@ -36,7 +36,7 @@ namespace kr
 			Init() noexcept;
 			~Init() noexcept;
 
-			uintp token;
+			uintptr_t token;
 		};
 	};
 #endif

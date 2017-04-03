@@ -204,9 +204,9 @@ namespace kr
 				{
 					Text dir;
 #ifdef WIN32
-					dir = read.readto_ye(SEPERATOR);
+					dir = read.readwith_ye(SEPERATOR);
 #else
-					dir = read.readto_e(sep);
+					dir = read.readwith_e(sep);
 #endif
 					switch (dir.size())
 					{

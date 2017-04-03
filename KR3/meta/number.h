@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../main.h"
+#include "if.h"
 
 namespace kr
 {
@@ -25,73 +26,30 @@ namespace kr
 		};
 	
 		// max of / over of
-		template <typename T> struct NumberInfo {};
-
-		template <> struct NumberInfo<qword>
+		namespace _pri_
 		{
-			static constexpr qword maxof = 0xffffffffffffffff;
-			static constexpr qword minof = 0;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<llong>
+			template <typename T>
+			struct UnsignedNumberInfo
+			{
+				static constexpr T maxof = (T)-1;
+				static constexpr T minof = 0;
+				static constexpr float overof = (float)((T)1 << (sizeof(T) * 8 - 1)) * 2.f;
+			};
+			template <typename T>
+			struct SignedNumberInfo
+			{
+				static constexpr T maxof = (T)((std::make_unsigned_t<T>)((T)-1) >> 1);
+				static constexpr T minof = - maxof - 1;
+				static constexpr float overof = (float)((((std::make_unsigned_t<T>)-1) >> 1) + 1);
+			};
+		}
+		template <typename T> struct NumberInfo:
+			meta::if_t<
+				std::is_unsigned<T>::value,
+				_pri_::UnsignedNumberInfo<T>,
+				_pri_::SignedNumberInfo<T>
+			>
 		{
-			static constexpr llong maxof = 0x7fffffffffffffff;
-			static constexpr llong minof = (llong)0x8000000000000000;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<dword>
-		{
-			static constexpr dword maxof = 0xffffffff;
-			static constexpr dword minof = 0;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<long>
-		{
-			static constexpr long maxof = 0x7fffffff;
-			static constexpr long minof = (long)0x80000000;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<word>
-		{
-			static const word maxof = 0xffff;
-			static const word minof = 0;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<short>
-		{
-			static constexpr short maxof = 0x7fff;
-			static constexpr short minof = (short)0x8000;
-			static const float overof;
-		};
-
-		template <> struct NumberInfo<byte>
-		{
-			static const byte maxof = 0xff;
-			static const byte minof = 0;
-			static const float overof;
-		};
-		template <> struct NumberInfo<char>
-		{
-			static constexpr char maxof = 0x7f;
-			static constexpr char minof = (char)0x80;
-			static const float overof;
-		};
-		template <> struct NumberInfo<uint>
-		{
-			static constexpr uint maxof = 0xffffffff;
-			static constexpr uint minof = 0;
-			static const float overof;
-		};
-		template <> struct NumberInfo<int>
-		{
-			static constexpr int maxof = 0x7fffffff;
-			static constexpr int minof = (int)0x80000000;
-			static const float overof;
 		};
 	}
 
@@ -103,7 +61,7 @@ namespace kr
 	};
 }
 
-#define lastbitof(type) (kr::meta::LastBitOf<type>::value)
-#define maxof(type)	(kr::meta::NumberInfo<type>::maxof)
-#define minof(type)	(kr::meta::NumberInfo<type>::minof)
-#define overof(type) (kr::meta::NumberInfo<type>::overof)
+#define lastbitof(type) (::kr::meta::LastBitOf<type>::value)
+#define maxof(type)	(::kr::meta::NumberInfo<type>::maxof)
+#define minof(type)	(::kr::meta::NumberInfo<type>::minof)
+#define overof(type) (::kr::meta::NumberInfo<type>::overof)

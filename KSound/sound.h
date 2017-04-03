@@ -17,7 +17,7 @@ namespace kr
 		constexpr int blockAlignment = channel * sampleBit / 8;
 		constexpr int secByte = blockAlignment * secSample;
 		constexpr int maxVolume = (((dword)1) << (sampleBit - 1)) - 1;
-		using sample = int_sz<sampleBit / 8>;
+		using sample = int_sz_t<sampleBit / 8>;
 
 		inline dword secToByte(dword x) noexcept
 		{

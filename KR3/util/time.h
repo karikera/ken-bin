@@ -156,19 +156,19 @@ namespace kr
 			}
 			inline bool operator <(timepoint p) const noexcept
 			{
-				return (long)(m_time - p.m_time) < 0;
+				return (dura_t)(m_time - p.m_time) < 0;
 			}
 			inline bool operator >(timepoint p) const noexcept
 			{
-				return (long)(m_time - p.m_time) > 0;
+				return (dura_t)(m_time - p.m_time) > 0;
 			}
 			inline bool operator <=(timepoint p) const noexcept
 			{
-				return (long)(m_time - p.m_time) <= 0;
+				return (dura_t)(m_time - p.m_time) <= 0;
 			}
 			inline bool operator >=(timepoint p) const noexcept
 			{
-				return (long)(m_time - p.m_time) >= 0;
+				return (dura_t)(m_time - p.m_time) >= 0;
 			}
 			inline bool operator ==(timepoint p) const noexcept
 			{
@@ -183,8 +183,8 @@ namespace kr
 
 	};
 
-	using MilliTime = TimeType<dword, long>;
-	using DetailTime = TimeType<qword, llong>;
+	using MilliTime = TimeType<uint32_t, int32_t>;
+	using DetailTime = TimeType<uint64_t, int64_t>;
 
 	using timepoint = MilliTime::timepoint;
 	using duration = MilliTime::duration;
@@ -249,11 +249,11 @@ namespace kr
 
 inline kr::duration operator ""_ms(unsigned long long v) noexcept
 {
-	return kr::duration((long)v);
+	return kr::duration((int32_t)v);
 }
 
 inline kr::duration operator ""_s(unsigned long long v) noexcept
 {
-	return kr::duration((long)(v * 1000));
+	return kr::duration((int32_t)(v * 1000));
 }
 

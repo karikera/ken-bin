@@ -21,15 +21,15 @@ namespace kr
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
 					if (align <= 1)
 					{
-						return (InternalComponent*)((pbyte)allocator->allocate(sz + offset) + offset);
+						return (InternalComponent*)((byte*)allocator->allocate(sz + offset) + offset);
 					}
 					else if (offset == 0)
 					{
-						return (InternalComponent*)((pbyte)allocator->allocate(sz, align));
+						return (InternalComponent*)((byte*)allocator->allocate(sz, align));
 					}
 					else
 					{
-						return (InternalComponent*)((pbyte)allocator->allocate(sz, align, offset) + offset);
+						return (InternalComponent*)((byte*)allocator->allocate(sz + offset, align, offset) + offset);
 					}
 				}
 				static InternalComponent * _mem_alloc(size_t sz) noexcept
@@ -39,7 +39,7 @@ namespace kr
 				static size_t _mem_msize_bytes(InternalComponent * p) noexcept
 				{
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
-					return (allocator->msize((pbyte)p - offset) - offset);
+					return (allocator->msize((byte*)p - offset) - offset);
 				}
 				static size_t _mem_msize(InternalComponent * p) noexcept
 				{
@@ -48,9 +48,9 @@ namespace kr
 				static bool _mem_expand(InternalComponent * p, size_t sz) // NotEnoughSpaceException
 				{
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
-					if (allocator->isLastBlock((pbyte)p - offset))
+					if (allocator->isLastBlock((byte*)p - offset))
 					{
-						return allocator->expand((pbyte)p - offset, sz * sizeof(InternalComponent) + offset);
+						return allocator->expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
 					}
 					else
 					{
@@ -63,27 +63,27 @@ namespace kr
 				{
 					_assert(sz <= _mem_msize(p));
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
-					if (!allocator->isLastBlock((pbyte)p - offset)) return;
-					allocator->expand((pbyte)p - offset, sz * sizeof(InternalComponent) + offset);
+					if (!allocator->isLastBlock((byte*)p - offset)) return;
+					allocator->expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
 				}
 				static void _mem_free(InternalComponent * p) noexcept
 				{
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
-					allocator->free((pbyte)p - offset);
+					allocator->free((byte*)p - offset);
 				}
 
 				template <typename LAMBDA>
 				static InternalComponent* _obj_move(InternalComponent * from, size_t ncap, const LAMBDA & ctor_move_d) // NotEnoughSpaceException
 				{
 					StackAllocator * allocator = StackAllocator::getThreadAllocator();
-					pbyte allocpoint = (pbyte)from - offset;
+					byte* allocpoint = (byte*)from - offset;
 					if (!allocator->isLastBlock(allocpoint))
 						throw NotEnoughSpaceException();
 
 					ncap *= sizeof(InternalComponent);
 
 					StackAllocator::Node * node = allocator->getLastNode();
-					InternalComponent* narr = (InternalComponent*)((pbyte)allocator->allocateWithNewNode(ncap, align, offset) + offset);
+					InternalComponent* narr = (InternalComponent*)((byte*)allocator->allocateWithNewNode(ncap, align, offset) + offset);
 					ctor_move_d(narr);
 					node->free(allocpoint);
 					return narr;
@@ -101,15 +101,15 @@ namespace kr
 				{
 					if (align <= 1)
 					{
-						return (InternalComponent*)((pbyte)kr_alloc(sz + offset) + offset);
+						return (InternalComponent*)((byte*)kr_alloc(sz + offset) + offset);
 					}
 					else if (offset == 0)
 					{
-						return (InternalComponent*)((pbyte)kr_aligned_alloc(sz, align));
+						return (InternalComponent*)((byte*)kr_aligned_alloc(sz, align));
 					}
 					else
 					{
-						return (InternalComponent*)((pbyte)kr_aligned_alloc(sz + offset, align, offset) + offset);
+						return (InternalComponent*)((byte*)kr_aligned_alloc(sz + offset, align, offset) + offset);
 					}
 				}
 				static InternalComponent * _mem_alloc(size_t sz) noexcept
@@ -120,15 +120,15 @@ namespace kr
 				{
 					if (align <= 1)
 					{
-						return (kr_msize((pbyte)p - offset) - offset);
+						return (kr_msize((byte*)p - offset) - offset);
 					}
 					else if (offset == 0)
 					{
-						return (kr_aligned_msize((pbyte)p, align));
+						return (kr_aligned_msize((byte*)p, align));
 					}
 					else
 					{
-						return (kr_aligned_msize((pbyte)p - offset, align, offset) - offset);
+						return (kr_aligned_msize((byte*)p - offset, align, offset) - offset);
 					}
 				}
 				static size_t _mem_msize(InternalComponent * p) noexcept
@@ -139,11 +139,11 @@ namespace kr
 				{
 					if (align <= 1)
 					{
-						return kr_expand((pbyte)p - offset, sz * sizeof(InternalComponent) + offset);
+						return kr_expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
 					}
 					else
 					{
-						return kr_aligned_expand((pbyte)p - offset, sz * sizeof(InternalComponent) + offset, align, offset);
+						return kr_aligned_expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset, align, offset);
 					}
 				}
 				static void _mem_reduce(InternalComponent * p, size_t sz) noexcept
@@ -154,11 +154,11 @@ namespace kr
 				{
 					if (align <= 1)
 					{
-						kr_free((pbyte)p - offset);
+						kr_free((byte*)p - offset);
 					}
 					else
 					{
-						kr_aligned_free((pbyte)p - offset);
+						kr_aligned_free((byte*)p - offset);
 					}
 				}
 

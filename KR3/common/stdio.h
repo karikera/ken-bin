@@ -103,6 +103,8 @@ namespace kr
 	extern DebugOutput &dout;
 	extern DebugOutput16 &udout;
 
+	void dumpMemory(void * addr, size_t size) noexcept;
+
 	template <ConsoleType type, typename C>
 	ConsoleOutputStream<type,C> ConsoleOutputStream<type, C>::out;
 

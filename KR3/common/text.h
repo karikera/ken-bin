@@ -29,7 +29,7 @@ namespace kr
 		using Super::prints;
 
 		TempSzText() noexcept
-			:Super((size_t)0, 1024)
+			:Super()
 		{
 		}
 		TempSzText(size_t size) noexcept

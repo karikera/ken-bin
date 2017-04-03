@@ -50,12 +50,12 @@ namespace kr
 		template <bool aligned>
 		class quaternionT;
 
-		using ipvec2 = vector<intp, 2, false, OrderRGBA>;
-		using ipvec3 = vector<intp, 3, false, OrderRGBA>;
-		using ipvec4 = vector<intp, 4, false, OrderRGBA>;
-		using upvec2 = vector<uintp, 2, false, OrderRGBA>;
-		using upvec3 = vector<uintp, 3, false, OrderRGBA>;
-		using upvec4 = vector<uintp, 4, false, OrderRGBA>;
+		using ipvec2 = vector<intptr_t, 2, false, OrderRGBA>;
+		using ipvec3 = vector<intptr_t, 3, false, OrderRGBA>;
+		using ipvec4 = vector<intptr_t, 4, false, OrderRGBA>;
+		using upvec2 = vector<uintptr_t, 2, false, OrderRGBA>;
+		using upvec3 = vector<uintptr_t, 3, false, OrderRGBA>;
+		using upvec4 = vector<uintptr_t, 4, false, OrderRGBA>;
 		using ivec2 = vector<int, 2, false, OrderRGBA>;
 		using ivec3 = vector<int, 3, false, OrderRGBA>;
 		using ivec4 = vector<int, 4, false, OrderRGBA>;

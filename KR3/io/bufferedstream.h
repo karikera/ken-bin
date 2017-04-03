@@ -10,13 +10,39 @@ namespace kr
 		class BufferedIStream 
 			:public FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>
 		{
-		public:
+		private:
 			using Super = FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>;
 			using Component = typename Base::Component;
 			using m = memt<sizeof(Component)>;
 			using Ref = RefArray<Component>;
 			using TSZ = TempSzText<Component>;
+			using AText = Array<Component>;
 
+			void _refill() // EofException
+			{
+				m_filled = m_read = m_buffer;
+				m_filled += base()->read(m_buffer, BUFFER_SIZE);
+			}
+			void _remainFill() // EofException
+			{
+				size_t remaining = m_filled - m_read;
+				if (remaining == 0)
+				{
+					return _refill();
+				}
+				if (m_read == m_buffer)
+				{
+					m_filled += base()->read(m_filled, BUFFER_SIZE - remaining);
+				}
+				else
+				{
+					mema::copy(m_buffer, m_read, remaining);
+					m_read = m_buffer;
+					m_filled = m_buffer + remaining;
+					m_filled += base()->read(m_filled, BUFFER_SIZE - remaining);
+				}
+			}
+		public:
 			using Super::read;
 			using Super::base;
 
@@ -49,6 +75,11 @@ namespace kr
 				resetStream(p->template retype<Component>());
 			}
 
+			void clearBuffer()
+			{
+				m_filled = m_read = m_buffer;
+			}
+
 			Component peek()
 			{
 				for (;;)
@@ -58,11 +89,59 @@ namespace kr
 						return *m_read;
 					}
 
-					size_t sz = base()->read(m_buffer, BUFFER_SIZE);
-					m_filled = m_buffer + sz;
-					m_read = m_buffer;
+					_refill();
 				}
 			}
+			Ref peek(size_t count) // TooBigException
+			{
+				if (count > BUFFER_SIZE) throw TooBigException();
+				for (;;)
+				{
+					if (m_filled >= m_read + count)
+					{
+						return Ref(m_read, count);
+					}
+
+					_remainFill();
+				}
+			}
+			bool nextIs(const Component & comp)
+			{
+				if (comp != peek()) return false;
+				skip(1);
+				return true;
+			}
+			bool nextIs(Ref comps)
+			{
+				if (comps != peek(comps.size())) return false;
+				skip(comps.size());
+				return true;
+			}
+			void must(const Component & comp)
+			{
+				if (!nextIs(comp)) throw InvalidSourceException();
+			}
+			void must(Ref comps)
+			{
+				TmpArray<Component> tmp((size_t)0, comps.size());
+				read(&tmp, comps.size());
+				if (tmp != comps) throw InvalidSourceException();
+			}
+
+			void skip(size_t sz = 1)
+			{
+				Component * line;
+				for (;;)
+				{
+					line = m_read + sz;
+					if (line <= m_filled) break;
+					sz = line - m_filled;
+					_refill();
+				}
+
+				m_read = line;
+			}
+
 			template <typename _Derived, typename _Info>
 			size_t readLine(OutStream<_Derived, Component, _Info> * dest)
 			{
@@ -161,6 +240,38 @@ namespace kr
 				m_read += len + 1;
 				return readed + len;
 			}
+
+			template <typename _Derived, typename _Info, typename LAMBDA>
+			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda)
+			{
+				size_t totalReaded = 0;
+				Component * line;
+				for (;;)
+				{
+					size_t size = m_filled - m_read;
+					if (size != 0)
+					{
+						line = (Component*)lambda(RefArray<Component>(m_read, size));
+						if (line != nullptr) break;
+						dest->write(m_read, size);
+						totalReaded += size;
+					}
+
+					_refill();
+				}
+
+				size_t len = line - m_read;
+				dest->write(m_read, len);
+				m_read = line;
+				return totalReaded + len;
+			}
+			template <typename LAMBDA>
+			TSZ readto_F(const LAMBDA &lambda)
+			{
+				TSZ tsz;
+				readto_F(&tsz, lambda);
+				return tsz;
+			}
 			template <typename LAMBDA>
 			size_t skipto_F(const LAMBDA &lambda)
 			{
@@ -177,85 +288,151 @@ namespace kr
 						readlen += size;
 					}
 
-					m_filled = m_read = m_buffer;
-					m_filled += base()->read(m_filled, BUFFER_SIZE);
+					_refill();
 				}
 
 				size_t copylen = line - m_read;
 				m_read = line;
 				return readlen + copylen;
 			}
-			template <typename _Derived, typename _Info, typename LAMBDA>
-			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda)
-			{
-				size_t readed = 0;
-				Component * line;
-				for (;;)
-				{
-					Component * last = m_filled;
-					size_t size = last - m_read;
-					if (size != 0)
-					{
-						line = (Component*)lambda(RefArray<Component>(m_read, size));
-						if (line != nullptr) break;
-						dest->write(m_read, size);
-						readed += size;
-					}
 
-					m_filled = m_read = m_buffer;
-
-					try
-					{
-						m_filled += base()->read(m_buffer, BUFFER_SIZE);
-					}
-					catch (EofException&)
-					{
-						if (readed == 0) throw;
-						return readed;
-					}
-				}
-
-				size_t len = line - m_read;
-				dest->write(m_read, len);
-				m_read = line;
-				return readed + len;
-			}
-			size_t skipto(Component chr)
-			{
-				return skipto_F([chr](Ref text) {
-					return text.find(chr).begin();
-				});
-			}
 			template <typename _Derived, typename _Info>
-			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &chr) // TooBigException
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &needle) // TooBigException
 			{
-				size_t sz = readto_F(dest, [chr](Ref text) {
-					return text.find(chr).begin();
+				return readto_F(dest, [&](Ref text) {
+					return text.find(needle).begin();
 				});
+			}
+			TSZ readto(const Component &chr) // TooBigException
+			{
+				TSZ tsz;
+				return readto(&tsz, chr);
+			}
+			size_t skipto(const Component &needle)
+			{
+				return skipto_F([&](Ref text) {
+					return text.find(needle).begin();
+				});
+			}
+
+			template <typename _Derived, typename _Info>
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, Ref needle) // TooBigException
+			{
+				size_t totalReaded = 0;
+				size_t needlesize = needle.size();
+				if (needlesize >= BUFFER_SIZE / 2) throw TooBigException();
+				Component * beg = m_read;
+				try
+				{
+					Component * finded = mem::find_callback([&]{
+						while (m_read == m_filled)
+						{
+							size_t readed = m_filled - beg;
+							if (readed > needlesize)
+							{
+								readed -= needlesize;
+								dest->write(beg, readed);
+								totalReaded += readed;
+								m_read = m_filled - needlesize;
+							}
+							_remainFill();
+							beg = m_buffer;
+						}
+						return m_read++;
+					}, needle.data(), needlesize);
+
+					m_read = finded - needlesize;
+					size_t readsize = finded - beg;
+					dest->write(beg, readsize);
+					return totalReaded + readsize;
+				}
+				catch (EofException&)
+				{
+					if (totalReaded == 0) throw;
+					dest->write(beg, m_filled - beg);
+					clearBuffer();
+					return totalReaded;
+				}
+			}
+			AText readto(Ref needle) // TooBigException
+			{
+				AText text;
+				readto(&text, needle);
+				return text;
+			}
+			size_t skipto(Ref needle)
+			{
+				size_t totalReaded = 0;
+				size_t needlesize = needle.size();
+				if (needlesize >= BUFFER_SIZE / 2) throw TooBigException();
+				Component * beg = m_read;
+				try
+				{
+					Component * finded = mem::find_callback([&]{
+						while (m_read == m_filled)
+						{
+							size_t readed = m_filled - beg;
+							if (readed > needlesize)
+							{
+								totalReaded += readed - needlesize;
+								m_read = m_filled - needlesize;
+							}
+							_remainFill();
+							beg = m_buffer;
+						}
+						return m_read++;
+					}, needle.data(), needlesize);
+
+					m_read = finded - needlesize;
+					return totalReaded + finded - beg;
+				}
+				catch (EofException&)
+				{
+					if (totalReaded == 0) throw;
+					clearBuffer();
+					return totalReaded;
+				}
+			}
+
+			template <typename _Derived, typename _Info>
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, const Component &chr) // TooBigException
+			{
+				size_t sz = readto(dest, chr);
 				skip(1);
 				return sz;
 			}
-			void skip(size_t sz)
+			TSZ readwith(const Component &chr) // TooBigException
 			{
-				Component * line;
-				for (;;)
-				{
-					line = m_read + sz;
-					if (line <= m_filled) break;
-					sz = line - m_filled;
-					size_t sz = base()->read(m_buffer, BUFFER_SIZE);
-					m_filled = m_buffer + sz;
-					m_read = m_buffer;
-				}
+				TSZ tsz;
+				readwith(&tsz, chr);
+				return tsz;
+			}
+			size_t skipwith(const Component &chr) // TooBigException
+			{
+				size_t sz = skipto(chr);
+				skip(1);
+				return sz;
+			}
 
-				m_read = line;
-			}
-			size_t skipto_y(Ref chr)
+			template <typename _Derived, typename _Info>
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, Ref needle) // TooBigException
 			{
-				return skipto_F([chr](Ref text) {
-					return text.find_y(chr).begin();
-				});
+				size_t sz = readto(dest, needle);
+				skip(needle.size());
+				return sz;
 			}
+			TSZ readwith(Ref needle) // TooBigException
+			{
+				TSZ tsz;
+				return readwith(&tsz, needle);
+			}
+			size_t skipwith(Ref needle) // TooBigException
+			{
+				size_t sz = skipto(needle);
+				skip(needle.size());
+				return sz;
+			}
+
 			template <typename _Derived, typename _Info>
 			size_t readto_y(OutStream<_Derived, Component, _Info> * dest, Ref chr)
 			{
@@ -263,25 +440,38 @@ namespace kr
 					return text.find_y(chr).begin();
 				});
 			}
+			TSZ readto_y(Ref chr)
+			{
+				TSZ tsz;
+				readto_y(&tsz, chr);
+				return tsz;
+			}
+			size_t skipto_y(Ref chr)
+			{
+				return skipto_F([chr](Ref text) {
+					return text.find_y(chr).begin();
+				});
+			}
+
+			template <typename _Derived, typename _Info>
+			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, const Component & chr)
+			{
+				return readto_F(dest, [&](Ref text) {
+					return text.find_n(chr).begin();
+				});
+			}
+			TSZ readto_n(const Component &chr)
+			{
+				TSZ tsz;
+				return readto_n(&tsz, chr);
+			}
 			size_t skipto_n(Component chr)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_n(chr).begin();
 				});
 			}
-			template <typename _Derived, typename _Info>
-			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, Component chr)
-			{
-				return readto_F(dest, [chr](Ref text) {
-					return text.find_n(chr).begin();
-				});
-			}
-			size_t skipto_ny(Ref chr)
-			{
-				return skipto_F([chr](Ref text) {
-					return text.find_ny(chr).begin();
-				});
-			}
+
 			template <typename _Derived, typename _Info>
 			size_t readto_ny(OutStream<_Derived, Component, _Info> * dest, Ref chr)
 			{
@@ -289,93 +479,17 @@ namespace kr
 					return text.find_ny(chr).begin();
 				});
 			}
-			template <typename _Derived, typename _Info>
-			int readto_unslash_linecount(OutStream<_Derived, Component, _Info> * dest, Component needle)
+			TSZ readto_ny(Ref chr)
 			{
-				int line = 0;
-				for (;;)
-				{
-					readto_F(dest, [&](Ref text) {
-						const Component needles[] = { (Component)'\\', needle };
-						Ref finded = text.find_y(Ref(needles, countof(needles)));
-						if (finded != nullptr)
-							line += (int)text.cut(finded).count('\n');
-						return finded.begin();
-					});
-					Component findedchr = read();
-
-					if (findedchr == '\\')
-					{
-						Component chr = read();
-						switch (chr)
-						{
-						case 'a': dest->write('\a'); break;
-						case 'b': dest->write('\b'); break;
-						case 'f': dest->write('\f'); break;
-						case 'r': dest->write('\r'); break;
-						case 'n': dest->write('\n'); break;
-						case 't': dest->write('\t'); break;
-						case '\"':
-						case '\'':
-						case '\\':
-						default:
-							dest->write(chr);
-							break;
-						}
-					}
-					else return line;
-				}
+				TSZ tsz;
+				readto_ny(&tsz, chr);
+				return tsz;
 			}
-			void skipto_unslash(Component needle)
+			size_t skipto_ny(Ref chr)
 			{
-				for (;;)
-				{
-					skipto_F([&](Ref text) {
-						const Component needles[] = { (Component)'\\', needle };
-						Ref finded = text.find_y(Ref(needles, countof(needles)));
-						return finded.begin();
-					});
-
-					if (read() == '\\')
-					{
-						skip(1);
-					}
-					else return;
-				}
-			}
-			template <typename _Derived, typename _Info>
-			void readto_unslash(OutStream<_Derived, Component, _Info> * dest, Component needle)
-			{
-				for (;;)
-				{
-					readto_F(dest, [&](Ref text) {
-						const Component needles[] = { (Component)'\\', needle };
-						Ref finded = text.find_y(Ref(needles, countof(needles)));
-						return finded.begin();
-					});
-					Component findedchr = read();
-
-					if (findedchr == '\\')
-					{
-						Component chr = read();
-						switch (chr)
-						{
-						case 'a': dest->write('\a'); break;
-						case 'b': dest->write('\b'); break;
-						case 'f': dest->write('\f'); break;
-						case 'r': dest->write('\r'); break;
-						case 'n': dest->write('\n'); break;
-						case 't': dest->write('\t'); break;
-						case '\"':
-						case '\'':
-						case '\\':
-						default:
-							dest->write(chr);
-							break;
-						}
-					}
-					else return;
-				}
+				return skipto_F([chr](Ref text) {
+					return text.find_ny(chr).begin();
+				});
 			}
 
 			RefArray<Component> getBuffer() noexcept
@@ -385,11 +499,11 @@ namespace kr
 			size_t readImpl(Component * dest, size_t need)
 			{
 				{
-					Component* readto = m_read + need;
-					if (m_filled >= readto)
+					Component* to = m_read + need;
+					if (m_filled >= to)
 					{
 						mema::copy(dest, m_read, need);
-						m_read = readto;
+						m_read = to;
 						return need;
 					}
 				}

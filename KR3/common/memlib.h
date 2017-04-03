@@ -20,13 +20,13 @@ namespace kr
 		inline operator const T&() const noexcept;
 
 	private:
-		int_sz<size> m_value;
+		int_sz_t<size> m_value;
 	};
 	template <size_t size>
 	template <typename T>
 	inline IntableValue<size>::IntableValue(T v) noexcept
 	{
-		m_value = (int_sz<size>)v;
+		m_value = (int_sz_t<size>)v;
 	}
 	template <size_t size>
 	template <typename T>
@@ -51,7 +51,7 @@ namespace kr
 	template <size_t BASE> 
 	struct memt
 	{
-		using type = uint_sz<BASE>;
+		using type = uint_sz_t<BASE>;
 		using atype = IntableValue<BASE>;
 	
 		_VOID_ zero(ptr _dst, size_t _len) noexcept;
@@ -64,10 +64,12 @@ namespace kr
 		_RETURN_(int) compare(cptr _dst, cptr _src, size_t _len) noexcept;
 		template <typename T>
 		_RETURN_(T*) compare_p(T* _dst, std::add_const_t<T>* _src, size_t _len) noexcept;
-
+		
 		_NOTNULL_(ptr) alloc(cptr _src, size_t _len) noexcept;
 		template <typename T>
 		_RETURN_(size_t) strlen(T* _dst) noexcept;
+		template <typename T, typename READCB>
+		_NOTNULL_(auto) find_callback(const READCB &read, T* _tar, size_t _tarlen)->decltype(read());
 		template <typename T> 
 		_NOTNULL_(T*) find(T* _dst, atype _tar) noexcept;
 		template <typename T>
@@ -403,7 +405,7 @@ namespace kr
 	{
 		static bool equals(const void * a, const void * b) noexcept
 		{
-			return *(word*)a == *(word*)b && ((pbyte)a)[2] == ((pbyte)b)[2];
+			return *(word*)a == *(word*)b && ((byte*)a)[2] == ((byte*)b)[2];
 		}
 	};
 
@@ -421,7 +423,7 @@ namespace kr
 	{
 		static bool equals(const void * a, const void * b) noexcept
 		{
-			return *(dword*)a == *(dword*)b && ((pbyte)a)[4] == ((pbyte)b)[4];
+			return *(dword*)a == *(dword*)b && ((byte*)a)[4] == ((byte*)b)[4];
 		}
 	};
 
@@ -430,7 +432,7 @@ namespace kr
 	{
 		static bool equals(const void * a, const void * b) noexcept
 		{
-			return *(dword*)a == *(dword*)b && ((pword)a)[4] == ((pword)b)[4];
+			return *(dword*)a == *(dword*)b && ((word*)a)[4] == ((word*)b)[4];
 		}
 	};
 
@@ -439,7 +441,7 @@ namespace kr
 	{
 		static bool equals(const void * a, const void * b) noexcept
 		{
-			return *(dword*)a == *(dword*)b && ((pword)a)[4] == ((pword)b)[4] && ((pbyte)a)[6] == ((pbyte)b)[6];
+			return *(dword*)a == *(dword*)b && ((word*)a)[4] == ((word*)b)[4] && ((byte*)a)[6] == ((byte*)b)[6];
 		}
 	};
 

@@ -10,11 +10,11 @@ namespace kr
 		template <char first, char ... lefts> struct BIN<first, lefts...>
 		{
 			static_assert(first == '0' || first == '1', "Need 0 or 1");
-			static constexpr uintp value = ((first-'0') << (sizeof ... (lefts))) | BIN<lefts...>::value;
+			static constexpr uintptr_t value = ((first-'0') << (sizeof ... (lefts))) | BIN<lefts...>::value;
 		};
 		template <> struct BIN<>
 		{
-			static constexpr uintp value = 0;
+			static constexpr uintptr_t value = 0;
 		};
 	}
 

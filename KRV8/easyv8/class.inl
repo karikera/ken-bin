@@ -129,7 +129,7 @@ inline void kr::JsClass<T>::setIndexAccessor(P(T::* get)(uint32_t), void(T::* se
 		T * _nthis = _this.getNativeObject<T>();
 		if (_nthis == nullptr) return undefined;
 		return (_nthis->*get)(idx);
-	}, [set](V8Object _this, unsigned long idx, JsAny value) {
+	}, [set](V8Object _this, uint32_t idx, JsAny value) {
 		T * _nthis = args.getThis().getNativeObject<T>();
 		if (_nthis == nullptr) return;
 		return (_nthis->*set)(idx, value);

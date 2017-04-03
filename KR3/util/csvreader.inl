@@ -138,7 +138,7 @@ bool kr::CSVReader<IS>::nextLine()
 				}
 			}
 
-			m_stream.readto_y(",\n", &finded);
+			m_stream.readwith_y(",\n", &finded);
 		}
 		while(finded == ',');
 		m_nLast = ',';
@@ -239,7 +239,7 @@ void kr::CSVReader<IS>::next(OutStream<Derived, C, _Info>* dest)
 			}
 		}
 
-		m_stream.readto_y(",\n", (char*)&finded).writeTo(dest);
+		m_stream.readwith_y(",\n", (char*)&finded).writeTo(dest);
 	}
 	catch (EofException&)
 	{

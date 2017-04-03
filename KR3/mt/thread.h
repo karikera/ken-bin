@@ -40,7 +40,7 @@ namespace kr
 			m_handle = ThreadHandle::create<T, &T::thread>(static_cast<T*>(this));
 #else
 			int pthread_create_res = pthread_create(&m_handle, nullptr, [](void * _this)->void* {
-				return (void*)(intp)(int)((T*)(_this))->thread();
+				return (void*)(intptr_t)(int)((T*)(_this))->thread();
 			}, this);
 			_assert(pthread_create_res != 0);
 #endif

@@ -87,10 +87,10 @@ namespace kr
 				return *(m_read++);
 			}
 
-			intp request() // TooBigException, EofException
+			intptr_t request() // TooBigException, EofException
 			{
-				intp shifted = m_buffer.begin() - m_read;
-				intp left = m_buffer.end() - m_read;
+				intptr_t shifted = m_buffer.begin() - m_read;
+				intptr_t left = m_buffer.end() - m_read;
 				m_buffer.copy(Text(m_read, left));
 				m_buffer.resize(left);
 				size_t remaining = m_buffer.left();
@@ -108,10 +108,10 @@ namespace kr
 					throw;
 				}
 			}
-			intp request(size_t need) // TooBigException, EofException
+			intptr_t request(size_t need) // TooBigException, EofException
 			{
-				intp shifted = m_buffer.begin() - m_read;
-				intp left = m_buffer.end() - m_read;
+				intptr_t shifted = m_buffer.begin() - m_read;
+				intptr_t left = m_buffer.end() - m_read;
 				m_buffer.copy(Text(m_read, left));
 				m_buffer.resize(left);
 				size_t remaining = m_buffer.left();
@@ -346,7 +346,7 @@ namespace kr
 					return res;
 				}
 			}
-			Text readto(InternalComponent _chr)
+			Text readwith(InternalComponent _chr)
 			{
 				size_t readlen = pos(_chr);
 				Text res = Text(m_read, readlen);
@@ -354,7 +354,7 @@ namespace kr
 				m_read++;
 				return res;
 			}
-			Text readto(Text _str)
+			Text readwith(Text _str)
 			{
 				size_t readlen = pos(_str);
 				Text res = Text(m_read, readlen);
@@ -362,7 +362,7 @@ namespace kr
 				m_read += _str.size();
 				return res;
 			}
-			Text readto_y(Text _str)
+			Text readwith_y(Text _str)
 			{
 				size_t readlen = pos_y(_str);
 				Text res = Text(m_read, readlen);
@@ -370,7 +370,7 @@ namespace kr
 				m_read++;
 				return res;
 			}
-			Text readto_y(Text _str, Component * _finded)
+			Text readwith_y(Text _str, Component * _finded)
 			{
 				size_t readlen = pos_y(_str);
 				Text res = Text(m_read, readlen);
@@ -379,7 +379,7 @@ namespace kr
 				m_read++;
 				return res;
 			}
-			Text readto_e(InternalComponent _chr)
+			Text readwith_e(InternalComponent _chr)
 			{
 				Text res;
 				try
@@ -393,7 +393,7 @@ namespace kr
 				}
 				return res;
 			}
-			Text readto_e(Text _str)
+			Text readwith_e(Text _str)
 			{
 				Text res;
 				try
@@ -407,12 +407,12 @@ namespace kr
 				}
 				return res;
 			}
-			Text readto_ye(Text _str)
+			Text readwith_ye(Text _str)
 			{
 				Text res;
 				try
 				{
-					res = readto_y(_str);
+					res = readwith_y(_str);
 				}
 				catch (EofException&)
 				{
@@ -421,12 +421,12 @@ namespace kr
 				}
 				return res;
 			}
-			Text readto_ye(Text _str, int * _finded)
+			Text readwith_ye(Text _str, int * _finded)
 			{
 				Text res;
 				try
 				{
-					readto_y(_str, _finded);
+					readwith_y(_str, _finded);
 				}
 				catch (EofException&)
 				{

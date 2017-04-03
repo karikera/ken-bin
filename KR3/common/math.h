@@ -33,9 +33,9 @@ namespace kr
 		template <typename T2, typename T> _RETURN_ T2 subb(T* _res, T _a, T _b) noexcept;
 		template <typename T> _RETURN_ int suspectedFloor(T value) noexcept;
 
-		_RETURN_ dword pow2ceil(dword number) noexcept;
-		_RETURN_ dword pow2floor(dword number) noexcept;
-		template <typename T> _RETURN_ dword cipher(T n_number, uint n_radix) noexcept;
+		_RETURN_ uint32_t pow2ceil(uint32_t number) noexcept;
+		_RETURN_ uint32_t pow2floor(uint32_t number) noexcept;
+		template <typename T> _RETURN_ uint32_t cipher(T n_number, uint n_radix) noexcept;
 		_RETURN_ float sin(float a) noexcept;
 		_RETURN_ float cos(float a) noexcept;
 		void sincos(float *s, float *c, float a) noexcept;
@@ -44,13 +44,12 @@ namespace kr
 		_RETURN_ float acos(float a) noexcept;
 		_RETURN_ float atan(float a) noexcept;
 		_RETURN_ float atan2(float y, float x) noexcept;
-		_RETURN_ long gap(long a, long b) noexcept;
+		_RETURN_ uint32_t gap(uint32_t a, uint32_t b) noexcept;
 		_RETURN_ float ceil(float a) noexcept;
-		_RETURN_ long ceil(long a, long b) noexcept;
-		_RETURN_ uint ceil(uint a, uint b) noexcept;
+		_RETURN_ uint32_t ceil(uint32_t a, uint32_t b) noexcept;
 		_RETURN_ float ceil(float a, float b) noexcept;
 		_RETURN_ float round(float x) noexcept;
-		_RETURN_ long lround(float x) noexcept;
+		_RETURN_ uint32_t lround(float x) noexcept;
 		template <typename T> _RETURN_ T tround(float x) noexcept;
 		template <> _RETURN_ float tround<float>(float x) noexcept;
 		template <> _RETURN_ double tround<double>(float x) noexcept;
@@ -64,9 +63,9 @@ namespace kr
 		template <>
 		_RETURN_ double mod<double>(double a, double b) noexcept;
 		_RETURN_ float radianmod(float a) noexcept;
-		_RETURN_ dword ilog(dword val, dword n) noexcept;
-		_RETURN_ dword ilog2(dword val) noexcept;
-		_RETURN_ dword plog2(uintp val) noexcept;
+		_RETURN_ uint32_t ilog(uint32_t val, uint32_t n) noexcept;
+		_RETURN_ uint32_t ilog2(uint32_t val) noexcept;
+		_RETURN_ uint32_t plog2(uintptr_t val) noexcept;
 
 		template <typename T, typename ... ARGS> 
 		_RETURN_ T sum(T arg, ARGS ... args) noexcept

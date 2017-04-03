@@ -106,12 +106,12 @@ namespace kr
 	class NumberAddress: public Bufferable<NumberAddress, BufferInfo<AutoComponent> >
 	{
 	private:
-		uintp m_value;
+		uintptr_t m_value;
 
 	public:
 		NumberAddress(const void* _value) noexcept
 		{
-			m_value = (uintp)_value;
+			m_value = (uintptr_t)_value;
 		}
 
 		template <typename C>

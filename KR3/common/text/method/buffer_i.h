@@ -44,23 +44,23 @@ namespace kr
 				{
 				}
 
-				Ref operator +(intp n) const noexcept
+				Ref operator +(intptr_t n) const noexcept
 				{
 					return Ref(begin() + n, end());
 				}
-				Ref operator -(intp n) const noexcept
+				Ref operator -(intptr_t n) const noexcept
 				{
 					return Ref(begin() - n, end());
 				}
-				intp operator -(const Component * ptr) const noexcept
+				intptr_t operator -(const Component * ptr) const noexcept
 				{
 					return begin() - ptr;
 				}
-				friend intp operator -(const Component * ptr, const BufferIMethod& ori) noexcept
+				friend intptr_t operator -(const Component * ptr, const BufferIMethod& ori) noexcept
 				{
 					return ptr - ori.begin();
 				}
-				template <typename T> intp operator -(const BufferIMethod<T>& ptr) const noexcept
+				template <typename T> intptr_t operator -(const BufferIMethod<T>& ptr) const noexcept
 				{
 					return begin() - ptr.begin();
 				}

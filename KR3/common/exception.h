@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../main.h"
+#include "../meta/number.h"
 
 namespace kr
 {
@@ -31,8 +32,13 @@ namespace kr
 	ATTR_NORETURN void quit(int exitCode); // QuitException
 	ATTR_NORETURN void error(const char * strMessage, ...) noexcept;
 	void warning(const char * strMessage, ...) noexcept;
-	template <typename T> bool intactTest(size_t v) noexcept;
-	template <typename T> T intact(size_t v) noexcept
+	template <typename T> bool intactTest(uintptr_t v) noexcept
+	{
+		if (sizeof(T) > sizeof(uintptr_t)) return true;
+		if (sizeof(T) == sizeof(uintptr_t) && std::is_unsigned<T>::value) return true;
+		return v < maxof(T);
+	}
+	template <typename T> T intact(uintptr_t v) noexcept
 	{
 		_assert(intactTest<T>(v));
 		return (T)v;

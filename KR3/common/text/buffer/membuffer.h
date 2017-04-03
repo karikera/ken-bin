@@ -18,16 +18,16 @@ namespace kr
 		public:
 			INHERIT_ITERATOR(TIterator<Iterator, C>);
 
-			intp operator -(const Iterator & o) const noexcept
+			intptr_t operator -(const Iterator & o) const noexcept
 			{
 				return o.m_pt - m_pt;
 			}
-			Iterator& operator += (intp v) noexcept
+			Iterator& operator += (intptr_t v) noexcept
 			{
 				m_pt -= v;
 				return *this;
 			}
-			Iterator& operator -= (intp v) noexcept
+			Iterator& operator -= (intptr_t v) noexcept
 			{
 				m_pt += v;
 				return *this;
@@ -44,7 +44,7 @@ namespace kr
 			}
 			C& operator [](size_t idx) const noexcept
 			{
-				return m_pt[-(intp)idx];
+				return m_pt[-(intptr_t)idx];
 			}
 		};
 
@@ -513,7 +513,7 @@ namespace kr
 
 				for (;;)
 				{
-					Ref finded = reader.readto(_tar);
+					Ref finded = reader.readwith(_tar);
 					if (finded == nullptr)
 					{
 						_out->print(Converter(reader));
@@ -530,7 +530,7 @@ namespace kr
 
 				for (;;)
 				{
-					Ref finded = reader.readto(_tar);
+					Ref finded = reader.readwith(_tar);
 					if (finded == nullptr)
 					{
 						_out->print(Converter(reader));
@@ -803,7 +803,7 @@ namespace kr
 				Array<C2>* scores = arr.begin();
 				Ref read(begin(), end());
 				Ref readi;
-				while ((readi = read.readto(chr)) != nullptr)
+				while ((readi = read.readwith(chr)) != nullptr)
 				{
 					(scores++)->copy(Converter(readi));
 				}
@@ -822,7 +822,7 @@ namespace kr
 
 				for (size_t y = 0; y<ylen; y++)
 				{
-					*inarray++ = read.readto(chr).template split<Converter>(chrin);
+					*inarray++ = read.readwith(chr).template split<Converter>(chrin);
 				}
 
 				*inarray = read.template split<Converter>(chrin);
@@ -847,28 +847,28 @@ namespace kr
 			}
 
 
-			Ref operator +(intp n) const noexcept
+			Ref operator +(intptr_t n) const noexcept
 			{
 				return Ref(begin() + n, end());
 			}
-			Ref operator -(intp n) const noexcept
+			Ref operator -(intptr_t n) const noexcept
 			{
 				return Ref(begin() - n, end());
 			}
-			intp operator -(const Component * ptr) const noexcept
+			intptr_t operator -(const Component * ptr) const noexcept
 			{
 				return data() - ptr;
 			}
-			friend intp operator -(const Component * ptr, const MemBuffer& ori) noexcept
+			friend intptr_t operator -(const Component * ptr, const MemBuffer& ori) noexcept
 			{
 				return ptr - ori.data();
 			}
 			template <typename _Derived, bool _szable, bool _readonly, typename _Parent> 
-			intp operator -(const MemBuffer<_Derived, BufferInfo<Component, true, _szable, _readonly, _Parent>>& ptr) const noexcept
+			intptr_t operator -(const MemBuffer<_Derived, BufferInfo<Component, true, _szable, _readonly, _Parent>>& ptr) const noexcept
 			{
 				return data() - ptr.data();
 			}
-			intp operator -(const MemBuffer& ptr) const noexcept
+			intptr_t operator -(const MemBuffer& ptr) const noexcept
 			{
 				return data() - ptr.data();
 			}

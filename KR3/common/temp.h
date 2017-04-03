@@ -36,7 +36,7 @@ namespace kr
 
 		private:
 			ATTR_CHECK_RETURN autoptr _allocate(AllocHead * head, byte * usefrom, byte * useto) noexcept;
-			ATTR_CHECK_RETURN bool _expandTo(pbyte to) noexcept;
+			ATTR_CHECK_RETURN bool _expandTo(byte* to) noexcept;
 		};
 
 		StackAllocator(size_t reserve = 1024) noexcept;

@@ -12,17 +12,17 @@ namespace kr
 		ProgressNotifier() noexcept;
 		~ProgressNotifier() noexcept;
 
-		void set(llong pr) noexcept;
-		void set(llong pr, llong length) noexcept;
+		void set(int64_t pr) noexcept;
+		void set(int64_t pr, int64_t length) noexcept;
 		void setEnd() noexcept;
-		llong progress() noexcept;
-		llong length() noexcept;
+		int64_t progress() noexcept;
+		int64_t length() noexcept;
 
 		virtual void onProgress() noexcept = 0;
 
 	protected:
-		llong m_progress;
-		llong m_length;
+		int64_t m_progress;
+		int64_t m_length;
 
 	private:
 		timepoint m_start;
@@ -43,10 +43,10 @@ namespace kr
 		}
 		void quit(int exitCode) noexcept;
 		void join() noexcept;
-		llong getProgress() noexcept;
-		llong getLength() noexcept;
-		void setProgress(llong progress) noexcept;
-		void setProgress(llong progress, llong length) noexcept;
+		int64_t getProgress() noexcept;
+		int64_t getLength() noexcept;
+		void setProgress(int64_t progress) noexcept;
+		void setProgress(int64_t progress, int64_t length) noexcept;
 		virtual int progressor() noexcept = 0;
 		virtual void onProgress() noexcept override = 0;
 

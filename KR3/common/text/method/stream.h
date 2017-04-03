@@ -47,12 +47,12 @@ namespace kr
 					addBegin(-1);
 					return out;
 				}
-				Self& operator +=(intp value) noexcept
+				Self& operator +=(intptr_t value) noexcept
 				{
 					addBegin(value);
 					return *static_cast<Self*>(this);
 				}
-				Self& operator -=(intp value) noexcept
+				Self& operator -=(intptr_t value) noexcept
 				{
 					addBegin(-value);
 					return *static_cast<Self*>(this);

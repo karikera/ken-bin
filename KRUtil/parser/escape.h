@@ -31,7 +31,7 @@ namespace kr
 					desc = kr::meml<kr::Charset::Default>::next(desc);
 					continue;
 				}
-				*dest << (Encoder)line.readat(desc);
+				*dest << (Encoder)line.readto(desc);
 				desc = kr::meml<kr::Charset::Default>::next(desc);
 				if (desc.empty())
 					return;

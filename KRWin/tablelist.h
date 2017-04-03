@@ -95,7 +95,7 @@ namespace kr
 		virtual void onGetItemText(upvec2 pos, Writer16 * writer) noexcept;
 		virtual void onPreviousCursor() noexcept;
 		virtual void onNextCursor() noexcept;
-		virtual void onHeaderClick(uintp column, int sortdir) noexcept;
+		virtual void onHeaderClick(uintptr_t column, int sortdir) noexcept;
 		virtual void onSelect(upvec2 cursor) noexcept;
 		virtual void onChange(upvec2 cursor, Text16 text) noexcept;
 		virtual void onChangeBoolean(upvec2 cursor, bool v) noexcept;
@@ -122,7 +122,7 @@ namespace kr
 		size_t m_columnDrag;
 		bool m_columnResize;
 		int m_nSortDir;
-		uintp m_nSortColumn;
+		uintptr_t m_nSortColumn;
 
 		bool m_bEdit;
 

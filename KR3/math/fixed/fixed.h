@@ -11,7 +11,7 @@ namespace kr
 	template <typename T, size_t size> class TFixedBase
 	{
 	public:
-		int_sz<size> fract;
+		int_sz_t<size> fract;
 		T value;
 	};
 
@@ -20,7 +20,7 @@ namespace kr
 	{
 		using Super = TFixedBase<T, size>;
 	public:
-		using TU = int_sz<size>;
+		using TU = int_sz_t<size>;
 		using Super::fract;
 		using Super::value;
 
@@ -47,10 +47,10 @@ namespace kr
 			value = (T)floorf(n);
 			fract = decltype(fract)((n - value) * ((1 << (sizeof(fract)* 8)) -1));
 		}
-		template <typename T3, intp size2>
+		template <typename T3, intptr_t size2>
 		explicit TFixed(const TFixed<T3, size2> &o)
 		{
-			const intp shift=(size - sizeof(o.fract));
+			const intptr_t shift=(size - sizeof(o.fract));
 			value = (T)o.value;
 			fract=(TU)((shift >= 0) ? (o.fract << shift) : (o.fract >> -shift));
 		}
@@ -101,19 +101,19 @@ namespace kr
 			auto _out = (raw(*this) << (size * 8)) / raw(o);
 			return (TFixed&)_out;
 		}
-		const TFixed operator +(intp n) const
+		const TFixed operator +(intptr_t n) const
 		{
 			return TFixed(value + n, fract);
 		}
-		const TFixed operator -(intp n) const
+		const TFixed operator -(intptr_t n) const
 		{
 			return TFixed(value - n, fract);
 		}
-		friend TFixed&& operator +(intp n, const TFixed &o)
+		friend TFixed&& operator +(intptr_t n, const TFixed &o)
 		{
 			return o + n;
 		}
-		friend TFixed&& operator -(intp n, const TFixed &o)
+		friend TFixed&& operator -(intptr_t n, const TFixed &o)
 		{
 			return TFixed(n - value, fract);
 		}
@@ -145,12 +145,12 @@ namespace kr
 		{
 			return *this = *this / o;
 		}
-		TFixed& operator +=(intp n)
+		TFixed& operator +=(intptr_t n)
 		{
 			value += n;
 			return *this;
 		}
-		TFixed& operator -=(intp n)
+		TFixed& operator -=(intptr_t n)
 		{
 			value -= n;
 			return *this;
@@ -174,7 +174,7 @@ namespace kr
 	public:
 		using Super::value;
 		using Super::fract;
-		using TU = int_sz<size>;
+		using TU = int_sz_t<size>;
 
 		TFixedPoint()
 		{
@@ -189,41 +189,41 @@ namespace kr
 			value=v;
 			fract=v2;
 		}
-		template <typename T3, intp size2> explicit TFixedPoint(const TFixed<T3, size2> &o)
+		template <typename T3, intptr_t size2> explicit TFixedPoint(const TFixed<T3, size2> &o)
 		{
-			const intp shift=(size - sizeof(o.fract));
+			const intptr_t shift=(size - sizeof(o.fract));
 			value = (T*)o.value;
 			fract=(TU)((shift >= 0) ? (o.fract << shift) : (o.fract >> -shift));
 		}
-		template <typename T3, intp size2> const TFixedPoint operator +(const TFixed<T3, size2> &_v) const
+		template <typename T3, intptr_t size2> const TFixedPoint operator +(const TFixed<T3, size2> &_v) const
 		{
 			TFixedPoint _out;
 			_out.value = math::addc<T3>(&_out.fract, fract, _v.fract) + value + _v.value;
 			return _out;
 		}
-		template <typename T3, intp size2> const TFixedPoint operator -(const TFixed<T3, size2> &_v) const
+		template <typename T3, intptr_t size2> const TFixedPoint operator -(const TFixed<T3, size2> &_v) const
 		{
 			TFixedPoint _out;
 			_out.value = math::subb<T3>(&_out.fract, fract, _v.fract) + value - _v.value;
 			return _out;
 		}
-		const TFixedPoint operator +(intp n) const
+		const TFixedPoint operator +(intptr_t n) const
 		{
 			return TFixedPoint(value + n, fract);
 		}
-		const TFixedPoint operator -(intp n) const
+		const TFixedPoint operator -(intptr_t n) const
 		{
 			return TFixedPoint(value - n, fract);
 		}
-		template <typename T3, intp size2> TFixedPoint& operator +=(const TFixed<T3, size2> &o)
+		template <typename T3, intptr_t size2> TFixedPoint& operator +=(const TFixed<T3, size2> &o)
 		{
 			return *this = *this + o;
 		}
-		template <typename T3, intp size2> TFixedPoint& operator -=(const TFixed<T3, size2> &o)
+		template <typename T3, intptr_t size2> TFixedPoint& operator -=(const TFixed<T3, size2> &o)
 		{
 			return *this = *this - o;
 		}
-		TFixedPoint& operator +=(intp n)
+		TFixedPoint& operator +=(intptr_t n)
 		{
 			value += n;
 			return *this;
@@ -247,7 +247,7 @@ namespace kr
 		{
 			return *value;
 		}
-		T& operator [](intp i)
+		T& operator [](intptr_t i)
 		{
 			return value[i];
 		}

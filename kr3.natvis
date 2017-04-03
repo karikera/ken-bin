@@ -54,7 +54,7 @@
         <Size>$T1</Size>
         <Loop>
           <Break Condition="i == $T1" />
-          <Item>(m_dwMap[i / (sizeof(kr::uintp) * 8)] &amp; (1 &lt;&lt; (i % (sizeof(kr::uintp) * 8)))) != 0</Item>
+          <Item>(m_dwMap[i / (sizeof(uintptr_t) * 8)] &amp; (1 &lt;&lt; (i % (sizeof(uintptr_t) * 8)))) != 0</Item>
           <Exec>i++</Exec>
         </Loop>
       </CustomListItems>

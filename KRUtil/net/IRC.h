@@ -264,7 +264,7 @@ namespace kr
 		template <typename T>
 		T rawToIrc(T value)
 		{
-			using uint_t = uint_sz<sizeof(T)>;
+			using uint_t = uint_sz_t<sizeof(T)>;
 
 			union
 			{
@@ -291,7 +291,7 @@ namespace kr
 		template <typename T>
 		T ircToRaw(T value)
 		{
-			using uint_t = uint_sz<sizeof(T)>;
+			using uint_t = uint_sz_t<sizeof(T)>;
 
 			uint_t result = 0;
 			byte(*values)[sizeof(T)] = (byte(*)[sizeof(T)]) &value;

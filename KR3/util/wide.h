@@ -5,7 +5,7 @@
 
 namespace kr
 {
-	using unicode_wchar_t = size_to_unicode_t<sizeof(wchar_t)>;
+	using unicode_wchar_t = char_sz_t<sizeof(wchar_t)>;
 
 	template <typename T>
 	inline meta::retype_t<T, wchar_t> wide(T v) noexcept

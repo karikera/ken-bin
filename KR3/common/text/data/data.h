@@ -73,7 +73,7 @@ namespace kr
 				{
 					m_begin = _beg;
 				}
-				void addBegin(intp n) noexcept
+				void addBegin(intptr_t n) noexcept
 				{
 					m_begin += n;
 				}
@@ -81,7 +81,7 @@ namespace kr
 				{
 					m_end = end;
 				}
-				void addEnd(intp n) noexcept
+				void addEnd(intptr_t n) noexcept
 				{
 					m_end += n;
 				}
@@ -106,7 +106,7 @@ namespace kr
 				}
 				size_t size() const noexcept
 				{
-					return ((pbyte)m_end - (pbyte)m_begin) / sizeof(InternalComponent);
+					return ((byte*)m_end - (byte*)m_begin) / sizeof(InternalComponent);
 				}
 				bool empty() const noexcept
 				{
@@ -171,7 +171,7 @@ namespace kr
 				{
 					m_begin = _beg;
 				}
-				void addBegin(intp n) noexcept
+				void addBegin(intptr_t n) noexcept
 				{
 					m_begin += n;
 				}
@@ -200,7 +200,7 @@ namespace kr
 				}
 				size_t size() const noexcept
 				{
-					return ((pbyte)m_end - (pbyte)m_begin) / sizeof(InternalComponent);
+					return ((byte*)m_end - (byte*)m_begin) / sizeof(InternalComponent);
 				}
 				bool empty() const noexcept
 				{

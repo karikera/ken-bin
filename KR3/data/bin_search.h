@@ -49,17 +49,17 @@ namespace kr
 		template <typename T, bool iscls> struct _Comparator;
 		template <typename T> struct _Comparator<T, true>
 		{
-			static intp compare(const T& a, const T&b)
+			static intptr_t compare(const T& a, const T&b)
 			{
 				return a.compare(b);
 			}
 		};
 		template <typename T> struct _Comparator<T, false>
 		{
-			static intp compare(const T& a, const T&b) noexcept
+			static intptr_t compare(const T& a, const T&b) noexcept
 			{
 				using K = Key<T>;
-				return (intp)K::getKey(a) - (intp)K::getKey(b);
+				return (intptr_t)K::getKey(a) - (intptr_t)K::getKey(b);
 			}
 		};
 

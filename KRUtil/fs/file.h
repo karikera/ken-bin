@@ -130,21 +130,21 @@ namespace kr
 		}
 		filesize_t getPointer() noexcept;
 		void movePointerToEnd(int offset) noexcept;
-		void movePointerToEnd(llong offset) noexcept;
+		void movePointerToEnd(int64_t offset) noexcept;
 		void movePointer(int Move) noexcept;
-		void movePointer(llong Move) noexcept;
+		void movePointer(int64_t Move) noexcept;
 		void setPointer(int Move) noexcept;
-		void setPointer(llong Move) noexcept;
+		void setPointer(int64_t Move) noexcept;
 		void toBegin() noexcept;
 		void toEnd() noexcept;
-		void skip(llong skip) noexcept;
+		void skip(int64_t skip) noexcept;
 		bool testSignature(dword signature) noexcept;
 		dword findChunk(dword signature); // EofException
 		ptr allocAll(size_t *pSize) noexcept;
 		Mapping beginMapping(filesize_t off, size_t read); // Error
 		void endMapping(const Mapping& map) noexcept;
-		void readStructure(ptr value, uintp size); // EofException
-		void readStructure(ptr value, uintp size, uintp srcsize); // EofException
+		void readStructure(ptr value, uintptr_t size); // EofException
+		void readStructure(ptr value, uintptr_t size, uintptr_t srcsize); // EofException
 
 		// »ç¿ë ÈÄ ÆÄÀÏÀÌ ´ÝÈù´Ù.
 		void md5All(byte _dest[16]); // Error
@@ -171,7 +171,7 @@ namespace kr
 			filesize_t len=0;
 			dword readed;
 			T temp[1024];
-			llong from=0;
+			int64_t from=0;
 			filesize_t out;
 			pcstr find;
 			do
@@ -200,7 +200,7 @@ namespace kr
 		static File * _createFile(pcstr str, dword Access, dword ShareMode, dword Disposition); // Error
 		static File * _createFile(pcstr16 str, dword Access, dword ShareMode, dword Disposition); // Error
 		void _movePointer(dword Method, int Move) noexcept;
-		void _movePointer(dword Method, llong Move) noexcept;
+		void _movePointer(dword Method, int64_t Move) noexcept;
 #endif
 	};
 

@@ -33,6 +33,7 @@ namespace kr
 			INHERIT_COMPONENT();
 
 			using Super::Super;
+			using Super::data;
 			using Super::begin;
 			using Super::end;
 			using Super::size;
@@ -45,29 +46,29 @@ namespace kr
 				return os;
 			}
 
-			qword to_qword_x(uint _radix, size_t _len) const noexcept
+			uint64_t to_uint64_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<qword>(begin(),_len,_radix);
+				return memm::template toint<uint64_t>(begin(),_len,_radix);
 			}
-			llong to_llong_x(uint _radix, size_t _len) const noexcept
+			int64_t to_int64_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<llong>(begin(), _len, _radix);
+				return memm::template toint<int64_t>(begin(), _len, _radix);
 			}
-			dword to_uint_x(uint _radix, size_t _len) const noexcept
+			uint32_t to_uint_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<dword>(begin(),_len,_radix);
+				return memm::template toint<uint32_t>(begin(),_len,_radix);
 			}
-			long to_int_x(uint _radix, size_t _len) const noexcept
+			int32_t to_int_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<long>(begin(), _len, _radix);
+				return memm::template toint<int32_t>(begin(), _len, _radix);
 			}
-			uintp to_uintp_x(uint _radix, size_t _len) const noexcept
+			uintptr_t to_uintp_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<uintp>(begin(), _len, _radix);
+				return memm::template toint<uintptr_t>(begin(), _len, _radix);
 			}
-			intp to_intp_x(uint _radix, size_t _len) const noexcept
+			intptr_t to_intp_x(uint _radix, size_t _len) const noexcept
 			{
-				return memm::template toint<intp>(begin(), _len, _radix);
+				return memm::template toint<intptr_t>(begin(), _len, _radix);
 			}
 			float to_ufloat_x(size_t _len) const noexcept
 			{
@@ -92,52 +93,52 @@ namespace kr
 				return (memm::numberonly(begin(), _len));
 			}
 
-			qword to_qword_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uint64_t to_uint64_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<qword>(begin(), _len, _radix);
+				return memm::template toint_limit<uint64_t>(data(), _len, _radix);
 			}
-			llong to_llong_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			int64_t to_int64_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<llong>(begin(), _len, _radix);
+				return memm::template toint_limit<int64_t>(data(), _len, _radix);
 			}
-			dword to_uint_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uint32_t to_uint_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<dword>(begin(), _len, _radix);
+				return memm::template toint_limit<uint32_t>(data(), _len, _radix);
 			}
-			long to_int_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			int32_t to_int_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<long>(begin(), _len, _radix);
+				return memm::template toint_limit<int32_t>(data(), _len, _radix);
 			}
-			uintp to_uintp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uintptr_t to_uintp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<uintp>(begin(), _len, _radix);
+				return memm::template toint_limit<uintptr_t>(data(), _len, _radix);
 			}
-			intp to_intp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			intptr_t to_intp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
 			{
-				return memm::template toint_limit<intp>(begin(), _len, _radix);
+				return memm::template toint_limit<intptr_t>(data(), _len, _radix);
 			}
 
-			qword to_qword(uint _radix = 10) const noexcept
+			uint64_t to_uint64(uint _radix = 10) const noexcept
 			{
-				return to_qword_x(_radix, size());
+				return to_uint64_x(_radix, size());
 			}
-			llong to_llong(uint _radix = 10) const noexcept
+			int64_t to_int64(uint _radix = 10) const noexcept
 			{
-				return to_llong_x(_radix, size());
+				return to_int64_x(_radix, size());
 			}
-			dword to_uint(uint _radix = 10) const noexcept
+			uint32_t to_uint(uint _radix = 10) const noexcept
 			{
 				return to_uint_x(_radix, size());
 			}
-			long to_int(uint _radix = 10) const noexcept
+			int32_t to_int(uint _radix = 10) const noexcept
 			{
 				return to_int_x(_radix, size());
 			}
-			uintp to_uintp(uint _radix = 10) const noexcept
+			uintptr_t to_uintp(uint _radix = 10) const noexcept
 			{
 				return to_uintp_x(_radix, size());
 			}
-			intp to_intp(uint _radix = 10) const noexcept
+			intptr_t to_intp(uint _radix = 10) const noexcept
 			{
 				return to_intp_x(_radix, size());
 			}
@@ -150,52 +151,52 @@ namespace kr
 				return to_float_x(size());
 			}
 
-			qword to_qword_limit(uint _radix = 10) const
+			uint64_t to_uint64_limit(uint _radix = 10) const
 			{
-				return to_qword_limit_x(_radix, size());
+				return to_uint64_limit_x(_radix, size());
 			}
-			llong to_llong_limit(uint _radix = 10) const
+			int64_t to_int64_limit(uint _radix = 10) const
 			{
-				return to_llong_limit_x(_radix, size());
+				return to_uint64_limit_x(_radix, size());
 			}
-			dword to_uint_limit(uint _radix = 10) const
+			uint32_t to_uint_limit(uint _radix = 10) const
 			{
 				return to_uint_limit_x(_radix, size());
 			}
-			long to_int_limit(uint _radix = 10) const
+			int32_t to_int_limit(uint _radix = 10) const
 			{
 				return to_int_limit_x(_radix, size());
 			}
-			dword to_uintp_limit(uint _radix = 10) const
+			uintptr_t to_uintp_limit(uint _radix = 10) const
 			{
 				return to_uintp_limit_x(_radix, size());
 			}
-			long to_intp_limit(uint _radix = 10) const
+			intptr_t to_intp_limit(uint _radix = 10) const
 			{
 				return to_intp_limit_x(_radix, size());
 			}
 
-			qword to_qword_l(size_t _len, uint _radix) const noexcept
+			uint64_t to_qword_l(size_t _len, uint _radix) const noexcept
 			{
-				return to_qword_x(_radix, math::min(_len, size()));
+				return to_uint64_x(_radix, math::min(_len, size()));
 			}
-			llong to_llong_l(size_t _len, uint _radix) const noexcept
+			int64_t to_llong_l(size_t _len, uint _radix) const noexcept
 			{
-				return to_llong_x(_radix, math::min(_len, size()));
+				return to_int64_x(_radix, math::min(_len, size()));
 			}
-			dword to_uint_l(size_t _len, uint _radix) const noexcept
+			uint32_t to_uint_l(size_t _len, uint _radix) const noexcept
 			{
 				return to_uint_x(_radix,math::min(_len, size()));
 			}
-			long to_int_l(size_t _len, uint _radix) const noexcept
+			int32_t to_int_l(size_t _len, uint _radix) const noexcept
 			{
 				return to_int_x(_radix,math::min(_len, size()));
 			}
-			dword to_uintp_l(size_t _len, uint _radix) const noexcept
+			uintptr_t to_uintp_l(size_t _len, uint _radix) const noexcept
 			{
 				return to_uintp_x(_radix, math::min(_len, size()));
 			}
-			long to_intp_l(size_t _len, uint _radix) const noexcept
+			intptr_t to_intp_l(size_t _len, uint _radix) const noexcept
 			{
 				return to_intp_x(_radix, math::min(_len, size()));
 			}
@@ -216,7 +217,7 @@ namespace kr
 			{
 				return memm::isdbcs(begin(),n);
 			}
-			intp compare(Ref _str) const noexcept
+			intptr_t compare(Ref _str) const noexcept
 			{
 				size_t len1 = size();
 				size_t len2 = _str.size();

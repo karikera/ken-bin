@@ -48,25 +48,25 @@ inline void kr::memt<BASE>::xor_copy(ptr _dest, cptr _src, size_t len, dword key
 	len *= BASE;
 	union
 	{
-		uintp * word_dest;
+		uintptr_t * word_dest;
 		type * byte_dest;
 	};
 	union
 	{
-		uintp * word_end;
+		uintptr_t * word_end;
 		type * byte_end;
 	};
 	union
 	{
-		uintp * word_src;
+		uintptr_t * word_src;
 		type * byte_src;
 	};
 
-	constexpr size_t MASK = (1 << sizeof(uintp)) - 1;
+	constexpr size_t MASK = (1 << sizeof(uintptr_t)) - 1;
 	constexpr size_t SHIFT = sizeof(type) * 8;
 
-	uintp keyv = key;
-	if (sizeof(uintp) < sizeof(dword))
+	uintptr_t keyv = key;
+	if (sizeof(uintptr_t) < sizeof(dword))
 	{
 #pragma warning(push)
 #pragma warning(disable:4293)
@@ -84,7 +84,7 @@ inline void kr::memt<BASE>::xor_copy(ptr _dest, cptr _src, size_t len, dword key
 	}
 
 	type * byte_real_end = (type*)_dest + len;
-	word_end = (uintp*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
+	word_end = (uintptr_t*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
 	if (word_dest < word_end)
 	{
 		do
@@ -157,14 +157,14 @@ inline int kr::memt<BASE>::compare(cptr _dst, cptr _src, size_t _len) noexcept
 {
 #pragma warning(push)
 #pragma warning(disable:4307)
-	static constexpr size_t wsize = sizeof(uintp) / BASE;
+	static constexpr size_t wsize = sizeof(uintptr_t) / BASE;
 	static constexpr size_t shift = meta::ilog2(wsize);
 #pragma warning(pop)
 
 	size_t fullsize = _len >> shift;
-	uintp* src = (uintp*)_src;
-	uintp* dst = (uintp*)_dst;
-	uintp* dend = dst + _len;
+	uintptr_t* src = (uintptr_t*)_src;
+	uintptr_t* dst = (uintptr_t*)_dst;
+	uintptr_t* dend = dst + _len;
 
 	size_t left;
 	while (dst != dend)
@@ -206,24 +206,24 @@ template<size_t BASE>
 template <typename T>
 inline T * kr::memt<BASE>::compare_p(T * _dst, std::add_const_t<T>* _src, size_t _len) noexcept
 {
-	static constexpr int wsize = sizeof(uintp) / sizeof(type);
+	static constexpr int wsize = sizeof(uintptr_t) / sizeof(type);
 	static constexpr int shift = meta::ilog2(wsize);
 
 	size_t fullsize = _len >> shift;
 	union
 	{
-		uintp* word_src;
+		uintptr_t* word_src;
 		type* byte_src;
 	};
 	union
 	{
-		uintp* word_dst;
+		uintptr_t* word_dst;
 		type* byte_dst;
 	};
 
-	word_src = (uintp*)_src;
-	word_dst = (uintp*)_dst;
-	uintp* word_end = word_dst + _len;
+	word_src = (uintptr_t*)_src;
+	word_dst = (uintptr_t*)_dst;
+	uintptr_t* word_end = word_dst + _len;
 
 	size_t left;
 	while (word_dst != word_end)
@@ -260,6 +260,84 @@ inline size_t kr::memt<BASE>::strlen(T* _dst) noexcept
 {
 	return find(_dst, (T)0) - _dst;
 }
+template <>
+template <typename T>
+inline size_t kr::memt<1>::strlen(T* _dst) noexcept
+{
+	return ::strlen((char*)_dst);
+}
+template <size_t BASE>
+template <typename T, typename READCB>
+inline auto kr::memt<BASE>::find_callback(const READCB &read, T* _tar, size_t _tarlen)->decltype(read())
+{
+	_assert(_tarlen != 0);
+	size_t tarhash = 0;
+	size_t srchash = 0;
+
+	{
+		auto * t = _tar;
+		auto * te = t + _tarlen;
+		while (t != te)
+		{
+			tarhash ^= *t;
+			tarhash = intrinsic<sizeof(size_t)>::rotl(tarhash, 9);
+			t++;
+		}
+	}
+
+	using unconstT = std::remove_const_t<T>;
+	Array<unconstT> tmp(_tarlen);
+	unconstT * tmpbeg = tmp.data();
+	unconstT * tmpend = tmpbeg + _tarlen;
+	unconstT * tmpiter = tmpbeg;
+	decltype(read()) srcptr;
+	{
+		do
+		{
+			srcptr = read();
+			*tmpiter++ = *srcptr;
+			srchash ^= *srcptr;
+			srchash = intrinsic<sizeof(size_t)>::rotl(srchash, 9);
+		}
+		while (tmpiter != tmpend);
+	}
+	tmpiter = tmpbeg;
+
+	int hashoff = (9 * _tarlen) & (sizeof(size_t) * 8 - 1);
+	{
+		size_t hashcap = sizeof(size_t) * 32 / 8;
+		if (_tarlen < hashcap) _tarlen = 0;
+		else _tarlen -= hashcap;
+	}
+	for (;;)
+	{
+		if (tarhash == srchash)
+		{
+			size_t left_part_sz = tmpend - tmpiter;
+			if (left_part_sz >= _tarlen)
+			{
+				if (equals(tmpiter, _tar, _tarlen)) break;
+			}
+			else
+			{
+				if (equals(tmpiter, _tar, left_part_sz))
+				{
+					T * right_part = _tar + left_part_sz;
+					size_t right_part_sz = _tarlen - left_part_sz;
+					if (equals(tmpbeg, right_part, right_part_sz)) break;
+				}
+			}
+		}
+		srchash ^= intrinsic<sizeof(size_t)>::rotl(*tmpiter, hashoff);
+		srcptr = read();
+		*tmpiter++ = *srcptr;
+		if (tmpiter == tmpend) tmpiter = tmpbeg;
+		srchash ^= *srcptr;
+		srchash = intrinsic<sizeof(size_t)>::rotl(srchash, 9);
+	}
+
+	return srcptr+1;
+}
 template <size_t BASE>
 template <typename T>
 inline T* kr::memt<BASE>::find(T* _dst, atype _tar) noexcept
@@ -282,12 +360,6 @@ inline T* kr::memt<BASE>::find(T* _dst, atype _tar, size_t _dstsize) noexcept
 		dst++;
 	}
 	return nullptr;
-}
-template <>
-template <typename T>
-inline size_t kr::memt<1>::strlen(T* _dst) noexcept
-{
-	return ::strlen((char*)_dst);
 }
 template <>
 template <typename T>
@@ -327,19 +399,23 @@ inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _tarle
 			t++;
 		}
 	}
-	T * _src2 = _src;
+	T * src_right = _src;
 	{
-		T * end = _src2 + _tarlen;
-		while (_src2 != end)
+		T * end = src_right + _tarlen;
+		while (src_right != end)
 		{
-			srchash ^= *_src2;
+			srchash ^= *src_right;
 			srchash = intrinsic<sizeof(size_t)>::rotl(srchash, 9);
-			_src2++;
+			src_right++;
 		}
 	}
 
 	int hashoff = (9 * _tarlen) & (sizeof(size_t) * 8 - 1);
-	_tarlen--;
+	{
+		size_t hashcap = sizeof(size_t) * 32 / 8;
+		if (_tarlen < hashcap) _tarlen = 0;
+		else _tarlen -= hashcap;
+	}
 
 	for (;;)
 	{
@@ -348,12 +424,11 @@ inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _tarle
 			return _src;
 		}
 		srchash ^= intrinsic<sizeof(size_t)>::rotl(*_src, hashoff);
-		srchash ^= *_src2;
+		srchash ^= *src_right;
 		srchash = intrinsic<sizeof(size_t)>::rotl(srchash, 9);
 		_src++;
-		_src2++;
+		src_right++;
 	}
-	return nullptr;
 }
 template <size_t BASE>
 template <typename T>
@@ -387,7 +462,11 @@ inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _srcle
 
 	T * srcend = _src + _srclen;
 	int hashoff = (9 * _tarlen) & (sizeof(size_t) * 8 - 1);
-	_tarlen--;
+	{
+		size_t hashcap = sizeof(size_t) * 32 / 8;
+		if (_tarlen < hashcap) _tarlen = 0;
+		else _tarlen -= hashcap;
+	}
 
 	for (;;)
 	{
@@ -401,7 +480,6 @@ inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _srcle
 		_src++;
 		_src2++;
 	}
-	return nullptr;
 }
 template <size_t BASE>
 template <typename T>

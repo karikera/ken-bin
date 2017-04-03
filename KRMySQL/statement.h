@@ -23,15 +23,15 @@ namespace kr
 		};
 		template <typename T> struct MysqlType;
 		template <> struct MysqlType<int>:MysqlTypeImpl<int, MYSQL_TYPE_LONG, false>{};;
-		template <> struct MysqlType<llong> :MysqlTypeImpl<llong, MYSQL_TYPE_LONGLONG, false>{};;
-		template <> struct MysqlType<long> :MysqlTypeImpl<long, MYSQL_TYPE_LONG, false>{};;
+		template <> struct MysqlType<long long> :MysqlTypeImpl<long long, MYSQL_TYPE_LONGLONG, false>{};;
+		template <> struct MysqlType<long> :MysqlTypeImpl<long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), false>{};;
 		template <> struct MysqlType<short> :MysqlTypeImpl<short, MYSQL_TYPE_SHORT, false>{};;
 		template <> struct MysqlType<char>:MysqlTypeImpl<char, MYSQL_TYPE_TINY, false>{};;
 		template <> struct MysqlType<uint>:MysqlTypeImpl<uint, MYSQL_TYPE_LONG, true>{};;
-		template <> struct MysqlType<qword>:MysqlTypeImpl<qword, MYSQL_TYPE_LONGLONG, true>{};;
-		template <> struct MysqlType<dword>:MysqlTypeImpl<dword, MYSQL_TYPE_LONG, true>{};;
-		template <> struct MysqlType<word>:MysqlTypeImpl<word, MYSQL_TYPE_SHORT, true>{};;
-		template <> struct MysqlType<byte>:MysqlTypeImpl<byte, MYSQL_TYPE_TINY, true>{};;
+		template <> struct MysqlType<unsigned long long>:MysqlTypeImpl<unsigned long long, MYSQL_TYPE_LONGLONG, true>{};;
+		template <> struct MysqlType<unsigned long>:MysqlTypeImpl<unsigned long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), true>{};;
+		template <> struct MysqlType<unsigned short>:MysqlTypeImpl<unsigned short, MYSQL_TYPE_SHORT, true>{};;
+		template <> struct MysqlType<unsigned char>:MysqlTypeImpl<unsigned char, MYSQL_TYPE_TINY, true>{};;
 		template <> struct MysqlType<Text>
 		{
 			static void initParam(MYSQL_BIND& bind) noexcept;

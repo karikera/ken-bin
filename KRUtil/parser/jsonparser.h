@@ -7,7 +7,7 @@
 
 namespace kr
 {
-	class JsonParser: public Parser
+	class JsonParser: private Parser
 	{
 	public:
 		enum Type
@@ -19,6 +19,7 @@ namespace kr
 		};
 		JsonParser(io::VIStream<char> is) noexcept;
 		~JsonParser() noexcept;
+		using Parser::getLine;
 		Type getNextType(); // kr::InvalidSourceException
 		float floatNumber(); // kr::InvalidSourceException
 		int integer(); // kr::InvalidSourceException

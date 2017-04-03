@@ -145,9 +145,11 @@ namespace kr
 			int getTextWidth(pcstr16 str,size_t len) noexcept;
 			int getTextWidth(Text str) noexcept;
 			int getTextWidth(Text16 str) noexcept;
-			int getTextHeight() noexcept;
 			bool getTextMetrics(TEXTMETRICA * metric) noexcept;
 			bool getTextMetrics(TEXTMETRICW * metric) noexcept;
+			int getTextHeight() noexcept;
+			int getTextAscent() noexcept;
+			int getTextDescent() noexcept;
 			int getTextPos(Text str,int x) noexcept;
 			int setSBL(int extra) noexcept; // Space between letter
 			int getSBL() noexcept; // Space between letter

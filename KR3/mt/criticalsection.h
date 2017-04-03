@@ -34,7 +34,7 @@ namespace kr
 			long RecursionCount;
 			void* OwningThread;        // from the thread's ClientId->UniqueThread
 			void* LockSemaphore;
-			uintp SpinCount;        // force size on 64-bit systems when packed
+			uintptr_t SpinCount;        // force size on 64-bit systems when packed
 		};
 #pragma pack(pop)
 

@@ -48,17 +48,17 @@ namespace kr
 			return (T)((arr[nx + ny] * invx + arr[nx2 + ny] * offx) * invy +
 				(arr[nx + ny2] * invx + arr[nx2 + ny2] * offx) * offy);
 		}
-		template <typename T, uintp W, uintp H> 
+		template <typename T, uintptr_t W, uintptr_t H> 
 		static const T bilinear(const T(&arr)[H][W], float x, float y) noexcept
 		{
 			return bilinear(arr[0], W, H, W, x, y);
 		};
-		template <typename T, uintp W, uintp H>
+		template <typename T, uintptr_t W, uintptr_t H>
 		static const T coslinear(const T(&arr)[H][W], float x, float y) noexcept
 		{
 			return coslinear(arr[0], W, H, W, x, y);
 		};
-		template <uintp W, uintp H>
+		template <uintptr_t W, uintptr_t H>
 		static float noise(float fAmplitude, float fFrequency, uint repeat, const float(&arr)[H][W], float x, float y) noexcept
 		{
 			float amplitude = 1;

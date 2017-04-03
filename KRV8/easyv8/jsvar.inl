@@ -59,10 +59,15 @@ inline static to toInner(const from & _value) noexcept { return (to)_value; }
 inline static to toInner(const from & _value) noexcept { return (to)_value; }\
 inline static to toInner(from && _value) noexcept { return to(move(_value)); }\
 
+			using long_to_what_t = meta::if_t<(sizeof(long) > sizeof(int)), double, int>;
+
 			CASTER(char, int);
 			CASTER(short, int);
 			CASTER(int, int);
-			CASTER(long, int);
+			inline static long_to_what_t toInner(long _value)
+			{
+				return (long_to_what_t)_value;
+			}
 			CASTER(long long, double);
 			CASTER(unsigned char, int);
 			CASTER(unsigned short, int);

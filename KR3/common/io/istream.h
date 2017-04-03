@@ -14,6 +14,7 @@ namespace kr
 		public:
 			INHERIT_COMPONENT();
 			using Super::Super;
+			using TSZ = TempSzText<C>;
 
 			inline size_t read(Component * dest, size_t sz)
 			{
@@ -29,11 +30,31 @@ namespace kr
 			{
 				return static_cast<Derived*>(this)->skipImpl(sz);
 			}
+			template <class _Derived, class _Parent>
+			inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) noexcept
+			{
+				try
+				{
+					for (;;)
+					{
+						static_cast<Derived*>(this)->read(os, 4096);
+					}
+				}
+				catch (EofException&)
+				{
+				}
+			}
 			inline Alc readAll() noexcept
 			{
 				Alc out;
-				static_cast<Derived*>(this)->readAll(&out);
+				readAll(&out);
 				return out;
+			}
+			inline TSZ read(size_t size)
+			{
+				TSZ tsz;
+				static_cast<Derived*>(this)->read(&tsz, size);
+				return tsz;
 			}
 
 			template <typename T> T readas() // EofException
@@ -80,7 +101,7 @@ namespace kr
 				mema::subs_copy((InternalComponent*)dest, (InternalComponent*)src, sz);
 				return sz;
 			}
-				
+
 			// 예외 검사 없이, 강제로 읽는다, 
 			inline InternalComponent readForce() noexcept
 			{
@@ -90,7 +111,7 @@ namespace kr
 			}
 			inline InternalComponent read() // EofException
 			{
-				if (size() == 0) 
+				if (size() == 0)
 					throw EofException();
 				const InternalComponent * p = (InternalComponent*)begin();
 				derived()->addBegin(1);
@@ -110,7 +131,7 @@ namespace kr
 				Ref ref = read((sizeof(T) + sizeof(Component) - 1) / sizeof(Component));
 				return *(T*)ref.begin();
 			}
-			inline Ref readat(Ref _idx) noexcept
+			inline Ref readto(Ref _idx) noexcept
 			{
 				const Component * b = begin();
 				const Component * e = end();
@@ -121,7 +142,7 @@ namespace kr
 				derived()->setBegin(p);
 				return out;
 			}
-			inline Ref readat(Ref _idx, size_t skip) noexcept
+			inline Ref readto(Ref _idx, size_t skip) noexcept
 			{
 				const Component * p = _idx.begin();
 				const Component * b = begin();
@@ -131,73 +152,78 @@ namespace kr
 				derived()->setBegin(p + skip);
 				return out;
 			}
-			inline Ref readat_p(Ref _idx) noexcept
+			inline Ref readto_p(Ref _idx) noexcept
 			{
-				return _idx == nullptr ? (Ref)nullptr : readat(_idx);
+				return _idx == nullptr ? (Ref)nullptr : readto(_idx);
 			}
-			inline Ref readat_p(Ref _idx, size_t _skip) noexcept
+			inline Ref readto_p(Ref _idx, size_t _skip) noexcept
 			{
-				return _idx == nullptr ? (Ref)nullptr : readat(_idx, _skip);
+				return _idx == nullptr ? (Ref)nullptr : readto(_idx, _skip);
 			}
-			inline Ref readat_e(Ref _idx) noexcept
+			inline Ref readto_e(Ref _idx) noexcept
 			{
-				return _idx == nullptr ? readAll() : readat(_idx);
+				return _idx == nullptr ? readAll() : readto(_idx);
 			}
-			inline Ref readat_e(Ref _idx, size_t _skip) noexcept
+			inline Ref readto_e(Ref _idx, size_t _skip) noexcept
 			{
-				return _idx == nullptr ? readAll() : readat(_idx, _skip);
-			}
-			template <typename LAMBDA>
-			inline Ref readat_L(const LAMBDA &lambda)
-			{
-				return readat_p(find_L(move(lambda)));
+				return _idx == nullptr ? readAll() : readto(_idx, _skip);
 			}
 			template <typename LAMBDA>
-			inline Ref readat_eL(const LAMBDA &lambda)
+			inline Ref readto_L(const LAMBDA &lambda)
 			{
-				return readat_e(find_L(lambda));
-			}
-			inline Ref readto(const InternalComponent &_cut) noexcept
-			{
-				return readat_p(find(_cut), 1);
-			}
-			inline Ref readto_e(const InternalComponent &_cut) noexcept
-			{
-				return readat_e(find(_cut), 1);
-			}
-			inline Ref readto(Ref _cut) noexcept
-			{
-				return readat_p(find(_cut), _cut.size());
-			}
-			inline Ref readto_e(Ref _cut) noexcept
-			{
-				return readat_e(find(_cut), _cut.size());
-			}
-			inline Ref readto_y(Ref _cut) noexcept
-			{
-				return readat_p(find_y(_cut), 1);
-			}
-			inline Ref readto_ye(Ref _cut) noexcept
-			{
-				return readat_e(find_y(_cut), 1);
-			}
-			inline Ref readto_n(const InternalComponent &_cut) // EofException
-			{
-				return readat_p(find_n(_cut));
-			}
-			inline Ref readto_ny(Ref _cut) // EofException
-			{
-				return readat_p(find_ny(_cut));
+				return readto_p(find_L(move(lambda)));
 			}
 			template <typename LAMBDA>
-			inline Ref readto_L(const LAMBDA & lambda)
+			inline Ref readto_eL(const LAMBDA &lambda)
 			{
-				return readat_p(find_L(move(lambda)), 1);
+				return readto_e(find_L(lambda));
+			}
+			inline Ref readwith(const InternalComponent &_cut) noexcept
+			{
+				return readto_p(find(_cut), 1);
+			}
+			inline Ref readwith_e(const InternalComponent &_cut) noexcept
+			{
+				return readto_e(find(_cut), 1);
+			}
+			inline Ref readwith(Ref _cut) noexcept
+			{
+				return readto_p(find(_cut), _cut.size());
+			}
+			inline Ref readwith_e(Ref _cut) noexcept
+			{
+				return readto_e(find(_cut), _cut.size());
+			}
+			inline Ref readwith_y(Ref _cut) noexcept
+			{
+				return readto_p(find_y(_cut), 1);
+			}
+			inline Ref readwith_ye(Ref _cut) noexcept
+			{
+				return readto_e(find_y(_cut), 1);
+			}
+			inline Ref readwith_n(const InternalComponent &_cut) // EofException
+			{
+				return readto_p(find_n(_cut));
+			}
+			inline Ref readwith_ny(Ref _cut) // EofException
+			{
+				return readto_p(find_ny(_cut));
 			}
 			template <typename LAMBDA>
-			inline Ref readto_eL(const LAMBDA & lambda)
+			inline Ref readwith_L(const LAMBDA & lambda)
 			{
-				return readat_e(find_L(move(lambda)), 1);
+				return readto_p(find_L(move(lambda)), 1);
+			}
+			template <typename LAMBDA>
+			inline Ref readwith_eL(const LAMBDA & lambda)
+			{
+				return readto_e(find_L(move(lambda)), 1);
+			}
+			template <class _Derived, class _Parent>
+			inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) noexcept
+			{
+				static_cast<Derived*>(this)->read(os, size());
 			}
 			inline Ref readAll() noexcept
 			{
@@ -205,14 +231,14 @@ namespace kr
 				derived()->setBegin(end());
 				return out;
 			}
-			inline size_t readto_a(Alc *_v, const InternalComponent &_cut) noexcept
+			inline size_t readwith_a(Alc *_v, const InternalComponent &_cut) noexcept
 			{
-				return _v->alloc(readto(_cut));
+				return _v->alloc(readwith(_cut));
 			}
 
-			inline size_t readto_ay(Alc *_v, Ref _cut) noexcept
+			inline size_t readwith_ay(Alc *_v, Ref _cut) noexcept
 			{
-				return _v->alloc(readto(_cut));
+				return _v->alloc(readwith(_cut));
 			}
 			inline size_t read_str(Wri& _v) noexcept
 			{
@@ -220,21 +246,21 @@ namespace kr
 				derived()->addBegin(_len);
 				return _len;
 			}
-			inline size_t readto_str(Wri& _v, const InternalComponent &_cut) noexcept
+			inline size_t readwith_str(Wri& _v, const InternalComponent &_cut) noexcept
 			{
-				return _v.copy(readto(_cut));
+				return _v.copy(readwith(_cut));
 			}
-			inline size_t readto_str_y(Wri& _v, Ref _cut) noexcept
+			inline size_t readwith_str_y(Wri& _v, Ref _cut) noexcept
 			{
-				return _v.copy(readto(_cut));
+				return _v.copy(readwith(_cut));
 			}
 
 			inline int read_enumchar(Ref list) // EofException
 			{
-				if (size() == 0) 
+				if (size() == 0)
 					throw EofException();
 				size_t i = memm::pos(list.begin(), *begin(), list.size());
-				if (i != -1) 
+				if (i != -1)
 					derived()->addBegin(1);
 				return i;
 			}
@@ -251,42 +277,9 @@ namespace kr
 		INHERIT_COMPONENT();
 		using Super::Super;
 		using Super::read;
-		using Super::readAll;
 
-		template <class _Derived, class _Parent>
-		inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) noexcept
-		{
-			try
-			{
-				for (;;)
-				{
-					read(os, 4096);
-				}
-			}
-			catch (EofException&)
-			{
-			}
-		}
 		template <class _Derived, class _Parent>
 		inline size_t read(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os, size_t size)
-		{
-			size_t sz = read(os->padding(size), size);
-			os->commit(sz);
-			return sz;
-		}
-	};
-	template <class Derived, class Parent>
-	class InStream<Derived, AutoComponent, StreamInfo<false, Parent>>
-		:public _pri_::IStream_cmpAccessable<Derived, AutoComponent, StreamInfo<false, Parent>>
-	{
-		CLASS_HEADER(InStream, _pri_::IStream_cmpAccessable<Derived, AutoComponent, StreamInfo<false, Parent>>);
-	public:
-		INHERIT_COMPONENT();
-		using Super::Super;
-		using Super::read;
-
-		template <class _Derived, typename _Component, class _Parent>
-		size_t read(OutStream<_Derived, _Component, StreamInfo<true, _Parent>> * os, size_t size)
 		{
 			size_t sz = read(os->padding(size), size);
 			os->commit(sz);
