@@ -24,5 +24,7 @@ namespace kr
 	private:
 		AText16 m_src;
 		AText16 m_dest;
+		size_t m_srcend;
+		size_t m_destend;
 	};
 }

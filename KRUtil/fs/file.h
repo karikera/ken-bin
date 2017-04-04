@@ -97,18 +97,18 @@ namespace kr
 			return openAsArrayT<T, char16>(name);
 		}
 		template <typename T, typename CHR>
-		static inline Array<T> openAsArrayTempT(const CHR * name) // TooBigException, Error
+		static inline TmpArray<T> openAsArrayTempT(const CHR * name) // TooBigException, Error
 		{
 			Must<File> file = open(name);
 			return file->readAllTemp<T>();
 		}
 		template <typename T>
-		static inline Array<T> openAsArrayTemp(const char * name) // TooBigException, Error
+		static inline TmpArray<T> openAsArrayTemp(const char * name) // TooBigException, Error
 		{
 			return openAsArrayTempT<T, char>(name);
 		}
 		template <typename T>
-		static inline Array<T> openAsArrayTemp(const char16 * name) // TooBigException, Error
+		static inline TmpArray<T> openAsArrayTemp(const char16 * name) // TooBigException, Error
 		{
 			return openAsArrayTempT<T, char16>(name);
 		}
