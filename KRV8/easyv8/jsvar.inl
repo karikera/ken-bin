@@ -564,5 +564,5 @@ inline kr::V8Class * kr::JsObject<kr::NativeObject>::getClass()
 }
 inline void kr::JsObject<kr::NativeObject>::finallize() noexcept
 {
-	kr_aligned_free(static_cast<kr::NativeObject*>(this));
+	alloc<alignof(NativeObject)>::free(this);
 }

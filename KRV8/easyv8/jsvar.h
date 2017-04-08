@@ -192,7 +192,7 @@ default: debug();\
 		inline JsString(bool b);
 		inline JsString(undefined_t);
 		inline JsString(void *);
-		CBS_EASYV8_DLLEXPORT JsString(const V8Handle<v8::Value> & obj);
+		KR_EASYV8_DLLEXPORT JsString(const V8Handle<v8::Value> & obj);
 		inline JsString(const JsFunction & obj);
 		inline ~JsString();
 		inline char16 * begin() noexcept;

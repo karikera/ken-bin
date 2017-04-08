@@ -15,7 +15,7 @@ namespace kr
 		class Data : public JsExternalData
 		{
 		public:
-			CBS_EASYV8_DLLEXPORT V8Function CT_FASTCALL getV8Value() noexcept;
+			KR_EASYV8_DLLEXPORT V8Function CT_FASTCALL getV8Value() noexcept;
 			virtual JsAny call(const JsArguments & args) = 0;
 		};
 

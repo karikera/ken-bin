@@ -59,26 +59,10 @@ void * CT_CDECL operator new[](size_t size);
 void CT_CDECL operator delete(void * data) noexcept;
 void CT_CDECL operator delete[](void * data) noexcept;
 
-
-#ifdef KR_MEMORY_OBSERVER
-#define kr_alloc(sz)				((::kr::autoptr)reline_new(::kr::_pri_::alloc_impl((sz))))
-#define kr_aligned_alloc(sz, ...)	((::kr::autoptr)reline_new(::kr::_pri_::aligned_alloc_impl((sz), __VA_ARGS__)))
-#else
-#define kr_alloc(sz)				((::kr::autoptr)::kr::_pri_::alloc_impl((sz)))
-#define kr_aligned_alloc(sz, ...)	((::kr::autoptr)::kr::_pri_::aligned_alloc_impl((sz), __VA_ARGS__))
-#endif
-#define kr_free(ptr)			(::kr::_pri_::free_impl(ptr))
-#define kr_expand(ptr,sz)		(::kr::_pri_::expand_impl(ptr,sz))
-#define kr_msize(ptr)			(::kr::_pri_::msize_impl(ptr))
-#define kr_aligned_free(ptr)		(::kr::_pri_::aligned_free_impl(ptr))
-#define kr_aligned_expand(ptr, sz, ...)	(::kr::_pri_::aligned_expand_impl(ptr, sz, __VA_ARGS__))
-#define kr_aligned_msize(ptr, ...)	(::kr::_pri_::aligned_msize_impl(ptr, __VA_ARGS__))
-
 namespace kr
 {
 	namespace _pri_
 	{
-		ATTR_CHECK_RETURN void* CT_FASTCALL alloc_impl(size_t sz) noexcept;
 		ATTR_CHECK_RETURN bool CT_FASTCALL expand_impl(void * data, size_t nsize) noexcept;
 		void CT_FASTCALL free_impl(void * data) noexcept;
 		ATTR_CHECK_RETURN size_t CT_FASTCALL msize_impl(const void * ptr) noexcept;
@@ -88,40 +72,45 @@ namespace kr
 		ATTR_CHECK_RETURN bool CT_FASTCALL aligned_expand_impl(void * data, size_t nsize, size_t aligned, size_t offset = 0) noexcept;
 		ATTR_CHECK_RETURN size_t CT_FASTCALL aligned_msize_impl(const void * ptr, size_t aligned, size_t offset = 0) noexcept;
 		void CT_FASTCALL aligned_free_impl(void * ptr) noexcept;
-
-		template <typename T, typename ... ARGS> T * newAligned(const ARGS &... args)
+		
+		template <size_t alignment, size_t offset>
+		struct alloc_base
 		{
-			T* data = (T*)_pri_::aligned_alloc_impl(sizeof(T), alignof(T));
-			return new(data) T(args...);
-		}
-		template <typename T, typename ... ARGS> T * newAlignedArray(size_t sz)
-		{
-			static_assert(sizeof(T) % alignof(T) == 0, "sizeof & alignment unmatch!!");
-
-			if (std::is_class<T>::value)
+			ATTR_CHECK_RETURN static void* CT_FASTCALL allocate(size_t sz) noexcept
 			{
-				size_t * cnt = (size_t*)_pri_::aligned_alloc_impl(sizeof(T) * sz, alignof(T), sizeof(size_t));
-				*cnt = sz;
-				T * data = (T*)(cnt + 1);
-				T * end = data + sz;
-				for (T * beg = data; beg != end; beg++)
-				{
-					new (beg) T;
-				}
-				return data;
+				if (offset == 0) return aligned_alloc_impl(sz, alignment);
+				else return aligned_alloc_impl(sz, alignment, offset);
 			}
-			else
+			ATTR_CHECK_RETURN static void CT_FASTCALL free(void * p) noexcept
 			{
-				return (T*)_pri_::aligned_alloc_impl(sizeof(T) * sz, alignof(T));
+				return aligned_free_impl(p);
 			}
-		}
-		template <typename T, typename ... ARGS> T * newAlignedArrayNC(size_t sz)
+			ATTR_CHECK_RETURN static bool CT_FASTCALL expand(void * p, size_t sz) noexcept
+			{
+				return aligned_expand_impl(p, sz, alignment, offset);
+			}
+			ATTR_CHECK_RETURN static size_t CT_FASTCALL msize(const void * data) noexcept
+			{
+				return aligned_msize_impl(p, alignment, offset);
+			}
+		};
+		template <>
+		struct alloc_base<0, 0>
 		{
-			static_assert(sizeof(T) % alignof(T) == 0, "sizeof & alignment unmatch!!");
-
-			return (T*)_pri_::aligned_alloc_impl(sizeof(T) * sz, alignof(T));
-		}
+			ATTR_CHECK_RETURN static void* CT_FASTCALL allocate(size_t sz) noexcept;
+			ATTR_CHECK_RETURN static void CT_FASTCALL free(void * data) noexcept;
+			ATTR_CHECK_RETURN static bool CT_FASTCALL expand(void * data, size_t nsize) noexcept;
+			ATTR_CHECK_RETURN static size_t CT_FASTCALL msize(const void * data) noexcept;
+		};
 	}
+
+	template <size_t alignment = 0, size_t offset = 0>
+	struct alloc : _pri_::alloc_base <
+		offset % alignment == 0 && alignment <= alignof(max_align_t) ? 0 : alignment,
+		offset % alignment >
+	{
+		static_assert(((alignment - 1) & alignment) == 0, "Alignment must power of 2");
+	};
 
 	// 메모리 테스트의 지점을 정한다.
 	// 디버그 모드에서만 동작한다.
@@ -145,16 +134,46 @@ namespace kr
 		inline ~MemoryTest() noexcept{ memtest(); }
 	};
 
+	template <typename T, typename ... ARGS> T * newAligned(const ARGS &... args)
+	{
+		T* data = (T*)alloc<alignof(T)>::allocate(sizeof(T));
+		return new(data) T(args...);
+	}
+	template <typename T, typename ... ARGS> T * newAlignedArray(size_t sz)
+	{
+		if (std::is_class<T>::value)
+		{
+			static_assert(sizeof(T) % alignof(T) == 0, "sizeof & alignment unmatch!!");
+			size_t * cnt = (size_t*)alloc<alignof(T), sizeof(size_t)>::allocate(sizeof(T) * sz);
+			*cnt = sz;
+			T * data = (T*)(cnt + 1);
+			T * end = data + sz;
+			for (T * beg = data; beg != end; beg++)
+			{
+				new (beg) T;
+			}
+			return data;
+		}
+		else
+		{
+			return (T*)alloc<alignof(T)>::allocate(sizeof(T) * sz);
+		}
+	}
+	template <typename T, typename ... ARGS> T * newAlignedArrayNC(size_t sz)
+	{
+		static_assert(sizeof(T) % alignof(T) == 0, "sizeof & alignment unmatch!!");
+		return (T*)alloc<alignof(T)>::allocate(sizeof(T) * sz);
+	}
 	template <typename T> void deleteAligned(T * ptr) noexcept
 	{
 		if (ptr == nullptr) return;
 		ptr->~T();
-		_pri_::aligned_free_impl(ptr);
+		alloc<alignof(T)>::free(ptr);
 	}
 	template <typename T> void deleteAlignedND(T * ptr) noexcept
 	{
 		if (ptr == nullptr) return;
-		_pri_::aligned_free_impl(ptr);
+		return alloc<alignof(T)>::free(ptr);
 	}
 	template <typename T> void deleteAlignedArray(T * ptr) noexcept
 	{
@@ -168,16 +187,25 @@ namespace kr
 			{
 				ptr->~T();
 			}
-			_pri_::aligned_free_impl(cnt);
+			alloc<alignof(T), sizeof(size_t)>::free(cnt);
 		}
 		else
 		{
-			_pri_::aligned_free_impl(ptr);
+			alloc<alignof(T)>::free(ptr);
 		}
 	}
 }
 
 
-#define _newAligned(T, ...) new((T*)kr_aligned_alloc(sizeof(T), alignof(T))) T(__VA_ARGS__)
-#define _newAlignedArray(T, cnt) reline_new(::kr::_pri_::newAlignedArray<T>(cnt))
-#define _newAlignedArrayNC(T, cnt) reline_new(::kr::_pri_::newAlignedArrayNC<T>(cnt))
+#ifdef KR_MEMORY_OBSERVER
+#define kr_alloc(sz, ...)			((::kr::autoptr)reline_new(::kr::alloc<__VA_ARGS__>::allocate(sz)))
+#else
+#define kr_alloc(sz, ...)			((::kr::autoptr)::kr::alloc<__VA_ARGS__>::allocate(sz)))
+#endif
+#define kr_free(ptr, ...)			(::kr::alloc<__VA_ARGS__>::free(ptr))
+#define kr_expand(ptr, sz, ...)		(::kr::alloc<__VA_ARGS__>::expand(ptr,sz))
+#define kr_msize(ptr, ...)			(::kr::alloc<__VA_ARGS__>::msize(ptr))
+
+#define _newAligned(T, ...)			new((T*)::kr::alloc<alignof(T)>::allocate(sizeof(T))) T(__VA_ARGS__)
+#define _newAlignedArray(T, cnt)	reline_new(::kr::_pri_::newAlignedArray<T>(cnt))
+#define _newAlignedArrayNC(T, cnt)	reline_new(::kr::_pri_::newAlignedArrayNC<T>(cnt))

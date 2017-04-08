@@ -37,7 +37,7 @@ namespace kr
 		}
 		inline virtual void finallize() noexcept override
 		{
-			deleteAligned(static_cast<Class*>(this));
+			alloc<alignof(Class)>::free(this);
 		}
 
 		// 객체를 생성합니다
@@ -56,7 +56,7 @@ namespace kr
 		inline ~JsObject() noexcept;
 		// 객체를 생성합니다
 		static inline V8Object newInstanceRaw(JsArgumentsIn args);
-		CBS_EASYV8_DLLEXPORT static JsClass<NativeObject> & classObject;
+		KR_EASYV8_DLLEXPORT static JsClass<NativeObject> & classObject;
 		virtual inline V8Class * getClass();
 		inline virtual void finallize() noexcept;
 
@@ -74,8 +74,8 @@ namespace kr
 	public:
 		NativeObject(const NativeObject &) = delete;
 
-		CBS_EASYV8_DLLEXPORT NativeObject(const JsArguments & args);
-		CBS_EASYV8_DLLEXPORT ~NativeObject();
+		KR_EASYV8_DLLEXPORT NativeObject(const JsArguments & args);
+		KR_EASYV8_DLLEXPORT ~NativeObject();
 		static Text16 getClassName() noexcept
 		{
 			return u"NativeObject";
@@ -83,8 +83,8 @@ namespace kr
 		static void initMethods(JsClass<NativeObject> * cls) noexcept
 		{
 		}
-		CBS_EASYV8_DLLEXPORT void CT_FASTCALL setWeak();
-		CBS_EASYV8_DLLEXPORT bool CT_FASTCALL deleted() noexcept;
+		KR_EASYV8_DLLEXPORT void CT_FASTCALL setWeak();
+		KR_EASYV8_DLLEXPORT bool CT_FASTCALL deleted() noexcept;
 
 	};
 

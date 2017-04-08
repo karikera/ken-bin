@@ -95,22 +95,12 @@ namespace kr
 			private:
 				using InternalComponent = internal_component_t<C>;
 				static constexpr size_t align = alignof(InternalComponent);
+				using allocator = alloc<align, offset>;
 
 			public:
 				static InternalComponent * _mem_alloc_bytes(size_t sz) noexcept
 				{
-					if (align <= 1)
-					{
-						return (InternalComponent*)((byte*)kr_alloc(sz + offset) + offset);
-					}
-					else if (offset == 0)
-					{
-						return (InternalComponent*)((byte*)kr_aligned_alloc(sz, align));
-					}
-					else
-					{
-						return (InternalComponent*)((byte*)kr_aligned_alloc(sz + offset, align, offset) + offset);
-					}
+					return (InternalComponent*)((byte*)allocator::allocate(sz + offset) + offset);
 				}
 				static InternalComponent * _mem_alloc(size_t sz) noexcept
 				{
@@ -118,18 +108,7 @@ namespace kr
 				}
 				static size_t _mem_msize_bytes(InternalComponent * p) noexcept
 				{
-					if (align <= 1)
-					{
-						return (kr_msize((byte*)p - offset) - offset);
-					}
-					else if (offset == 0)
-					{
-						return (kr_aligned_msize((byte*)p, align));
-					}
-					else
-					{
-						return (kr_aligned_msize((byte*)p - offset, align, offset) - offset);
-					}
+					return allocator::msize((byte*)p - offset);
 				}
 				static size_t _mem_msize(InternalComponent * p) noexcept
 				{
@@ -137,14 +116,7 @@ namespace kr
 				}
 				static bool _mem_expand(InternalComponent * p, size_t sz) noexcept
 				{
-					if (align <= 1)
-					{
-						return kr_expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
-					}
-					else
-					{
-						return kr_aligned_expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset, align, offset);
-					}
+					return allocator::expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
 				}
 				static void _mem_reduce(InternalComponent * p, size_t sz) noexcept
 				{
@@ -152,14 +124,7 @@ namespace kr
 				}
 				static void _mem_free(InternalComponent * p) noexcept
 				{
-					if (align <= 1)
-					{
-						kr_free((byte*)p - offset);
-					}
-					else
-					{
-						kr_aligned_free((byte*)p - offset);
-					}
+					return allocator::free((byte*)p - offset);
 				}
 
 				template <typename LAMBDA>

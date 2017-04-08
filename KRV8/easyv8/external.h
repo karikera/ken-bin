@@ -13,11 +13,11 @@ namespace kr
 		int m_reference;
 		v8::Persistent<v8::External> m_external;
 
-		CBS_EASYV8_DLLEXPORT void _toWeak() noexcept;
+		KR_EASYV8_DLLEXPORT void _toWeak() noexcept;
 
 	public:
-		CBS_EASYV8_DLLEXPORT JsExternalData() noexcept;
-		CBS_EASYV8_DLLEXPORT ~JsExternalData() noexcept;
+		KR_EASYV8_DLLEXPORT JsExternalData() noexcept;
+		KR_EASYV8_DLLEXPORT ~JsExternalData() noexcept;
 		virtual void remove() noexcept = 0;
 
 		inline void AddRef() noexcept

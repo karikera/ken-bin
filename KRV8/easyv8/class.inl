@@ -158,21 +158,23 @@ T* kr::JsClass<T>::newInstance(const ARGS & ... args) const
 template <typename T>
 inline void kr::V8Handle<v8::FunctionTemplate>::setClass(Text16 _name, int internalFieldCount)
 {
-	_init(_name, internalFieldCount, [](const JsArguments & arguments)->NativeObject* {
-		return _newAligned(T, arguments);
-	});
+	_init(_name, internalFieldCount, 
+		[](const JsArguments & arguments)->NativeObject* { return _newAligned(T, arguments); }
+	);
 }
 template <typename T>
 inline void kr::V8Handle<v8::FunctionTemplate>::setClass(Text16 _name, V8Class * parent)
 {
-	_init(_name, parent, [](const JsArguments & arguments)->NativeObject* { 
-		return _newAligned(T, arguments);
-	});
+	_init(_name, parent,
+		[](const JsArguments & arguments)->NativeObject* { return _newAligned(T, arguments); }
+	);
 }
 template <typename T>
-inline kr::V8Class kr::V8Handle<v8::FunctionTemplate>::createChild()
+inline kr::V8Class kr::V8Handle<v8::FunctionTemplate>::createChild(Text16 _name)
 {
-	return _createChild([](const JsArguments & arguments)->NativeObject* { return _new T(arguments); });
+	return _createChild(_name, 
+		[](const JsArguments & arguments)->NativeObject* { return _newAligned(T, arguments); }
+	);
 }
 template <typename LAMBDA>
 inline void kr::V8Handle<v8::FunctionTemplate>::setStaticMethodRaw(Text16 _name, LAMBDA lambda)

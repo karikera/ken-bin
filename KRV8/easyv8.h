@@ -36,11 +36,11 @@ namespace kr
 		// 자바스크립트를 컴파일 시킨다.
 		// 파라미터 fileName: 예외가 발생하면, 발생 파일 이름에 넣어놓을 문자열
 		// 파라미터 source: 소스 문자열
-		CBS_EASYV8_DLLEXPORT JsCode() noexcept;
-		CBS_EASYV8_DLLEXPORT JsCode(Text16 fileName, Text16 source);
-		CBS_EASYV8_DLLEXPORT ~JsCode() noexcept;
-		CBS_EASYV8_DLLEXPORT JsCode(const JsCode &_copy) noexcept;
-		CBS_EASYV8_DLLEXPORT bool CT_FASTCALL empty() const noexcept;
+		KR_EASYV8_DLLEXPORT JsCode() noexcept;
+		KR_EASYV8_DLLEXPORT JsCode(Text16 fileName, Text16 source);
+		KR_EASYV8_DLLEXPORT ~JsCode() noexcept;
+		KR_EASYV8_DLLEXPORT JsCode(const JsCode &_copy) noexcept;
+		KR_EASYV8_DLLEXPORT bool CT_FASTCALL empty() const noexcept;
 		inline JsCode& operator =(const JsCode &_copy) noexcept
 		{
 			this->~JsCode();
@@ -59,16 +59,16 @@ namespace kr
 		friend JsCode;
 		friend V8Object;
 	public:
-		CBS_EASYV8_DLLEXPORT JsContext() noexcept;
-		CBS_EASYV8_DLLEXPORT JsContext(const JsContext & _ctx) noexcept;
-		CBS_EASYV8_DLLEXPORT ~JsContext() noexcept;
+		KR_EASYV8_DLLEXPORT JsContext() noexcept;
+		KR_EASYV8_DLLEXPORT JsContext(const JsContext & _ctx) noexcept;
+		KR_EASYV8_DLLEXPORT ~JsContext() noexcept;
 		
 		// 자바스크립트를 실행한다.
 		// 예외: JsException
-		CBS_EASYV8_DLLEXPORT JsAny CT_FASTCALL run(const JsCode & code);
-		CBS_EASYV8_DLLEXPORT V8Object CT_FASTCALL global();
-		CBS_EASYV8_DLLEXPORT void CT_FASTCALL enter();
-		CBS_EASYV8_DLLEXPORT void CT_FASTCALL exit();
+		KR_EASYV8_DLLEXPORT JsAny CT_FASTCALL run(const JsCode & code);
+		KR_EASYV8_DLLEXPORT V8Object CT_FASTCALL global();
+		KR_EASYV8_DLLEXPORT void CT_FASTCALL enter();
+		KR_EASYV8_DLLEXPORT void CT_FASTCALL exit();
 
 		inline JsCode compile(Text16 source) // JsException
 		{
@@ -87,8 +87,8 @@ namespace kr
 			return run(compile(source));
 		}
 
-		CBS_EASYV8_DLLEXPORT static void CT_FASTCALL gc() noexcept;
-		CBS_EASYV8_DLLEXPORT static void CT_FASTCALL terminate() noexcept;
+		KR_EASYV8_DLLEXPORT static void CT_FASTCALL gc() noexcept;
+		KR_EASYV8_DLLEXPORT static void CT_FASTCALL terminate() noexcept;
 		
 	private:
 		v8::Persistent<v8::Context> m_context;

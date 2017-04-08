@@ -23,7 +23,7 @@ namespace kr
 		// 오류에 대한 정보
 		JsString message;
 
-		CBS_EASYV8_DLLEXPORT JsException(v8::TryCatch * trycatch);
+		KR_EASYV8_DLLEXPORT JsException(v8::TryCatch * trycatch);
 		inline JsException(JsString message)
 		{
 			this->message = move(message);
