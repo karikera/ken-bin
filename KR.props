@@ -31,7 +31,7 @@
     <IntDir>bin\$(PlatformShortName)\$(Configuration)\</IntDir>
     <ExecutablePath>$(OutDir);$(KEN_DIR)batch;$(ExecutablePath)</ExecutablePath>
     <IncludePath>$(KEN_DIR);$(KEN_DIR)KRThird\angle\include;$(KEN_DIR)KRThird\zlib\$(PlatformShortName)\include;$(KEN_DIR)empolyfill;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(KEN_DIR)KRThird\zlib\$(PlatformShortName)\lib;$(KEN_DIR)KRThird\libssh2\lib\$(PlatformShortName);$(KEN_DIR)KRThird\curl\lib\$(PlatformShortName);$(KEN_DIR)KRThird\angle\lib\$(PlatformShortName)\$(ConfigDir);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(OutDir);$(KEN_DIR)\lib\$(PlatformShortName)\$(Configuration);$(KEN_DIR)KRThird\zlib\$(PlatformShortName)\lib;$(KEN_DIR)KRThird\libssh2\lib\$(PlatformShortName);$(KEN_DIR)KRThird\curl\lib\$(PlatformShortName);$(KEN_DIR)KRThird\angle\lib\$(PlatformShortName)\$(ConfigDir);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
