@@ -7,9 +7,6 @@ namespace std
 	namespace krext
 	{
 		template <typename _Elem>
-		bool isNumber(const basic_string<_Elem> &str);
-
-		template <typename _Elem>
 		basic_string<_Elem> trim(const basic_string<_Elem> & s);
 
 		template <typename _Elem>

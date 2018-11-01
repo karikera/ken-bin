@@ -83,8 +83,8 @@ namespace kr
 		static void initMethods(JsClass<NativeObject> * cls) noexcept
 		{
 		}
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setWeak();
-		KR_EASYV8_DLLEXPORT bool CT_FASTCALL deleted() noexcept;
+		KR_EASYV8_DLLEXPORT void setWeak();
+		KR_EASYV8_DLLEXPORT bool deleted() noexcept;
 
 	};
 

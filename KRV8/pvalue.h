@@ -64,7 +64,7 @@ namespace kr
 		}
 		const T& operator ->() const
 		{
-			assert(m_value != nullptr);
+			_assert(m_value != nullptr);
 			return m_value;
 		}
 

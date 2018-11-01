@@ -1,10 +1,13 @@
 #pragma once
 
 #include <kr3/util/time.h>
+#include <KR3/util/callable.h>
+#include <KR3/util/process.h>
 #include <kr3/math/coord.h>
 #include <KR3/wl/windows.h>
 #include <KR3/wl/handle.h>
 #include <KR3/wl/eventhandle.h>
+#include <KR3/wl/threadhandle.h>
 #include <KRUtil/uts.h>
 
 
@@ -30,13 +33,47 @@ namespace kr
 
 	namespace win
 	{
+		ivec2 getCursorPos() noexcept;
+
+		class ProcessAndModule
+		{
+		public:
+			Process * process;
+			Module * module;
+
+			class ModuleName : public Bufferable<ModuleName, BufferInfo<AutoComponent, false, true, true>>
+			{
+			private:
+				ProcessAndModule * const m_owner;
+			public:
+				inline ModuleName(ProcessAndModule * owner) noexcept : m_owner(owner)
+				{
+				}
+
+				template <typename C>
+				inline size_t sizeAs() const noexcept
+				{
+					return m_owner->getNameLength<C>();
+				}
+				template <typename C>
+				inline size_t copyTo(C * dest) const noexcept
+				{
+					return m_owner->getName<C>(dest, m_module->getNameLength<C>() + 1);
+				}
+			};
+
+			const ModuleName name() noexcept;
+			template <typename T> size_t getName(T* dest, size_t capacity) noexcept;
+			template <typename T> size_t getNameLength() noexcept;
+		};
+
 		class Library:public Handle<HINSTANCE__>
 		{
 		public:
 			static Library* load(pcstr16 str) noexcept;
-			void operator delete(ptr library) noexcept;
+			static Module * getModule(pcstr16 str) noexcept;
+			void operator delete(void * library) noexcept;
 			const autovar<sizeof(ptr)> get(pcstr str) noexcept;
-
 		};
 		class Iconable:public Handle<HICON__>
 		{
@@ -50,7 +87,7 @@ namespace kr
 			static Cursor* load(pcstr16 name);
 			static Cursor* load(const wchar_t * name);
 			static Cursor* load(uintptr_t id);
-			static Cursor* load(HINSTANCE hInstance, uintptr_t id);
+			static Cursor* load(Instance* hInstance, uintptr_t id);
 			class Current
 			{
 			public:
@@ -67,7 +104,7 @@ namespace kr
 			static Icon* load(pcstr16 name);
 			static Icon* load(const wchar_t * name);
 			static Icon* load(uintptr_t id);
-			static Icon* load(HINSTANCE hInstance, uintptr_t id);
+			static Icon* load(Instance* hInstance, uintptr_t id);
 		};
 		class Menu:public Handle<HMENU__>
 		{
@@ -91,6 +128,23 @@ namespace kr
 		class Process :public EventHandle
 		{
 		public:
+			using ThreadRoutine = unsigned long (CT_STDCALL *)(void* lpThreadParameter);
+			
+			static Process * open(ProcessId id) noexcept;
+			static Process* execute(pstr strCommand, pcstr strPath = nullptr) noexcept;
+			static Process* execute(pstr16 strCommand, pcstr16 strPath = nullptr) noexcept;
+			static Process* suspendedExecute(pstr strCommand, pcstr strPath = nullptr) noexcept;
+			static Process* suspendedExecute(pstr16 strCommand, pcstr16 strPath = nullptr) noexcept;
+
+			bool terminate() noexcept;
+			dword resume() noexcept;
+			Module * getFirstModule() noexcept;
+			Module* injectDll(pcstr strDllPath) noexcept;
+			Module* injectDll(pcstr16 strDllPath) noexcept;
+			dword call(ThreadRoutine pThread, Buffer buffer) noexcept;
+			dword call(ThreadRoutine pThread, intptr_t data) noexcept;
+			size_t write(void * pDest, const void *pSrc, size_t nSize) noexcept;
+			size_t read(void * pDest, const void *pSrc, size_t nSize) noexcept;
 		};
 		class Monitor :public Handle<HMONITOR__>
 		{
@@ -106,7 +160,7 @@ namespace kr
 			static const Window * TOPMOST;
 			static const Window * NOTOPMOST;
 
-			class WindowText : public Bufferable<WindowText, BufferInfo<AutoComponent, false, true, true, Empty>>
+			class WindowText : public Bufferable<WindowText, BufferInfo<AutoComponent, false, true, true>>
 			{
 			private:
 				Window * const m_window;
@@ -143,7 +197,8 @@ namespace kr
 			long setExStyle(long style) noexcept;
 			long addExStyle(long style) noexcept;
 			long getExStyle() noexcept;
-			intptr_t removeStyle(intptr_t style) noexcept;
+			long removeStyle(long style) noexcept;
+			long removeExStyle(long style) noexcept;
 			WindowProgram* setProgram(WindowProgram * pProgram) noexcept;
 			WindowProgram* getProgram() noexcept;
 
@@ -178,6 +233,9 @@ namespace kr
 			BOOL endPaint(PAINTSTRUCT *ps) noexcept;
 			DrawContext* getDC() noexcept;
 			int releaseDC(DrawContext * dc) noexcept;
+
+			bool updateLayer(DrawContext* dc, const irectwh & region) noexcept;
+			bool updateLayer(DrawContext* dc, int width, int height) noexcept;
 
 			BOOL postMessage(UINT Msg, WPARAM wParam, LPARAM lParam) noexcept;
 			BOOL postMessageA(UINT Msg, WPARAM wParam, LPARAM lParam) noexcept;
@@ -269,6 +327,19 @@ namespace kr
 			}
 
 			Static * insertStatic(pcstr16 pszText, irectwh rc) noexcept;
+			struct ProcessBag {
+				ThreadId threadId;
+				ProcessId processId;
+			};
+			ProcessBag getProcessId() noexcept;
+			static Window * find(pcstr16 className, pcstr16 windowName) noexcept;
+			static void all(CallableT<bool(Window*)> * call) noexcept;
+			template <typename LAMBDA>
+			static void all(const LAMBDA & lambda) noexcept
+			{
+				LambdaCallable<bool(Window*), LAMBDA> call = lambda;
+				all(&call);
+			}
 			static Window * getForeground() noexcept;
 			static Window* createPrimary(pcstr16 pszClass, pcstr16 pszTitle, dword style, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
 			static Window* createPrimary(pcstr16 pszClass, pcstr16 pszTitle, dword style, dword width, dword height, HMENU hMenu = nullptr, WindowProgram * pProgram = nullptr) noexcept;
@@ -294,6 +365,9 @@ namespace kr
 			bool endDialog(intptr_t retcode) noexcept;
 			bool setItemText(int id, pcstr text) noexcept;
 			bool setItemText(int id, pcstr16 text) noexcept;
+			bool checkItemButton(int id, uint check) noexcept;
+			bool checkRadioButton(int first, int last, int target) noexcept;
+			uint isItemButtonChecked(int id) noexcept;
 			Window* getItem(int id) noexcept;
 			template <typename T>
 			T* getItem(int id) noexcept
@@ -370,7 +444,7 @@ namespace kr
 
 
 		extern Window * g_mainWindow;
-		extern HINSTANCE g_hInstance;
+		extern Instance * g_instance;
 
 	}
 	

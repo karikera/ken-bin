@@ -217,9 +217,9 @@ namespace kr
 	public:
 		bool Resize(int w, int h);
 		void LoadFromBMPData(const BMPINFO* pbi, ptr data);
-		bool LoadFromBMPFile(pcwstr strFile);
-		bool LoadFromPNGFile(pcwstr Filename);
-		bool SaveAsPNGFile(pcwstr Filename, BOOL InterlaceAdam7);
+		bool LoadFromBMPFile(pcstr16 strFile);
+		bool LoadFromPNGFile(pcstr16 Filename);
+		bool SaveAsPNGFile(pcstr16 Filename, BOOL InterlaceAdam7);
 
 		inline void Create(int w, int h)
 		{

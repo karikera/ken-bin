@@ -22,17 +22,13 @@ namespace kr
 		using typename Super::Decoder;
 		using typename Super::FromText;
 		using typename Super::ToText;
-		using typename Super::FromWriter;
-		using typename Super::ToWriter;
-		using MText = RefArray<M>;
+		using MText = View<M>;
 		using MWriter = ArrayWriter<M>;
 
 		static size_t length(FromText text) noexcept;
 		static size_t encode(To * out, FromText text) noexcept;
-		static void encode(ToWriter * out, FromText * text) noexcept;
 		static size_t delength(ToText text) noexcept;
 		static size_t decode(From * out, ToText text) noexcept;
-		static void decode(FromWriter * out, ToText * text) noexcept;
 	};
 
 	class Utf16ToUtf32
@@ -44,10 +40,8 @@ namespace kr
 
 		static size_t length(Text16 text) noexcept;
 		static size_t encode(char32 * out, Text16 text) noexcept;
-		static void encode(Writer32 * out, Text16 * text) noexcept;
 		static size_t delength(Text32 text) noexcept;
 		static size_t decode(char16 * out, Text32 text) noexcept;
-		static void decode(Writer16 * out, Text32 * text) noexcept;
 	};;
 
 	template <Charset charset, typename To> class ToConvert
@@ -58,14 +52,11 @@ namespace kr
 		using Super::Super;
 		using typename Super::Decoder;
 		using typename Super::ToText;
-		using typename Super::ToWriter;
 
 		static size_t length(Text text) noexcept;
 		static size_t encode(To * out, Text text) noexcept;
-		static void encode(ToWriter * out, Text * text) noexcept;
 		static size_t delength(ToText text) noexcept;
 		static size_t decode(char * out, ToText text) noexcept;
-		static void decode(Writer * out, ToText * text) noexcept;
 	};;
 
 	template <Charset charset>
@@ -102,14 +93,6 @@ namespace kr
 		return ToConverter::encode(out, text_m);
 	}
 	template <typename ToConverter, typename FromConverter>
-	void TransConverter<ToConverter, FromConverter>::encode(ToWriter * out, FromText * text) noexcept
-	{
-		TmpArray<M> text_m = FromConverter(*text);
-		MText text_m_ref = text_m;
-		ToConverter::encode(out, &text_m_ref);
-		text->setBegin(text->end());
-	}
-	template <typename ToConverter, typename FromConverter>
 	size_t TransConverter<ToConverter, FromConverter>::delength(ToText text) noexcept
 	{
 		TmpArray<M> text_m = typename ToConverter::Decoder(text);
@@ -120,14 +103,6 @@ namespace kr
 	{
 		TmpArray<M> text_m = typename ToConverter::Decoder(text);
 		return FromConverter::decode(out, text_m);
-	}
-	template <typename ToConverter, typename FromConverter>
-	void TransConverter<ToConverter, FromConverter>::decode(FromWriter * out, ToText * text) noexcept
-	{
-		TmpArray<M> text_m = typename ToConverter::Decoder(*text);
-		MText text_m_ref = text_m;
-		FromConverter::decode(out, &text_m_ref);
-		text->setBegin(text->end());
 	}
 
 	template <Charset charset>
@@ -222,7 +197,7 @@ namespace kr
 	template <Charset charset>
 	Text meml<charset>::next(Text str) noexcept
 	{
-		assert(!str.empty());
+		_assert(!str.empty());
 		if (!isDbcs(*str++))
 			return str;
 		if (str.empty())

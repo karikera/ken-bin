@@ -40,7 +40,7 @@ namespace kr
 		KR_EASYV8_DLLEXPORT JsCode(Text16 fileName, Text16 source);
 		KR_EASYV8_DLLEXPORT ~JsCode() noexcept;
 		KR_EASYV8_DLLEXPORT JsCode(const JsCode &_copy) noexcept;
-		KR_EASYV8_DLLEXPORT bool CT_FASTCALL empty() const noexcept;
+		KR_EASYV8_DLLEXPORT bool empty() const noexcept;
 		inline JsCode& operator =(const JsCode &_copy) noexcept
 		{
 			this->~JsCode();
@@ -65,10 +65,10 @@ namespace kr
 		
 		// 자바스크립트를 실행한다.
 		// 예외: JsException
-		KR_EASYV8_DLLEXPORT JsAny CT_FASTCALL run(const JsCode & code);
-		KR_EASYV8_DLLEXPORT V8Object CT_FASTCALL global();
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL enter();
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL exit();
+		KR_EASYV8_DLLEXPORT JsAny run(const JsCode & code);
+		KR_EASYV8_DLLEXPORT V8Object global();
+		KR_EASYV8_DLLEXPORT void enter();
+		KR_EASYV8_DLLEXPORT void exit();
 
 		inline JsCode compile(Text16 source) // JsException
 		{
@@ -87,8 +87,8 @@ namespace kr
 			return run(compile(source));
 		}
 
-		KR_EASYV8_DLLEXPORT static void CT_FASTCALL gc() noexcept;
-		KR_EASYV8_DLLEXPORT static void CT_FASTCALL terminate() noexcept;
+		KR_EASYV8_DLLEXPORT static void gc() noexcept;
+		KR_EASYV8_DLLEXPORT static void terminate() noexcept;
 		
 	private:
 		v8::Persistent<v8::Context> m_context;

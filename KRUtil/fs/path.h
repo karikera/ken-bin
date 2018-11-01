@@ -23,9 +23,9 @@ namespace kr
 		constexpr static size_t MAX_LEN = 512;
 
 		Path() noexcept;
-		Text16 get(Text16 filename); // NotEnoughSpaceException
-		pcstr16 getsz(Text16 filename); // NotEnoughSpaceException
-		char16 * enter(Text16 name); // NotEnoughSpaceException
+		Text16 get(Text16 filename) throw(NotEnoughSpaceException);
+		pcstr16 getsz(Text16 filename) throw(NotEnoughSpaceException);
+		char16 * enter(Text16 name) throw(NotEnoughSpaceException);
 		void leave(char16 * path) noexcept;
 		pcstr16 getCurrentDirectorySz() noexcept;
 
@@ -48,7 +48,7 @@ namespace kr
 		static constexpr C sep = (C)'/';
 #endif
 
-		using Text = RefArray<C>;
+		using Text = View<C>;
 		using TSZ = TempSzText<C>;
 
 		// '/' -> true
@@ -90,6 +90,14 @@ namespace kr
 			return text.cut(basename(text));
 		}
 
+		// "dir/name/basename.ext.name" -> "basename"
+		// "dir/name/.ext.name" -> ""
+		static Text filenameOnly(Text text) noexcept
+		{
+			Text name = basename(text);
+			Text find = text.find_e('.');
+			return name.cut(find);
+		}
 
 		// "dir/name/basename.ext" -> "basename.ext"
 		// "basename.ext" -> "basename.ext"
@@ -246,5 +254,6 @@ namespace kr
 	extern template class path_t<char>;
 	extern template class path_t<char16>;
 	static path_t<char> & path = nullref;
-	static path_t<char16> & wpath = nullref;
+	static path_t<char16> & path16 = nullref;
 }
+

@@ -88,6 +88,22 @@ namespace kr
 		};
 
 		template <typename T, bool aligned>
+		class matrix_data<T, 3, 2, aligned, matrix_data_type::none>
+		{
+		public:
+			union
+			{
+				vector<T, 2, aligned> v[3];
+				struct
+				{
+					T _11, _12;
+					T _21, _22;
+					T _31, _32;
+				};
+			};
+		};
+
+		template <typename T, bool aligned>
 		class matrix_data<T, 3, 3, aligned, matrix_data_type::none>
 		{
 		public:

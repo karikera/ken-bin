@@ -13,7 +13,7 @@ namespace kr
 	{
 		static_assert(std::is_arithmetic<T>::value, "T is not number");
 	private:
-		T m_value;
+		std::make_unsigned_t<T> m_value;
 		uint m_radix;
 		dword m_cipher;
 		bool m_minus;
@@ -186,7 +186,7 @@ namespace kr
 	// FIXED: 표시할 소수점 수, 0으로 하면 자동으로 된다.
 	template <typename T>
 	class NumberFloat<0, T>
-		:public Bufferable<NumberFloat<0, T>, BufferInfo<AutoComponent>>
+		:public AddBufferable<NumberFloat<0, T>, BufferInfo<AutoComponent>>
 	{
 	private:
 		enum Mode
@@ -232,7 +232,7 @@ namespace kr
 
 		NumberFloat(T v) noexcept
 		{
-			if (isnan(v))
+			if (!isnormal(v))
 			{
 				if (isinf(v))
 				{
@@ -472,8 +472,8 @@ namespace kr
 	};
 
 
-	// 
-	template <typename Component> class Fill :public Bufferable<Fill<Component>, BufferInfo<Component>>
+	template <typename Component> 
+	class Fill :public Bufferable<Fill<Component>, BufferInfo<Component>>
 	{
 	public:
 		const Component value;
@@ -495,6 +495,37 @@ namespace kr
 			return count;
 		}
 	};
+
+	template <typename Component, typename Text>
+	class FillLeft :public Bufferable<FillLeft<Component, Text>, BufferInfo<Component>>
+	{
+	public:
+		const Component value;
+		const Text& m_text;
+		size_t totalSize;
+		size_t count;
+
+		FillLeft(Component _value, size_t _count, const Text & text) noexcept
+			: value(_value)
+			, m_text(text)
+		{
+			size_t txsize = m_text.template sizeAs<Component>();
+			totalSize = math::max(txsize, _count);
+			count = totalSize - txsize;
+		}
+
+		size_t size() const noexcept
+		{
+			return totalSize;
+		}
+		size_t copyTo(Component* dest) const noexcept
+		{
+			mema::ctor_fill(dest, value, count);
+			m_text.copyTo(dest + count);
+			return totalSize;
+		}
+	};
+
 	class CostNumber : public Bufferable<CostNumber, BufferInfo<AutoComponent>>
 	{
 	private:
@@ -619,9 +650,15 @@ namespace kr
 	{
 		return{ _v, _radix, _fixed, _fillchr };
 	};
+
 	template <typename T> Fill<T> fill(T v, size_t sz) noexcept
 	{
-		return {v, sz};
+		return Fill<T>(v, sz);
+	};
+
+	template <typename T, typename Text> FillLeft<T, Text> fill(T v, size_t sz, const Text & text) noexcept
+	{
+		return FillLeft<T, Text>( v, sz, text );
 	};
 	
 }

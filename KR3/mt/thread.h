@@ -26,9 +26,11 @@ namespace kr
 	public:
 		inline Threadable() noexcept
 		{
-			m_handle = nullptr;
 #ifdef WIN32
 			m_id = nullptr;
+			m_handle = nullptr;
+#else
+			m_handle = 0;
 #endif
 		}
 		inline ~Threadable() noexcept
@@ -37,7 +39,7 @@ namespace kr
 		inline void start() noexcept
 		{
 #ifdef WIN32
-			m_handle = ThreadHandle::create<T, &T::thread>(static_cast<T*>(this));
+			m_handle = ThreadHandle::create<T, &T::thread>(static_cast<T*>(this), &m_id);
 #else
 			int pthread_create_res = pthread_create(&m_handle, nullptr, [](void * _this)->void* {
 				return (void*)(intptr_t)(int)((T*)(_this))->thread();

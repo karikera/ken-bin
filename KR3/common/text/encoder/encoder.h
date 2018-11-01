@@ -20,6 +20,7 @@ namespace kr
 			
 			
 		};
+
 		template <typename Derived, typename To, typename From>
 		class Encoder :public Bufferable<Derived, BufferInfo<To>>
 		{
@@ -29,39 +30,37 @@ namespace kr
 			using ToComponent = To;
 			using FromComponent = From;
 
-			using ToText = RefArray<To>;
-			using ToWriter = ArrayWriter<To>;
-			using FromText = RefArray<From>;
-			using FromWriter = ArrayWriter<From>;
+			using ToText = View<To>;
+			using FromText = View<From>;
 
-			Encoder(RefArray<From> src) noexcept;
+			Encoder(View<From> src) noexcept;
 			size_t size() const noexcept;
 			size_t copyTo(To * dest) const noexcept;
 			class Decoder : public Bufferable<Decoder, BufferInfo<From>>
 			{
 			public:
-				Decoder(RefArray<To> src) noexcept;
+				Decoder(View<To> src) noexcept;
 				size_t size() const noexcept;
 				size_t copyTo(From * dest) const noexcept;
 
 			private:
-				const RefArray<To> m_data;
+				const View<To> m_data;
 				const size_t m_size;
 			};
 
 			template <class _Derived> 
 			static io::OStreamEncoder<_Derived, Derived> * cast(_Derived * t)
 			{
-				return static_cast<io::OStreamEncoder<_Derived, Derived>*>(t);
+				return reinterpret_cast<io::OStreamEncoder<_Derived, Derived>*>(t);
 			}
 
 		private:
-			const RefArray<From> m_data;
+			const View<From> m_data;
 			const size_t m_size;
 		};
 
 		template <typename Derived, typename To, typename From>
-		Encoder<Derived, To, From>::Encoder(RefArray<From> src) noexcept
+		Encoder<Derived, To, From>::Encoder(View<From> src) noexcept
 			:m_data(src), m_size(Derived::length(src))
 		{
 		}
@@ -76,7 +75,7 @@ namespace kr
 			return Derived::encode(dest, m_data);
 		}
 		template <typename Derived, typename To, typename From>
-		Encoder<Derived, To, From>::Decoder::Decoder(RefArray<To> src) noexcept
+		Encoder<Derived, To, From>::Decoder::Decoder(View<To> src) noexcept
 			:m_data(src), m_size(Derived::delength(src))
 		{
 		}
@@ -134,24 +133,33 @@ namespace kr
 	
 	namespace io
 	{
-		template <class Derived, class Encoder>
+		template <class Base, class Encoder>
 		class OStreamEncoder :
-			public OutStream<OStreamEncoder<Derived, Encoder>, typename Derived::Component, StreamInfo<false, Derived>>
+			public OutStream<OStreamEncoder<Base, Encoder>, typename Base::Component, StreamInfo<false>>
 		{
-			CLASS_HEADER(OStreamEncoder, OutStream<OStreamEncoder<Derived, Encoder>, typename Derived::Component, StreamInfo<false, Derived>>);
+			CLASS_HEADER(OStreamEncoder, OutStream<OStreamEncoder<Base, Encoder>, typename Base::Component, StreamInfo<false>>);
 		public:
 			INHERIT_COMPONENT();
-			static_assert(IsOStream<Derived>::value, "Derived is not OutStream");
+			static_assert(IsOStream<Base>::value, "Base is not OutStream");
 
 			OStreamEncoder() noexcept = delete;
 
+			static OStreamEncoder * from(Base * base) noexcept
+			{
+				return reinterpret_cast<OStreamEncoder*>(base);
+			}
+			Base * base() noexcept
+			{
+				return reinterpret_cast<Base*>(this);
+			}
+
 			void writeImpl(const Component * _data, size_t _size)
 			{
-				size_t _nsize = Encoder::length(RefArray<Component>(_data, _size));
-				WriteLock<Derived> lockData(_nsize);
-				lockData.lock(this);
-				Encoder::encode(&ArrayWriter<Component>(lockData.begin(), _nsize), &RefArray<Component>(_data, _size));
-				lockData.unlock(this);
+				size_t _nsize = Encoder::length(View<Component>(_data, _size));
+				WriteLock<Base> lockData(_nsize);
+				lockData.lock(base());
+				Encoder::encode(&ArrayWriter<Component>(lockData.begin(), _nsize), &View<Component>(_data, _size));
+				lockData.unlock(base());
 			}
 		};
 	}

@@ -21,10 +21,6 @@ class CChannel;
 class CClient
 {
 public:
-    struct POSITION
-    {
-        float x,y,h,v;
-    };
     CClient(Socket sock,IPADDRESS ip);
     
     CSocketStream* Lock();
@@ -34,8 +30,6 @@ public:
     void Send(BUFFER buff);
     void ReadUserData(CWSOStream &stream);
     unsigned GetID();
-    float GetX();
-    float GetY();
     size_t GetChannelIndex();
     void SetChannelIndex(size_t nIndex);
     

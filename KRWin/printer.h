@@ -9,7 +9,8 @@ namespace kr
 {
 	namespace paper
 	{
-		static const vec2 A4 = { 210, 297 };
+		constexpr float A4_WIDTH = 210.f;
+		constexpr float A4_HEIGHT = 297.f;
 	}
 
 	class GDIReUnit
@@ -42,6 +43,7 @@ namespace kr
 		void text(Text16 text) noexcept;
 		vec2 getPosition() noexcept;
 		vec2 moveTo(vec2 point) noexcept;
+		vec2 moveBy(vec2 point) noexcept;
 		void lineTo(vec2 point) noexcept;
 		void strokeRect(frect rc) noexcept;
 		void fillRect(frect rc) noexcept;
@@ -70,7 +72,7 @@ namespace kr
 		Keep<win::DrawContext> m_pMDC;
 		LOGFONTW m_logfont;
 	
-		ivec2 m_offset;
+		vec2 m_offset;
 		vec2 m_vDPMM;
 		int m_nCursorX;
 		float m_fLineHeight;

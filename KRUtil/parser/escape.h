@@ -8,7 +8,7 @@ namespace kr
 	{
 	public:
 		template <typename O, typename C>
-		static void parse(O * os, RefArray<C> *text) noexcept
+		static void parse(O * os, View<C> *text) noexcept
 		{
 		}
 	};
@@ -20,7 +20,7 @@ namespace kr
 		using FromComponent = typename Encoder::FromComponent;
 
 		template <typename _Parent, bool _accessable, typename _Parent>
-		void parse(OutStream<_Parent, StreamInfo<Component, _accessable, _Parent>>* dest, kr::RefArray<FromComponent> line) noexcept
+		void parse(OutStream<_Parent, StreamInfo<Component, _accessable, _Parent>>* dest, kr::View<FromComponent> line) noexcept
 		{
 			kr::Text desc = line;
 			while (!desc.empty())
@@ -31,7 +31,7 @@ namespace kr
 					desc = kr::meml<kr::Charset::Default>::next(desc);
 					continue;
 				}
-				*dest << (Encoder)line.readto(desc);
+				*dest << (Encoder)line.readto_p(desc);
 				desc = kr::meml<kr::Charset::Default>::next(desc);
 				if (desc.empty())
 					return;

@@ -17,6 +17,8 @@ namespace kr
 	{
 		static byte adc(byte carry, word v1, word v2, void* res) noexcept;
 		static byte sbb(byte carry, word v1, word v2, void* res) noexcept;
+		static word rotl(word value, byte shift) noexcept;
+		static word rotr(word value, byte shift) noexcept;
 	};
 	template <> struct intrinsic<3>
 	{

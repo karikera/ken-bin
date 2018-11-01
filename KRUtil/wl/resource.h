@@ -11,16 +11,21 @@ typedef struct HINSTANCE__ *HINSTANCE;
 
 namespace kr
 {
-	template <typename T> class Resource: public Resource<void>
+	template <typename T>
+	class Resource: public Resource<void>
 	{
 	public:
-		using Resource<void>::Resource;
-		inline operator T*()
+		Resource(HINSTANCE hModule, int id, int type) noexcept
+			:Resource<void>(hModule, id, type)
+		{	
+		}
+		operator T*() noexcept
 		{
 			return (T*)m_resource;
 		}
 	};
-	template <> class Resource<void>
+	template <>
+	class Resource<void>
 	{
 	public:
 		Resource(HINSTANCE hModule, int id, int type) noexcept;
@@ -40,7 +45,7 @@ namespace kr
 	public:
 		ResourceFile(HINSTANCE hModule, int id, int type) noexcept;
 		~ResourceFile() noexcept;
-		bool toFile(pcstr16 str, bool temp=false); // Error
+		bool toFile(pcstr16 str, bool temp=false) throw(Error);
 		int execute(Text16 param) noexcept;
 
 	protected:

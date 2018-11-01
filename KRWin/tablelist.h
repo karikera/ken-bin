@@ -11,12 +11,13 @@ namespace kr
 		String,
 		Unsigned,
 		Byte,
-		Boolean
+		Boolean,
+		Custom,
 	};
 
 	struct FColumnFlags
 	{
-		ColumnType columnType : 2;
+		ColumnType columnType : 3;
 		bool readOnly : 1;
 	};
 

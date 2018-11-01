@@ -4,7 +4,7 @@
 
 namespace kr
 {
-	struct Ipv4Address:public Bufferable<Ipv4Address, BufferInfo<AutoComponent, false, false, true, Empty>>
+	struct Ipv4Address:public Bufferable<Ipv4Address, BufferInfo<AutoComponent, false, false, true>>
 	{
 		union
 		{
@@ -27,6 +27,8 @@ namespace kr
 		}
 		template <typename CHR>
 		size_t copyTo(CHR * dest) const noexcept;
+
+		static const Ipv4Address loopBack;
 	};
 
 }

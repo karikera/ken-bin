@@ -16,12 +16,12 @@ namespace kr
 		friend NativeObject;
 		friend _pri_::InternalTools;
 	private:
-		typedef NativeObject *(CT_FASTCALL *CTOR)(const JsArguments &);
+		typedef NativeObject *(*CTOR)(const JsArguments &);
 
 		inline v8::Handle<v8::FunctionTemplate> _initClass(Text16 _name, int internalFieldCount, CTOR ctor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL _init(Text16 _name, int internalFieldCount, CTOR ctor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL _init(Text16 _name, V8Class *parent, CTOR ctor);
-		KR_EASYV8_DLLEXPORT V8Class CT_FASTCALL _createChild(Text16 _name, CTOR ctor) const;
+		KR_EASYV8_DLLEXPORT void _init(Text16 _name, int internalFieldCount, CTOR ctor);
+		KR_EASYV8_DLLEXPORT void _init(Text16 _name, V8Class *parent, CTOR ctor);
+		KR_EASYV8_DLLEXPORT V8Class _createChild(Text16 _name, CTOR ctor) const;
 		
 		inline v8::Persistent<v8::FunctionTemplate>& _handle();
 		inline const v8::Persistent<v8::FunctionTemplate>& _handle() const;
@@ -37,29 +37,29 @@ namespace kr
 		template <typename T>
 		inline V8Class createChild(Text16 _name = nullptr);
 
-		KR_EASYV8_DLLEXPORT V8Function CT_FASTCALL getFunction();
+		KR_EASYV8_DLLEXPORT V8Function getFunction();
 		
 		// 클래스 객체의 내부 변수 개수를 정한다.
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setInternalFieldCount(int count);
-		KR_EASYV8_DLLEXPORT int CT_FASTCALL getInternalFieldCount();
+		KR_EASYV8_DLLEXPORT void setInternalFieldCount(int count);
+		KR_EASYV8_DLLEXPORT int getInternalFieldCount();
 
 		// 클래스의 멤버 변수를 설정한다
 		// 예외: JsException (이름이 중복될 시 발생)
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL set(Text16 _name, JsAny v);
+		KR_EASYV8_DLLEXPORT void set(Text16 _name, JsAny v);
 
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL makeField(Text16 _name, JsFilter _filter);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL makeReadOnlyField(Text16 name, int index);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setAccessor(Text16 _name, JsAccessor _accessor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setReadOnlyAccessor(Text16 _name, JsAccessor _accessor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setIndexAccessor(JsIndexAccessor _accessor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setReadOnlyIndexAccessor(JsIndexAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void makeField(Text16 _name, JsFilter _filter);
+		KR_EASYV8_DLLEXPORT void makeReadOnlyField(Text16 name, int index);
+		KR_EASYV8_DLLEXPORT void setAccessor(Text16 _name, JsAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void setReadOnlyAccessor(Text16 _name, JsAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void setIndexAccessor(JsIndexAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void setReadOnlyIndexAccessor(JsIndexAccessor _accessor);
 
 		// 클래스의 멤버 변수를 설정한다
 		// 예외: JsException (이름이 중복될 시 발생)
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setStatic(Text16 _name, JsAny v);
+		KR_EASYV8_DLLEXPORT void setStatic(Text16 _name, JsAny v);
 
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setStaticAccessor(Text16 _name, JsAccessor _accessor);
-		KR_EASYV8_DLLEXPORT void CT_FASTCALL setStaticReadOnlyAccessor(Text16 _name, JsAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void setStaticAccessor(Text16 _name, JsAccessor _accessor);
+		KR_EASYV8_DLLEXPORT void setStaticReadOnlyAccessor(Text16 _name, JsAccessor _accessor);
 		
 		template <typename P>
 		void setStaticAccessor(Text16 _name, P * value)
@@ -110,12 +110,12 @@ namespace kr
 
 		// 객체를 생성합니다
 		// 예외: JsException
-		KR_EASYV8_DLLEXPORT V8Object CT_FASTCALL newInstanceRaw(JsArgumentsIn args) const;
+		KR_EASYV8_DLLEXPORT V8Object newInstanceRaw(JsArgumentsIn args) const;
 
 		// 객체를 생성합니다
 		// 기본적으로 Weak 상태로 생성되어, GC에 의하여 지워질 수 있습니다
 		// 예외: JsException
-		KR_EASYV8_DLLEXPORT NativeObject* CT_FASTCALL newInstanceRawPtr(JsArgumentsIn args) const;
+		KR_EASYV8_DLLEXPORT NativeObject* newInstanceRawPtr(JsArgumentsIn args) const;
 
 		template <typename LAMBDA>
 		inline void setStaticMethodRaw(Text16 _name, LAMBDA _lambda);

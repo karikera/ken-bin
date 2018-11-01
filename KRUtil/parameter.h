@@ -13,31 +13,31 @@ namespace kr
 		PrefixMap() noexcept;
 
 		template <typename C, size_t sz>
-		void addText(const C(&text)[sz]); //InvalidSourceException, DuplicateException
+		void addText(const C(&text)[sz]) throw(InvalidSourceException, DuplicateException);
 
 		template <typename C>
-		void addText(RefArray<C> text); //InvalidSourceException, DuplicateException
+		void addText(View<C> text) throw(InvalidSourceException, DuplicateException);
 
 		template <typename C, size_t sz>
-		RefArray<C> find(const C (&text)[sz]); //NotFoundException
+		View<C> find(const C(&text)[sz]) throw(NotFoundException);
 
 		template <typename C>
-		RefArray<C> find(RefArray<C> text); //NotFoundException
+		View<C> find(View<C> text) throw(NotFoundException);
 
 		template <typename C>
-		static size_t toIndex(C chr); //NotFoundException
+		static size_t toIndex(C chr) throw(NotFoundException);
 
 	private:
 		Array<size_t> m_array;
 	};
 
 	template <typename C, size_t sz>
-	void PrefixMap::addText(const C(&text)[sz])
+	void PrefixMap::addText(const C(&text)[sz]) throw(InvalidSourceException, DuplicateException)
 	{
-		return addText((RefArray<C>)text);
+		return addText((View<C>)text);
 	}
 	template <typename C>
-	void PrefixMap::addText(RefArray<C> text)
+	void PrefixMap::addText(View<C> text) throw(InvalidSourceException, DuplicateException)
 	{
 		if (text.empty())
 			throw InvalidSourceException();
@@ -72,12 +72,12 @@ namespace kr
 		}
 	}
 	template <typename C, size_t sz>
-	RefArray<C> PrefixMap::find(const C(&text)[sz])
+	View<C> PrefixMap::find(const C(&text)[sz]) throw(NotFoundException)
 	{
-		return find(RefArray<C>(text));
+		return find(View<C>(text));
 	}
 	template <typename C>
-	RefArray<C> PrefixMap::find(RefArray<C> text)
+	View<C> PrefixMap::find(View<C> text) throw(NotFoundException)
 	{
 		size_t * array = m_array.data();
 		for (;;)
@@ -95,7 +95,7 @@ namespace kr
 		}
 	}
 	template <typename C>
-	size_t PrefixMap::toIndex(C chr)
+	size_t PrefixMap::toIndex(C chr) throw(NotFoundException)
 	{
 		if (chr > (C)'Z')
 		{
@@ -116,13 +116,13 @@ namespace kr
 	template <typename C> class ParameterTokenizerT
 	{
 	public:
-		using Text = RefArray<C>;
-		ParameterTokenizerT(const C * params);
+		using Text = View<C>;
+		ParameterTokenizerT(const C * params) noexcept;
 
-		template <typename LAMBDA> void left(LAMBDA lambda);
-		Array<C> nextString();
-		int nextInt();
-		bool hasNext();
+		template <typename LAMBDA> void left(LAMBDA lambda) throw(NotFoundException);
+		Array<C> nextString() throw(NotFoundException);
+		int nextInt() throw(NotFoundException);
+		bool hasNext() noexcept;
 
 	private:
 		const C * m_params;
@@ -136,7 +136,7 @@ namespace kr
 	};
 	template <typename C> 
 	template <typename LAMBDA>
-	void ParameterTokenizerT<C>::left(LAMBDA lambda)
+	void ParameterTokenizerT<C>::left(LAMBDA lambda) throw(NotFoundException)
 	{
 		if(m_params == nullptr) throw NotFoundException();
 		const wchar_t * i = m_params;
@@ -153,7 +153,7 @@ namespace kr
 	class ParameterT
 	{
 	public:
-		using Text = RefArray<Component>;
+		using Text = View<Component>;
 		using AText = Array<Component>;
 
 		struct ParamInfo
@@ -178,7 +178,7 @@ namespace kr
 
 		void start(int argn, Component ** args) noexcept;
 
-		Value next(); // EofException, InvalidSourceException
+		Value next() throw(EofException, InvalidSourceException);
 
 		template <typename LAMBDA>
 		bool foreach(const LAMBDA & lambda) noexcept
@@ -204,10 +204,10 @@ namespace kr
 		void printPosition() noexcept;
 
 	private:
-		RefArray<Component> _getValue(Text name); //EofException
-		RefArray<Component> _get(); //EofException
-		void _checkName(Text name); //InvalidSourceException
-		RefArray<Component> _checkShortCut(Component shortCut); //InvalidSourceException
+		View<Component> _getValue(Text name) throw(EofException, InvalidSourceException);
+		View<Component> _get() throw(EofException);
+		void _checkName(Text name) throw(InvalidSourceException);
+		View<Component> _checkShortCut(Component shortCut) throw(InvalidSourceException);
 
 		PrefixMap m_prefix;
 		Map<Text, ParamInfo> m_map;

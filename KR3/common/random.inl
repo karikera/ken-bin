@@ -23,4 +23,8 @@ T kr::Random::getSigned(T value) noexcept
 {
 	return get<T>(value*2) - value;
 }
-
+template <typename T>
+T kr::Random::get(T from, T to) noexcept
+{
+	return get<T>(to - from) + from;
+}

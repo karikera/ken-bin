@@ -4,18 +4,34 @@
     <KEN_DIR>$(MSBuildThisFileDirectory)</KEN_DIR>
     <VEM_EXCLUDE>$(KEN_DIR)empolyfill;$(KEN_DIR)KRThird\gles_sdk\include;$(VEM_EXCLUDE)</VEM_EXCLUDE>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformShortName)' == 'x64'">
-    <PlatformShortName2>x86-64</PlatformShortName2>
+  <PropertyGroup Label="UserMacros" Condition="'$(PlatformShortName)' == 'x86'">
+    <PlatformDirectory></PlatformDirectory>
+    <PlatformPostfix></PlatformPostfix>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(PlatformShortName)' != 'x64'">
+  <PropertyGroup Label="UserMacros" Condition="'$(PlatformShortName)' != 'x86'">
+    <PlatformDirectory>$(PlatformShortName)\</PlatformDirectory>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(PlatformShortName)' == 'x64'">
+    <PlatformShortName2>x86-64</PlatformShortName2>
+    <PlatformPostfix>-x64</PlatformPostfix>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(PlatformShortName)' != 'x64'">
     <PlatformShortName2>$(PlatformShortName)</PlatformShortName2>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(Configuration)' == 'Debug'">
+    <DebugPostfix>d</DebugPostfix>
+    <ConfigDir>Debug</ConfigDir>
+  </PropertyGroup>
+  <PropertyGroup Label="UserMacros" Condition="'$(Configuration)' != 'Debug'">
+    <DebugPostfix></DebugPostfix>
+    <ConfigDir>Release</ConfigDir>
   </PropertyGroup>
   <PropertyGroup>
     <OutDir>$(SolutionDir)bin\$(PlatformShortName)\$(Configuration)\</OutDir>
     <IntDir>bin\$(PlatformShortName)\$(Configuration)\</IntDir>
     <ExecutablePath>$(OutDir);$(KEN_DIR)batch;$(ExecutablePath)</ExecutablePath>
-    <IncludePath>$(KEN_DIR);$(KEN_DIR)KRThird\zext-angle-bin\include;$(KEN_DIR)empolyfill;$(IncludePath)</IncludePath>
-    <LibraryPath>$(OutDir);$(KEN_DIR)lib\$(PlatformShortName)\$(Configuration);$(KEN_DIR)KRThird\zext-angle-bin\lib\$(PlatformShortName)\$(Configuration);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(KEN_DIR);$(KEN_DIR)KRThird\angle\include;$(KEN_DIR)KRThird\zlib\$(PlatformShortName)\include;$(KEN_DIR)empolyfill;$(IncludePath)</IncludePath>
+    <LibraryPath>$(OutDir);$(KEN_DIR)KRThird\zlib\$(PlatformShortName)\lib;$(KEN_DIR)KRThird\libssh2\lib\$(PlatformShortName);$(KEN_DIR)KRThird\curl\lib\$(PlatformShortName);$(KEN_DIR)KRThird\angle\lib\$(PlatformShortName)\$(ConfigDir);$(MYSQL_C_DIR)lib;$(LibraryPath)</LibraryPath>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -40,7 +56,6 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <CallingConvention>VectorCall</CallingConvention>
       <FloatingPointModel>Fast</FloatingPointModel>
       <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -66,7 +81,14 @@
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;PROJECTRUN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
+    <Link>
+      <LinkTimeCodeGeneration></LinkTimeCodeGeneration>
+    </Link>
+    <Lib>
+      <LinkTimeCodeGeneration></LinkTimeCodeGeneration>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)' == 'Release'">
     <ClCompile>
@@ -101,9 +123,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <ClCompile>
-      <CallingConvention>FastCall</CallingConvention>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
-      <DisableSpecificWarnings>4180</DisableSpecificWarnings>
       <TreatSpecificWarningsAsErrors>4018;4101;4316;4715;%(TreatSpecificWarningsAsErrors)</TreatSpecificWarningsAsErrors>
       <ExceptionHandling>Async</ExceptionHandling>
     </ClCompile>

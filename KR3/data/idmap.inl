@@ -1,174 +1,189 @@
 #pragma once
 
-template <typename Parent, typename GetKey, typename Cmp> 
-kr::map::IdMap<Parent, GetKey, Cmp>::IdMap() noexcept
+template <typename Parent, typename Cmp> 
+kr::map::IdMap<Parent, Cmp>::IdMap() noexcept
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-kr::map::IdMap<Parent, GetKey, Cmp>::IdMap(size_t capacity) noexcept
+template <typename Parent, typename Cmp> 
+kr::map::IdMap<Parent, Cmp>::IdMap(size_t capacity) noexcept
 	: Parent((size_t)0, capacity)
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-kr::map::IdMap<Parent, GetKey, Cmp>::~IdMap() noexcept
+template <typename Parent, typename Cmp> 
+kr::map::IdMap<Parent, Cmp>::~IdMap() noexcept
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-bool kr::map::IdMap<Parent, GetKey, Cmp>::insert(const Component &data) noexcept
+template <typename Parent, typename Cmp> 
+bool kr::map::IdMap<Parent, Cmp>::insert(const Component &data) noexcept
 {
 	Component * beg = Parent::begin();
-	return findAct(GetKey::getKey(data),
+	return findAct(Cmp::getKey(data),
 		[&](Component* p) { return false; },
 		[&](Component* p) { Parent::insert(p - beg, data); return true; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-bool kr::map::IdMap<Parent, GetKey, Cmp>::replace(const Component &data) noexcept
+template <typename Parent, typename Cmp> 
+bool kr::map::IdMap<Parent, Cmp>::replace(const Component &data) noexcept
 {
-	return findAct(GetKey::getKey(data),
+	return findAct(Cmp::getKey(data),
 		[&](Component* p) { *p = data; return true; },
 		[&](Component* p) { return false; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::IdMap<Parent, GetKey, Cmp>::remove(K key) noexcept
+template <typename Parent, typename Cmp> 
+bool kr::map::IdMap<Parent, Cmp>::remove(K key) noexcept
 {
-	findAct(key,
-		[this](Component* p) { Parent::remove(p-begin()); },
-		[](Component* p) { }
+	return findAct(key,
+		[this](Component* p) { 
+			Parent::remove(p-begin());
+			return true;
+		},
+		[](Component* p) {
+			return false;
+		}
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::removeGet(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::Component kr::map::IdMap<Parent, Cmp>::removeGet(K key) noexcept
 {
 	return findAct(key,
 		[this](Component* p) { return Parent::removeGet(p - begin()); },
 		[](Component* p) { return (Component)nullptr; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-bool kr::map::IdMap<Parent, GetKey, Cmp>::removeGet(K key, Component* dest) noexcept
+template <typename Parent, typename Cmp> 
+bool kr::map::IdMap<Parent, Cmp>::removeGet(K key, Component* dest) noexcept
 {
 	return findAct(key,
 		[&](Component* p) { *dest = Parent::removeGet(p-begin()); return true; },
 		[](Component* p) { return false; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::IdMap<Parent, GetKey, Cmp>::removeByIndex(size_t idx) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::IdMap<Parent, Cmp>::removeByIndex(size_t idx) noexcept
 {
 	return Parent::remove(idx);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::removeByIndexGet(size_t idx) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::Component kr::map::IdMap<Parent, Cmp>::removeByIndexGet(size_t idx) noexcept
 {
 	return Parent::removeGet(idx);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::get(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::Component kr::map::IdMap<Parent, Cmp>::get(K key) noexcept
 {
 	return findAct(key, [](Component* data) { return *data; }, [](Component*) { return (Component)0; });
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::K kr::map::IdMap<Parent, GetKey, Cmp>::getEmptyKey(K from, K to) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::K kr::map::IdMap<Parent, Cmp>::getEmptyKey(K from, K to) noexcept
 {
 	Component* i = _searchKeyLeft(from);
 	Component* end = Parent::end();
 	while (i != end)
 	{
-		if (GetKey::getKey(*i) != from) break;
+		if (Cmp::getKey(*i) != from) break;
 		i++;
 		from++;
 		if (from >= to) return (K)-1;
 	}
 	return from;
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::K kr::map::IdMap<Parent, GetKey, Cmp>::getEmptyKey(K from) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::K kr::map::IdMap<Parent, Cmp>::getEmptyKey(K from) noexcept
 {
 	Component* i = _searchKeyLeft(from);
 	Component* end = Parent::end();
 	while (i != end)
 	{
-		if (GetKey::getKey(*i) != from) break;
+		if (Cmp::getKey(*i) != from) break;
 		i++;
 		from++;
 	}
 	return from;
 }
 
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component* kr::map::IdMap<Parent, GetKey, Cmp>::_searchKeyLeft(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::Component* kr::map::IdMap<Parent, Cmp>::_searchKeyLeft(K key) noexcept
 {
 	auto lambda =[](Component* v) { return v; };
 	return findAct(key, lambda,lambda);
 }
 
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA> 
-typename kr::map::IdMap<Parent, GetKey, Cmp>::Component kr::map::IdMap<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
+typename kr::map::IdMap<Parent, Cmp>::Component kr::map::IdMap<Parent, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
 {
-	return findAct(GetKey::getKey(data),
+	return findAct(Cmp::getKey(data),
 		[&](Component* p) { Component old = move(p);  p->value = move(data); return old; },
 		[&](Component* p) { _shiftRight(p); new(p) Component(move(data)); return (Component)nullptr; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA> 
-auto kr::map::IdMap<Parent, GetKey, Cmp>::findAct(K key, LAMBDA lambda)->decltype(lambda(nullptr))
+auto kr::map::IdMap<Parent, Cmp>::findAct(K key, LAMBDA lambda)->decltype(lambda(nullptr))
 {
 	Component * beg = Parent::begin();
 	size_t sz = Parent::size();
 	return Search::search(beg, sz, key, lambda, lambda);
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA, typename LAMBDA2>
-auto kr::map::IdMap<Parent, GetKey, Cmp>::findAct(K key, LAMBDA found, LAMBDA2 notfound)->decltype(found(nullptr))
+auto kr::map::IdMap<Parent, Cmp>::findAct(K key, LAMBDA found, LAMBDA2 notfound)->decltype(found(nullptr))
 {
 	return Search::search(Parent::begin(), Parent::size(), key, found, notfound);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-const typename kr::map::IdMap<Parent, GetKey, Cmp>::Component& kr::map::IdMap<Parent, GetKey, Cmp>::getDataByIndex(size_t index) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::IdMap<Parent, Cmp>::Component& kr::map::IdMap<Parent, Cmp>::getDataByIndex(size_t index) noexcept
 {
 	return Parent::begin()[index];
 }
-template <typename Parent, typename GetKey, typename Cmp>
-size_t kr::map::IdMap<Parent, GetKey, Cmp>::getIndexByData(Component* ptr) noexcept
+template <typename Parent, typename Cmp> 
+const typename kr::map::IdMap<Parent, Cmp>::Component& kr::map::IdMap<Parent, Cmp>::getDataByIndex(size_t index) const noexcept
+{
+	return Parent::begin()[index];
+}
+template <typename Parent, typename Cmp> 
+size_t kr::map::IdMap<Parent, Cmp>::getIndexByData(Component* ptr) noexcept
 {
 	return ptr - Parent::begin();
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::IdMap<Parent, GetKey, Cmp>::insertByIndex(size_t index, const Component &data) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::IdMap<Parent, Cmp>::forceSetByIndex(size_t index, Component data) noexcept
 {
-	(*this)[index] = data;
+	(*this)[index] = move(data);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::IdMap<Parent, GetKey, Cmp>::makeEmptyField(size_t size) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::IdMap<Parent, Cmp>::forceInsertByIndex(size_t index, Component data) noexcept
+{
+	Parent::insert(index, move(data));
+}
+template <typename Parent, typename Cmp> 
+void kr::map::IdMap<Parent, Cmp>::makeEmptyField(size_t size) noexcept
 {
 	Parent::resize(size);
 }
 
-template <typename Parent, typename GetKey, typename Cmp>
-kr::map::SortedArray<Parent, GetKey, Cmp>::SortedArray() noexcept
+template <typename Parent, typename Cmp> 
+kr::map::SortedArray<Parent, Cmp>::SortedArray() noexcept
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-kr::map::SortedArray<Parent, GetKey, Cmp>::SortedArray(size_t capacity) noexcept
+template <typename Parent, typename Cmp> 
+kr::map::SortedArray<Parent, Cmp>::SortedArray(size_t capacity) noexcept
 	: Parent((size_t)0, capacity)
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-kr::map::SortedArray<Parent, GetKey, Cmp>::~SortedArray() noexcept
+template <typename Parent, typename Cmp> 
+kr::map::SortedArray<Parent, Cmp>::~SortedArray() noexcept
 {
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::insert(const Component &data)
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::insert(const Component &data) throw(NotEnoughSpaceException)
 {
 	Component * beg = Parent::begin();
-	findAct(GetKey::getKey(data), [&](Component* p) { Parent::insert(p - beg, data); });
+	findAct(Cmp::getKey(data), [&](Component* p) { Parent::insert(p - beg, data); });
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingInsert(const Component & data, size_t limit)
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::rankingInsert(const Component & data, size_t limit) throw(NotEnoughSpaceException)
 {
 	if (size() < limit)
 	{
@@ -177,68 +192,68 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingInsert(const Component & 
 	}
 
 	Component & last = (*this)[limit - 1];
-	K lastKey = GetKey::getKey(last);
-	K curKey = GetKey::getKey(data);
+	K lastKey = Cmp::getKey(last);
+	K curKey = Cmp::getKey(data);
 	if (Cmp::compare(curKey,lastKey) > 0) return;
 	if (curKey != lastKey)
 	{
 		Component & last2 = (*this)[limit - 2];
-		if (GetKey::getKey(last2) != lastKey)
+		if (Cmp::getKey(last2) != lastKey)
 		{
 			resize(limit - 1);
 		}
 	}
 	insert(data);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::remove(K key) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::remove(K key) noexcept
 {
 	findAct(key,
 		[this](Component* p) { Parent::remove(p - begin()); },
 		[](Component* p) { }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::removeGet(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::SortedArray<Parent, Cmp>::Component kr::map::SortedArray<Parent, Cmp>::removeGet(K key) noexcept
 {
 	return findAct(key,
 		[this](Component* p) { return Parent::removeGet(p - begin()); },
 		[](Component* p) { return (Component)nullptr; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-bool kr::map::SortedArray<Parent, GetKey, Cmp>::removeGet(K key, Component* dest) noexcept
+template <typename Parent, typename Cmp> 
+bool kr::map::SortedArray<Parent, Cmp>::removeGet(K key, Component* dest) noexcept
 {
 	return findAct(key,
 		[&](Component* p) { *dest = Parent::removeGet(p - begin()); return true; },
 		[](Component* p) { return false; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::removeByIndex(size_t idx) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::removeByIndex(size_t idx) noexcept
 {
 	Parent::remove(idx);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::removeByIndexGet(size_t idx) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::SortedArray<Parent, Cmp>::Component kr::map::SortedArray<Parent, Cmp>::removeByIndexGet(size_t idx) noexcept
 {
 	return Parent::removeGet(idx);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::get(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::SortedArray<Parent, Cmp>::Component kr::map::SortedArray<Parent, Cmp>::get(K key) noexcept
 {
 	return findAct(key, [](Component* data) { return *data; }, [](Component*) { return (Component)0; });
 }
-template <typename Parent, typename GetKey, typename Cmp>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component* kr::map::SortedArray<Parent, GetKey, Cmp>::_searchKeyLeft(K key) noexcept
+template <typename Parent, typename Cmp> 
+typename kr::map::SortedArray<Parent, Cmp>::Component* kr::map::SortedArray<Parent, Cmp>::_searchKeyLeft(K key) noexcept
 {
 	auto lambda = [](Component* v) { return v; };
 	return findAct(key, lambda, lambda);
 }
 
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop(LAMBDA lambda) noexcept
+void kr::map::SortedArray<Parent, Cmp>::rankingLoop(LAMBDA lambda) noexcept
 {
 	if(empty()) return;
 
@@ -248,7 +263,7 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop(LAMBDA lambda) noexc
 	K key;
 	{
 		Component& c = *iter;
-		key = GetKey::getKey(c);
+		key = Cmp::getKey(c);
 		lambda(ranking, c);
 	}
 	size_t sz = size();
@@ -258,7 +273,7 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop(LAMBDA lambda) noexc
 	for(;iter != iterend; iter++)
 	{
 		Component& c = *iter;
-		uint curKey = GetKey::getKey(c);
+		uint curKey = Cmp::getKey(c);
 		if (curKey != key)
 		{
 			key = curKey;
@@ -268,9 +283,9 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop(LAMBDA lambda) noexc
 		i++;
 	}
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA> 
-void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop_u(LAMBDA lambda) noexcept
+void kr::map::SortedArray<Parent, Cmp>::rankingLoop_u(LAMBDA lambda) noexcept
 {
 	if (empty()) return;
 
@@ -280,7 +295,7 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop_u(LAMBDA lambda) noe
 	K key;
 	{
 		Component& c = *iter;
-		key = GetKey::getKey(c);
+		key = Cmp::getKey(c);
 		lambda(ranking, c);
 	}
 	size_t sz = size();
@@ -289,7 +304,7 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop_u(LAMBDA lambda) noe
 	for (; iter != iterend; iter++)
 	{
 		Component& c = *iter;
-		uint curKey = GetKey::getKey(c);
+		uint curKey = Cmp::getKey(c);
 		if (curKey != key)
 		{
 			key = curKey;
@@ -298,36 +313,36 @@ void kr::map::SortedArray<Parent, GetKey, Cmp>::rankingLoop_u(LAMBDA lambda) noe
 		lambda(ranking, c);
 	}
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA>
-typename kr::map::SortedArray<Parent, GetKey, Cmp>::Component kr::map::SortedArray<Parent, GetKey, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
+typename kr::map::SortedArray<Parent, Cmp>::Component kr::map::SortedArray<Parent, Cmp>::insertAlways(Component data, LAMBDA old) noexcept
 {
-	return findAct(GetKey::getKey(data),
+	return findAct(Cmp::getKey(data),
 		[&](Component* p) { Component old = move(p);  p->value = move(data); return old; },
 		[&](Component* p) { _shiftRight(p); new(p) Component(move(data)); return (Component)nullptr; }
 	);
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA>
-auto kr::map::SortedArray<Parent, GetKey, Cmp>::findAct(K key, LAMBDA lambda)->decltype(lambda(nullptr))
+auto kr::map::SortedArray<Parent, Cmp>::findAct(K key, LAMBDA lambda)->decltype(lambda(nullptr))
 {
 	Component * beg = Parent::begin();
 	size_t sz = Parent::size();
 	return Search::search(beg, sz, key, lambda, lambda);
 }
-template <typename Parent, typename GetKey, typename Cmp>
+template <typename Parent, typename Cmp> 
 template <typename LAMBDA, typename LAMBDA2>
-auto kr::map::SortedArray<Parent, GetKey, Cmp>::findAct(K key, LAMBDA found, LAMBDA2 notfound)->decltype(found(nullptr))
+auto kr::map::SortedArray<Parent, Cmp>::findAct(K key, LAMBDA found, LAMBDA2 notfound)->decltype(found(nullptr))
 {
 	return Search::search(Parent::begin(), Parent::size(), key, found, notfound);
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::insertByIndex(size_t index, const Component &data) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::insertByIndex(size_t index, const Component &data) noexcept
 {
 	(*this)[index] = data;
 }
-template <typename Parent, typename GetKey, typename Cmp>
-void kr::map::SortedArray<Parent, GetKey, Cmp>::makeEmptyField(size_t size) noexcept
+template <typename Parent, typename Cmp> 
+void kr::map::SortedArray<Parent, Cmp>::makeEmptyField(size_t size) noexcept
 {
 	Parent::resize(size);
 }

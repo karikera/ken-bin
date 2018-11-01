@@ -141,7 +141,7 @@ template <typename RET, typename ... ARGS>
 inline void kr::JsClass<T>::setMethod(Text16 _name, RET(T::* func)(ARGS ...))
 {
 	set(_name, JsFunction([func](const JsArguments & args)->JsAny {
-		return JsMeta<decltype(func)>::call(func, args);
+		return JsMeta<decltype(func)>::Call::call(func, args);
 	}));
 }
 
@@ -152,7 +152,7 @@ template <typename ... ARGS>
 T* kr::JsClass<T>::newInstance(const ARGS & ... args) const
 {
 	meta::array<JsAny, sizeof...(args)> list = { args ... };
-	return static_cast<T*>(newInstanceRawPtr(RefArray<JsAny>(list, endof(list))));
+	return static_cast<T*>(newInstanceRawPtr(View<JsAny>(list, endof(list))));
 }
 
 template <typename T>
@@ -208,7 +208,7 @@ template <typename T, typename RET, typename ... ARGS>
 inline void kr::V8Handle<v8::FunctionTemplate>::setMethod(Text16 _name, RET(T::* func)(ARGS ...))
 {
 	set(_name, JsFunction([func](const JsArguments & args)->JsAny {
-		return JsMeta<decltype(func)>::call(func, args);
+		return JsMeta<decltype(func)>::Call::call(func, args);
 	}));
 }
 

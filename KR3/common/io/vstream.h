@@ -22,18 +22,32 @@ namespace kr
 		public:
 			VIStream() noexcept
 			{
-				m_read = [](void * stream, C * data, size_t sz)->size_t { throw EofException(); };
+				reset();
 			}
-			template <class S> VIStream(S * stream) noexcept
+
+			template <typename Derived, typename Info>
+			VIStream(InStream<Derived, C, Info> * stream) noexcept
 				: m_stream(stream)
 			{
-				static_assert(IsIStream<S>::value, "is not InStream");
-				m_read = [](void * stream, C * data, size_t sz)->size_t { return ((S*)stream)->read(data, sz); };
+				m_read = [](void * stream, C * data, size_t sz)->size_t { 
+					return ((InStream<Derived, C, Info> *)stream)->read(data, sz);
+				};
+			}
+
+			template <typename Derived, typename Info>
+			VIStream(Streamable<Derived, Info> * stream) noexcept
+				: VIStream(stream->stream<C>())
+			{
 			}
 
 			size_t readImpl(C* data, size_t sz)
 			{
 				return m_read(m_stream, data, sz);
+			}
+
+			void reset()
+			{
+				m_read = [](void * stream, C * data, size_t sz)->size_t { throw EofException(); };
 			}
 		};
 		template <typename C, class Parent>
@@ -44,16 +58,34 @@ namespace kr
 			void(*m_write)(void * stream, const C * data, size_t sz);
 
 		public:
-			template <class S> VOStream(S * stream) noexcept
+			VOStream() noexcept
+			{
+				reset();
+			}
+
+			template <typename Derived, typename Info>
+			VOStream(OutStream<Derived, C, Info> * stream) noexcept
 				: m_stream(stream)
 			{
-				static_assert(IsOStream<S>::value, "S is not OutStream");
-				m_write = [](void * stream, const C * data, size_t sz) { ((S*)stream)->write(data, sz); };
+				m_write = [](void * stream, const C * data, size_t sz) { 
+					((OutStream<Derived, C, Info> *)stream)->write(data, sz);
+				};
+			}
+
+			template <typename Derived, typename Info>
+			VOStream(Streamable<Derived, Info> * stream) noexcept
+				: VOStream(stream->stream<C>())
+			{
 			}
 
 			void writeImpl(const C* data, size_t sz)
 			{
 				return m_write(m_stream, data, sz);
+			}
+
+			void reset()
+			{
+				m_write = [](void * stream, const C * data, size_t sz) { throw EofException(); };
 			}
 		};
 

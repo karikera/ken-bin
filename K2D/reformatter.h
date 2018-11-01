@@ -6,7 +6,8 @@
 #include "palette.h"
 #include "format.h"
 
-typedef enum _D3DFORMAT D3DFORMAT;
+// gcc: cannot forward reference of enum
+// typedef enum _D3DFORMAT D3DFORMAT;
 
 namespace kr
 {
@@ -20,6 +21,10 @@ namespace kr
 			template <int _bitcount, int _offset = -1>
 			struct PixelBitInfo: public PixelBitInfo<_bitcount, -1>
 			{
+				using Super = PixelBitInfo<_bitcount, -1>;
+				using Super::fromComponent;
+				using Super::toComponent;
+
 				static constexpr int offset = _offset;
 				static constexpr int bitcount = _bitcount;
 				static constexpr int mask = ((1 << (_offset + _bitcount)) - 1) ^ ((1 << _offset) - 1);
@@ -102,31 +107,21 @@ namespace kr
 				static constexpr int mask = (1 << (_bitcount)) - 1;
 
 				template <int _tobit>
-				static int fromComponent(int _comp)
+				static int fromComponent(int _comp) noexcept
 				{
+					if (_tobit == _bitcount) return _comp;
 					constexpr int tovalue = (1 << _tobit) - 1;
 					constexpr int fromvalue = (1 << _bitcount) - 1;
 					return (_comp * tovalue + fromvalue / 2) / fromvalue;
 				}
 
-				template <>
-				static int fromComponent<_bitcount>(int _comp)
-				{
-					return _comp;
-				}
-
 				template <int _frombit>
 				static int toComponent(int _fromComp) noexcept
 				{
+					if (_frombit == _bitcount) return _fromComp;
 					constexpr int tovalue = (1 << _bitcount) - 1;
 					constexpr int fromvalue = (1 << _frombit) - 1;
 					return (_fromComp * tovalue + fromvalue / 2) / fromvalue;
-				}
-
-				template <>
-				static int toComponent<_bitcount>(int _fromComp) noexcept
-				{
-					return _fromComp;
 				}
 
 				static float floatFromComponent(int _comp) noexcept
@@ -177,10 +172,10 @@ namespace kr
 				color get() const noexcept
 				{
 					color out;
-					out.r = (byte)base()->red<8>();
-					out.g = (byte)base()->green<8>();
-					out.b = (byte)base()->blue<8>();
-					out.a = (byte)base()->alpha<8>();
+					out.r = (byte)base()->template red<8>();
+					out.g = (byte)base()->template green<8>();
+					out.b = (byte)base()->template blue<8>();
+					out.a = (byte)base()->template alpha<8>();
 					return out;
 				}
 
@@ -197,6 +192,8 @@ namespace kr
 			struct BitPixel: PixelCommon<Derived, pxsz>
 			{
 				using Super = PixelCommon<Derived, pxsz>;
+
+				using Super::data;
 
 				using A = PixelBitInfo<abit, rbit + gbit + bbit>;
 				using R = PixelBitInfo<rbit, gbit + bbit>;
@@ -263,10 +260,10 @@ namespace kr
 				template <typename _Parent, int _pxsize>
 				void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
 				{
-					int res = _src.base()->alpha<abit>() << A::offset;
-					res |= _src.base()->red<rbit>() << R::offset;
-					res |= _src.base()->green<gbit>() << G::offset;
-					res |= _src.base()->blue<bbit>() << B::offset;
+					int res = _src.base()->template alpha<abit>() << A::offset;
+					res |= _src.base()->template red<rbit>() << R::offset;
+					res |= _src.base()->template green<gbit>() << G::offset;
+					res |= _src.base()->template blue<bbit>() << B::offset;
 					rawValue() = (Type)res;
 				}
 			};
@@ -308,6 +305,8 @@ namespace kr
 			{
 				using Super = PixelCommon<Derived, pxsz>;
 
+				using Super::base;
+				using Super::data;
 				using AByte = color_byte<a>;
 				using RByte = color_byte<r>;
 				using GByte = color_byte<g>;
@@ -399,15 +398,15 @@ namespace kr
 				template <typename _Parent, int _pxsize>
 				void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
 				{
-					base()->rawAlpha() = _src.base()->alpha<8>();
-					base()->rawRed() = _src.base()->red<8>();
-					base()->rawGreen() = _src.base()->green<8>();
-					base()->rawBlue() = _src.base()->blue<8>();
-				}
-				template <>
-				void set<Derived>(const px::PixelCommon<Derived, pxsz> &_src)
-				{
-					*base() = *_src.base();
+					if (is_same<Derived, _Parent>::value)
+					{
+						*base() = *(Derived*)_src.base();
+						return;
+					}
+					base()->rawAlpha() = _src.base()->template alpha<8>();
+					base()->rawRed() = _src.base()->template red<8>();
+					base()->rawGreen() = _src.base()->template green<8>();
+					base()->rawBlue() = _src.base()->template blue<8>();
 				}
 			};
 		}
@@ -458,10 +457,10 @@ namespace kr
 			void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
 			{
 				color c;
-				c.r = (byte)_src.base()->red<8>();
-				c.g = (byte)_src.base()->green<8>();
-				c.b = (byte)_src.base()->blue<8>();
-				c.a = (byte)_src.base()->alpha<8>();
+				c.r = (byte)_src.base()->template red<8>();
+				c.g = (byte)_src.base()->template green<8>();
+				c.b = (byte)_src.base()->template blue<8>();
+				c.a = (byte)_src.base()->template alpha<8>();
 				Palette::defaultPalette->getNearstColor(c);
 			}
 		};
@@ -600,7 +599,8 @@ namespace kr
 		struct FormatInfo
 		{
 			int size;
-			D3DFORMAT d3d9Format;
+			int d3d9Format;
+			int dxgiFormat;
 			bool hasAlpha;
 
 			void(*reformat[(size_t)PixelFormat::Count])(ImageData * _dest, const ImageData * _src);
@@ -613,7 +613,8 @@ namespace kr
 		};
 
 		const FormatInfo * getFormatInfo(PixelFormat pf) noexcept;
-		PixelFormat getFromD3D9Format(D3DFORMAT format) noexcept;
+		PixelFormat getFromD3D9Format(int format) noexcept;
+		PixelFormat getFromDXGIFormat(int format) noexcept;
 		void reformat(ImageData * dest, const ImageData * src) noexcept;
 	}
 }

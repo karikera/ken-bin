@@ -2,18 +2,6 @@
 
 #include "vector_method.h"
 #include <iostream>
-#include "mmx.h"
-
-#ifdef __EMSCRIPTEN__
-
-#define _mm_shuffle_epi32(a, mask) \
-  ((__ivector4)__builtin_shufflevector((__ivector4)(a), (__ivector4)(a), \
-                                  (((mask) >> 0) & 0x3) + 0, \
-                                  (((mask) >> 2) & 0x3) + 0, \
-                                  (((mask) >> 4) & 0x3) + 4, \
-                                  (((mask) >> 6) & 0x3) + 4))
-
-#endif
 
 namespace kr
 {
@@ -35,6 +23,7 @@ namespace kr
 			using Super::Super;
 			using method_t = _pri_::vector_method<T, _size, _size, aligned, order>;
 			using method_t::m_data;
+			using method_t::m_vector;
 
 			static const vector makez() noexcept;
 			static const vector makes(T v) noexcept;
@@ -74,6 +63,7 @@ namespace kr
 			const vector operator ^(const vector & v) const noexcept;
 			T length_sq() const noexcept;
 			T length() const noexcept;
+			const vector sqrtV() const noexcept;
 			const vector length_sqV() const noexcept;
 			const vector lengthV() const noexcept;
 			const vector normalize() const noexcept;
@@ -179,8 +169,19 @@ namespace kr
 		const vec4a vec4a::shuffle() const noexcept
 		{
 			static_assert(sizeof ...(idx) <= 4, "index overflow");
+#if defined(EMSIMD) || defined(MSSIMD)
 			constexpr uint shuffleKey = _pri_::makeshuffle<4, 0, idx ...>::value;
 			return _mm_shuffle_ps(m_vector, m_vector, shuffleKey);
+#else
+			vec4a out;
+			size_t i = 0;
+			unpack(out.m_vector[i++] = m_vector[idx]);
+			for (; i != 4; i++)
+			{
+				out.m_vector[i] = m_vector[i];
+			}
+			return out;
+#endif
 		}
 
 		template <>
@@ -188,8 +189,19 @@ namespace kr
 		const ivec4a ivec4a::shuffle() const noexcept
 		{
 			static_assert(sizeof ...(idx) <= 4, "index overflow");
+#if defined(EMSIMD) || defined(MSSIMD)
 			constexpr uint shuffleKey = _pri_::makeshuffle<4, 0, idx ...>::value;
 			return _mm_shuffle_epi32(m_vector, shuffleKey);
+#else
+			ivec4a out;
+			size_t i = 0;
+			unpack(out.m_vector[i++] = m_vector[idx]);
+			for (; i != 4; i++)
+			{
+				out.m_vector[i] = m_vector[i];
+			}
+			return out;
+#endif
 		}
 
 		extern "C" ATTR_ANY const vec4a CV_MINUS_X = vec4a(-1, 1, 1, 1);
@@ -268,8 +280,13 @@ template <size_t ... idx>
 ATTR_INLINE const kr::vec4a shuffle(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
 	static_assert(sizeof ...(idx) <= 4, "index overflow");
+#if defined(EMSIMD) || defined(MSSIMD)
 	constexpr kr::uint shuffleKey = kr::math::_pri_::makeshuffle<4, 0, idx ...>::value;
 	return _mm_shuffle_ps(a.m_vector, b.m_vector, shuffleKey);
+#else
+	size_t v[] ={idx...};
+	return { a[v[0]], a[v[1]], b[v[2]], b[v[3]] };
+#endif
 }
 ATTR_INLINE const kr::vec4a unpack_low(const kr::vec4a & a, const kr::vec4a & b) noexcept;
 ATTR_INLINE const kr::vec4a unpack_high(const kr::vec4a & a, const kr::vec4a & b) noexcept;

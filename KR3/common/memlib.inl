@@ -43,9 +43,8 @@ inline void kr::memt< BASE>::move(ptr _dst, cptr _src, size_t _len) noexcept
 	memmove(_dst, _src, _len * BASE);
 }
 template <size_t BASE>
-inline void kr::memt<BASE>::xor_copy(ptr _dest, cptr _src, size_t len, dword key) noexcept
+inline void kr::memt<BASE>::xor_copy(ptr _dst, cptr _src, size_t _len, dword _key) noexcept
 {
-	len *= BASE;
 	union
 	{
 		uintptr_t * word_dest;
@@ -62,11 +61,12 @@ inline void kr::memt<BASE>::xor_copy(ptr _dest, cptr _src, size_t len, dword key
 		type * byte_src;
 	};
 
-	constexpr size_t MASK = (1 << sizeof(uintptr_t)) - 1;
+	uintptr_t aligncheck = (((uintptr_t)_dst) & (sizeof(uintptr_t) - 1)) | (((uintptr_t)_src) & (sizeof(uintptr_t) - 1));
+
 	constexpr size_t SHIFT = sizeof(type) * 8;
 
-	uintptr_t keyv = key;
-	if (sizeof(uintptr_t) < sizeof(dword))
+	uintptr_t keyv = _key;
+	if (sizeof(uintptr_t) > sizeof(dword))
 	{
 #pragma warning(push)
 #pragma warning(disable:4293)
@@ -74,31 +74,38 @@ inline void kr::memt<BASE>::xor_copy(ptr _dest, cptr _src, size_t len, dword key
 #pragma warning(pop)
 	}
 
-	byte_end = (type*)((((size_t)_dest - 1) | MASK) + 1);
-	byte_dest = (type*)_dest;
+	byte_dest = (type*)_dst;
 	byte_src = (type*)_src;
-	for (; byte_dest != byte_end; byte_dest++, byte_src++)
-	{
-		*byte_dest = *byte_src ^ (type)key;
-		key = intrinsic<4>::rotr(key, SHIFT);
-	}
+	type * byte_real_end = (type*)_dst + _len;
 
-	type * byte_real_end = (type*)_dest + len;
-	word_end = (uintptr_t*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
-	if (word_dest < word_end)
+	if (!(aligncheck & (sizeof(uintptr_t) - 1)))
 	{
-		do
+		constexpr size_t MASK = (1 << sizeof(uintptr_t)) - 1;
+
+		byte_end = (type*)((((size_t)_dst - 1) | MASK) + 1);
+		if (byte_end + sizeof(uintptr_t) <= byte_real_end)
 		{
-			*word_dest = *word_src ^ key;
+			for (; byte_dest != byte_end; byte_dest++, byte_src++)
+			{
+				*byte_dest = *byte_src ^ (type)_key;
+				_key = intrinsic<4>::rotr(_key, SHIFT);
+			}
+
+			word_end = (uintptr_t*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
+			do
+			{
+				*word_dest = *word_src ^ _key;
+				word_dest++;
+				word_src++;
+			} while (word_dest != word_end);
 		}
-		while (word_dest != word_end);
 	}
 
 	byte_end = byte_real_end;
 	for (; byte_dest != byte_end; byte_dest++, byte_src++)
 	{
-		*byte_dest = *byte_src ^ (byte)key;
-		key = intrinsic<4>::rotr(key, SHIFT);
+		*byte_dest = *byte_src ^ (byte)_key;
+		_key = intrinsic<4>::rotr(_key, SHIFT);
 	}
 }
 
@@ -155,46 +162,72 @@ inline bool kr::memt<BASE>::equals_i(cptr _dst, cptr _src, size_t _len) noexcept
 template<size_t BASE>
 inline int kr::memt<BASE>::compare(cptr _dst, cptr _src, size_t _len) noexcept
 {
+	union
+	{
+		uintptr_t * word_dest;
+		type * byte_dest;
+	};
+	union
+	{
+		uintptr_t * word_end;
+		type * byte_end;
+	};
+	union
+	{
+		uintptr_t * word_src;
+		type * byte_src;
+	};
+
+	uintptr_t aligncheck = (((uintptr_t)_dst) & (sizeof(uintptr_t) - 1)) | (((uintptr_t)_src) & (sizeof(uintptr_t) - 1));
+
 #pragma warning(push)
 #pragma warning(disable:4307)
-	static constexpr size_t wsize = sizeof(uintptr_t) / BASE;
-	static constexpr size_t shift = meta::ilog2(wsize);
+	static constexpr size_t WORDSIZE = sizeof(uintptr_t) / BASE;
 #pragma warning(pop)
+	
+	constexpr size_t SHIFT = sizeof(type) * 8;
 
-	size_t fullsize = _len >> shift;
-	uintptr_t* src = (uintptr_t*)_src;
-	uintptr_t* dst = (uintptr_t*)_dst;
-	uintptr_t* dend = dst + _len;
-
-	size_t left;
-	while (dst != dend)
+	byte_dest = (type*)_dst;
+	byte_src = (type*)_src;
+	type * byte_real_end = (type*)_dst + _len;
+	
+	if (!(aligncheck & (sizeof(uintptr_t) - 1)))
 	{
-		if (*dst != *src)
+		constexpr size_t MASK = (1 << sizeof(uintptr_t)) - 1;
+		byte_end = (type*)((((size_t)_dst - 1) | MASK) + 1);
+		if (byte_end + sizeof(uintptr_t) <= byte_real_end)
 		{
-			left = wsize;
-			goto __left;
+			for (; byte_dest != byte_end; byte_dest++, byte_src++)
+			{
+				if (*byte_dest != *byte_src)
+				{
+					return (*byte_dest < *byte_src) ? -1 : 1;
+				}
+			}
+
+			word_end = (uintptr_t*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
+			do
+			{
+				if (*word_dest != *word_src)
+				{
+					byte_end = byte_dest + WORDSIZE;
+					goto __left;
+				}
+				word_src++;
+				word_dest++;
+			} while (word_dest != word_end);
 		}
-		dst++;
-		src++;
 	}
-	left = _len & wsize;
 
-	if (left == 0) return 0;
-
+	byte_end = byte_real_end;
 __left:
-	type* src2 = (type*)src;
-	type * dst2 = (type*)dst;
-	type * dend2 = dst2 + left;
-	do
+	for (;byte_dest != byte_end; byte_dest++, byte_src++)
 	{
-		if (*dst2 != *src2)
+		if (*byte_dest != *byte_src)
 		{
-			return (*dst2 < *src2) ? -1 : 1;
+			return (*byte_dest < *byte_src) ? -1 : 1;
 		}
-		dst2++;
-		src2++;
 	}
-	while (dst2 != dend2);
 	return 0;
 }
 template <>
@@ -204,54 +237,75 @@ inline ATTR_CHECK_RETURN int kr::memt<1>::compare(cptr _dst, cptr _src, size_t _
 }
 template<size_t BASE>
 template <typename T>
-inline T * kr::memt<BASE>::compare_p(T * _dst, std::add_const_t<T>* _src, size_t _len) noexcept
+inline T * kr::memt<BASE>::compare_p(T * _dst, tconst<T>* _src, size_t _len) noexcept
 {
-	static constexpr int wsize = sizeof(uintptr_t) / sizeof(type);
-	static constexpr int shift = meta::ilog2(wsize);
-
-	size_t fullsize = _len >> shift;
 	union
 	{
-		uintptr_t* word_src;
-		type* byte_src;
+		uintptr_t * word_dest;
+		type * byte_dest;
 	};
 	union
 	{
-		uintptr_t* word_dst;
-		type* byte_dst;
+		uintptr_t * word_end;
+		type * byte_end;
+	};
+	union
+	{
+		uintptr_t * word_src;
+		type * byte_src;
 	};
 
-	word_src = (uintptr_t*)_src;
-	word_dst = (uintptr_t*)_dst;
-	uintptr_t* word_end = word_dst + _len;
+	uintptr_t aligncheck = (((uintptr_t)_dst) & (sizeof(uintptr_t) - 1)) | (((uintptr_t)_src) & (sizeof(uintptr_t) - 1));
 
-	size_t left;
-	while (word_dst != word_end)
-	{
-		if (*word_dst != *word_src)
-		{
-			left = wsize;
-			goto __left;
-		}
-		word_dst++;
-		word_src++;
-	}
-	left = _len & wsize;
+#pragma warning(push)
+#pragma warning(disable:4307)
+	static constexpr size_t WORDSIZE = sizeof(uintptr_t) / BASE;
+#pragma warning(pop)
+	
+	constexpr size_t SHIFT = sizeof(type) * 8;
 
-	if (left != 0)
+	byte_dest = (type*)_dst;
+	byte_src = (type*)_src;
+	type * byte_real_end = (type*)_dst + _len;
+	
+	if (!(aligncheck & (sizeof(uintptr_t) - 1)))
 	{
-	__left:
-		type * byte_end = word_dst + left;
-		do
+		constexpr size_t MASK = (1 << sizeof(uintptr_t)) - 1;
+		byte_end = (type*)((((size_t)_dst - 1) | MASK) + 1);
+		if (byte_end + sizeof(uintptr_t) <= byte_real_end)
 		{
-			if (*word_dst != *word_src) 
-				return word_dst;
-			word_dst++;
-			word_src++;
+			for (; byte_dest != byte_end; byte_dest++, byte_src++)
+			{
+				if (*byte_dest != *byte_src)
+				{
+					return byte_dest;
+				}
+			}
+
+			word_end = (uintptr_t*)(((size_t)byte_real_end) & ((size_t)-1 ^ MASK));
+			do
+			{
+				if (*word_dest != *word_src)
+				{
+					byte_end = byte_dest + WORDSIZE;
+					goto __left;
+				}
+				word_src++;
+				word_dest++;
+			} while (word_dest != word_end);
 		}
-		while (word_dst != byte_end);
 	}
-	return (T*)byte_dst;
+	byte_end = byte_real_end;
+
+__left:
+	for (;byte_dest != byte_end; byte_dest++, byte_src++)
+	{
+		if (*byte_dest != *byte_src)
+		{
+			return byte_dest;
+		}
+	}
+	return 0;
 }
 
 template <size_t BASE>
@@ -383,7 +437,7 @@ inline T* kr::memt<BASE>::find_e(T* _src, atype _tar, size_t _srclen) noexcept
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find(T* _src, tconst<T>* _tar, size_t _tarlen) noexcept
 {
 	_assert(_tarlen != 0);
 	size_t tarhash = 0;
@@ -432,7 +486,7 @@ inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _tarle
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	_assert(_tarlen != 0);
 	if (_srclen < _tarlen) return nullptr;
@@ -497,7 +551,7 @@ inline T* kr::memt<BASE>::find_r(T* _src, atype _tar, size_t _len) noexcept
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_r(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_r(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	_assert(_tarlen != 0);
 	if (_srclen < _tarlen)
@@ -548,7 +602,7 @@ inline T* kr::memt<BASE>::find_r(T* _src, std::add_const_t<T>* _tar, size_t _src
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_ry(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_ry(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type* srcend = (type*)_src - 1;
 	type* src = srcend + _srclen;
@@ -576,7 +630,7 @@ inline T* kr::memt<BASE>::find_re(T* _src, atype _tar, size_t _len) noexcept
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_rye(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_rye(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type tar = _tar;
 	type* srcend = (type*)_src - 1;
@@ -590,7 +644,7 @@ inline T* kr::memt<BASE>::find_rye(T* _src, std::add_const_t<T>* _tar, size_t _s
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_y(T* _src, std::add_const_t<T>* _tar, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_y(T* _src, tconst<T>* _tar, size_t _tarlen) noexcept
 {
 	type * src = (type*)_src;
 
@@ -602,7 +656,7 @@ inline T* kr::memt<BASE>::find_y(T* _src, std::add_const_t<T>* _tar, size_t _tar
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_y(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_y(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type * src = (type*)_src;
 	type * srcend = (type*)_src + _srclen;
@@ -616,7 +670,7 @@ inline T* kr::memt<BASE>::find_y(T* _src, std::add_const_t<T>* _tar, size_t _src
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_ye(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline T* kr::memt<BASE>::find_ye(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type * src = (type*)_src;
 	type * srcend = (type*)_src + _srclen;
@@ -653,6 +707,20 @@ inline T* kr::memt<BASE>::find_n(T* _src, atype _skp, size_t _srclen) noexcept
 }
 template <size_t BASE>
 template <typename T>
+inline T* kr::memt<BASE>::find_nr(T* _src, atype _tar, size_t _len) noexcept
+{
+	type tar = _tar;
+	type* srcend = (type*)_src - 1;
+	type* src = srcend + _len;
+	while (src != srcend)
+	{
+		if (*src != tar) return (T*)src;
+		src--;
+	};
+	return nullptr;
+}
+template <size_t BASE>
+template <typename T>
 inline T* kr::memt<BASE>::find_ne(T* _src, atype _skp, size_t _srclen) noexcept
 {
 	type tar = _skp;
@@ -667,7 +735,7 @@ inline T* kr::memt<BASE>::find_ne(T* _src, atype _skp, size_t _srclen) noexcept
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_ny(T* _src, std::add_const_t<T>* _skp, size_t _skplen) noexcept
+inline T* kr::memt<BASE>::find_ny(T* _src, tconst<T>* _skp, size_t _skplen) noexcept
 {
 	type * src = (type*)_src;
 
@@ -679,7 +747,7 @@ inline T* kr::memt<BASE>::find_ny(T* _src, std::add_const_t<T>* _skp, size_t _sk
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_ny(T* _src, std::add_const_t<T>* _skp, size_t _srclen, size_t _skplen) noexcept
+inline T* kr::memt<BASE>::find_ny(T* _src, tconst<T>* _skp, size_t _srclen, size_t _skplen) noexcept
 {
 	type * src = (type*)_src;
 	type * srcend = (type*)_src + _srclen;
@@ -693,7 +761,21 @@ inline T* kr::memt<BASE>::find_ny(T* _src, std::add_const_t<T>* _skp, size_t _sr
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_nry(T* _src, std::add_const_t<T>* _skp, size_t _srclen, size_t _skplen) noexcept
+inline T* kr::memt<BASE>::find_nre(T* _src, atype _tar, size_t _len) noexcept
+{
+	type tar = _tar;
+	type* srcend = (type*)_src - 1;
+	type* src = srcend + _len;
+	while (src != srcend)
+	{
+		if (*src != tar) break;
+		src--;
+	};
+	return (T*)src;
+}
+template <size_t BASE>
+template <typename T>
+inline T* kr::memt<BASE>::find_nry(T* _src, tconst<T>* _skp, size_t _srclen, size_t _skplen) noexcept
 {
 	type* srcend = (type*)_src - 1;
 	type* src = srcend + _srclen;
@@ -707,7 +789,7 @@ inline T* kr::memt<BASE>::find_nry(T* _src, std::add_const_t<T>* _skp, size_t _s
 }
 template <size_t BASE>
 template <typename T>
-inline T* kr::memt<BASE>::find_nye(T* _src, std::add_const_t<T>* _skp, size_t _srclen, size_t _skplen) noexcept
+inline T* kr::memt<BASE>::find_nye(T* _src, tconst<T>* _skp, size_t _srclen, size_t _skplen) noexcept
 {
 	type * src = (type*)_src;
 	type * srcend = (type*)_src + _srclen;
@@ -737,13 +819,13 @@ inline size_t kr::memt<BASE>::pos(T* _src, atype _tar, size_t _srclen) noexcept
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos(T* _src, std::add_const_t<T>* _tar, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos(T* _src, tconst<T>* _tar, size_t _tarlen) noexcept
 {
 	return (type*)find(_src, _tar, _tarlen) - (type*)_src;
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type* str = (type*)find(_src, _tar, _srclen, _tarlen);
 	if (str == nullptr) return -1;
@@ -757,7 +839,7 @@ inline size_t kr::memt<BASE>::pos_r(T* _src, atype _tar, size_t _srclen) noexcep
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos_ry(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos_ry(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type* str = (type*)find_ry(_src, _tar, _srclen, _tarlen);
 	if (str == nullptr) return -1;
@@ -765,13 +847,13 @@ inline size_t kr::memt<BASE>::pos_ry(T* _src, std::add_const_t<T>* _tar, size_t 
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos_y(T* _src, std::add_const_t<T>* _tar, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos_y(T* _src, tconst<T>* _tar, size_t _tarlen) noexcept
 {
 	return (type*)find_y(_src, _tar, _tarlen) - (type*)_src;
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos_y(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos_y(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type* str = (type*)find_y(_src, _tar, _srclen, _tarlen);
 	if (str == nullptr) return -1;
@@ -779,7 +861,29 @@ inline size_t kr::memt<BASE>::pos_y(T* _src, std::add_const_t<T>* _tar, size_t _
 }
 template <size_t BASE>
 template <typename T>
-inline size_t kr::memt<BASE>::pos_nry(T* _src, std::add_const_t<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
+inline size_t kr::memt<BASE>::pos_n(T* _src, atype _tar) noexcept
+{
+	type* str = (type*)find_n(_src, _tar);
+	if (str == nullptr) return -1;
+	return str - (type*)_src;
+}
+template <size_t BASE>
+template <typename T>
+inline size_t kr::memt<BASE>::pos_n(T* _src, atype _tar, size_t _srclen) noexcept
+{
+	type* str = (type*)find_n(_src, _tar, _srclen);
+	if (str == nullptr) return -1;
+	return str - (type*)_src;
+}
+template <size_t BASE>
+template <typename T>
+inline size_t kr::memt<BASE>::pos_nr(T* _src, atype _tar, size_t _srclen) noexcept
+{
+	return (type*)find_nre(_src, _tar, _srclen) - (type*)_src;
+}
+template <size_t BASE>
+template <typename T>
+inline size_t kr::memt<BASE>::pos_nry(T* _src, tconst<T>* _tar, size_t _srclen, size_t _tarlen) noexcept
 {
 	type* str = (type*)find_nry(_src, _tar, _srclen, _tarlen);
 	if (str == nullptr) return -1;
@@ -928,28 +1032,6 @@ inline bool kr::memt<BASE>::numberonly(cptr _src, size_t _len) noexcept
 	return true;
 }
 template<size_t BASE>
-inline bool kr::memt<BASE>::isdbcs(cptr _src, size_t _pos) noexcept
-{
-	type* src = (type*)_src;
-	type* srcend = src + _pos;
-
-	for (;;)
-	{
-		if (*src < 0)
-		{
-			if (src == srcend) return true;
-			src++;
-			if (src == srcend) return true;
-			src++;
-		}
-		else
-		{
-			if (src == srcend) return false;
-			src++;
-		}
-	}
-}
-template<size_t BASE>
 template<typename T>
 inline T kr::memt<BASE>::toint(cptr _src, size_t _len, uint _radix) noexcept
 {
@@ -957,7 +1039,7 @@ inline T kr::memt<BASE>::toint(cptr _src, size_t _len, uint _radix) noexcept
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::toint_limit(cptr _src, size_t _len, uint _radix) // OutOfRangeException
+inline T kr::memt<BASE>::toint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
 {
 	return _pri_::AutoFunc<BASE, std::is_signed<T>::value>::template toint_limit<T>(_src, _len, _radix);
 }
@@ -995,7 +1077,7 @@ __start:
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::touint_limit(cptr _src, size_t _len, uint _radix) // OutOfRangeException
+inline T kr::memt<BASE>::touint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
 {
 	static_assert(std::is_unsigned<T>::value, "Must be unsigned number");
 	type* src = (type*)_src;
@@ -1043,7 +1125,7 @@ inline T kr::memt<BASE>::tosint(cptr _src, size_t _len, uint _radix) noexcept
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::tosint_limit(cptr _src, size_t _len, uint _radix) // OutOfRangeException
+inline T kr::memt<BASE>::tosint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
 {
 	static_assert(std::is_signed<T>::value, "Must be signed number");
 	using UT = std::make_unsigned_t<T>;
@@ -1066,15 +1148,17 @@ template<size_t BASE>
 template<typename T>
 inline void kr::memt<BASE>::fromint(ptr _dst, size_t _cipher, T _number, uint _radix) noexcept
 {
-	type* dst = (type*)_dst + _cipher - 1;
-	do
+	std::make_unsigned_t<T> val = _number;
+
+	type* p = (type*)_dst + _cipher - 1;
+	for (;;)
 	{
-		T res = _number % _radix;
-		_number /= _radix;
-		*dst = inttochr(res);
-		dst--;
+		T res = val % _radix;
+		val /= _radix;
+		*p = inttochr(res);
+		if (_dst == p) break;
+		p--;
 	}
-	while (_number != 0);
 }
 
 template <size_t SIZE>
@@ -1120,7 +1204,51 @@ inline void kr::_pri_::SIZE_MEM_SINGLE<SIZE>::zero(void* dest) noexcept
 }
 
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::subs_fill(T* dest, const T& src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, true>::subs_copy(void* dest, const void* src, size_t size) noexcept
+{
+	memcpy(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::subs_move(void* dest, void* src, size_t size) noexcept
+{
+	memcpy(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor(void * dest, size_t size) noexcept
+{
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::dtor(void * dest, size_t size) noexcept
+{
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor_copy(void* dest, const void* src, size_t size) noexcept
+{
+	memcpy(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor_move(void* dest, void* src, size_t size) noexcept
+{
+	memcpy(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor_move_r(void* dest, void* src, size_t size) noexcept
+{
+	memmove(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor_move_d(void* dest, void* src, size_t size) noexcept
+{
+	memcpy(dest, src, size);
+}
+template <typename T>
+void kr::_pri_::ARRCOPY<true, true>::ctor_move_rd(void* dest, void* src, size_t size) noexcept
+{
+	memmove(dest, src, size);
+}
+
+template <typename T>
+void kr::_pri_::ARRCOPY<true, false>::subs_fill(T* dest, const T& src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1129,7 +1257,7 @@ void kr::_pri_::ARRCOPY<true>::subs_fill(T* dest, const T& src, size_t size) noe
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::subs_copy(T* dest, const T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::subs_copy(T* dest, const T* src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1138,7 +1266,7 @@ void kr::_pri_::ARRCOPY<true>::subs_copy(T* dest, const T* src, size_t size) noe
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::subs_move(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::subs_move(T* dest, T* src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1147,7 +1275,7 @@ void kr::_pri_::ARRCOPY<true>::subs_move(T* dest, T* src, size_t size) noexcept
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor(T * dest, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor(T * dest, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1156,7 +1284,7 @@ void kr::_pri_::ARRCOPY<true>::ctor(T * dest, size_t size) noexcept
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::dtor(T * dest, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::dtor(T * dest, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1165,7 +1293,7 @@ void kr::_pri_::ARRCOPY<true>::dtor(T * dest, size_t size) noexcept
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_fill(T* dest, const T& src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_fill(T* dest, const T& src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1174,7 +1302,7 @@ void kr::_pri_::ARRCOPY<true>::ctor_fill(T* dest, const T& src, size_t size) noe
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_copy(T* dest, const T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_copy(T* dest, const T* src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1183,7 +1311,7 @@ void kr::_pri_::ARRCOPY<true>::ctor_copy(T* dest, const T* src, size_t size) noe
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_move(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_move(T* dest, T* src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1192,7 +1320,7 @@ void kr::_pri_::ARRCOPY<true>::ctor_move(T* dest, T* src, size_t size) noexcept
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_move_r(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_move_r(T* dest, T* src, size_t size) noexcept
 {
 	dest--;
 	src--;
@@ -1205,7 +1333,7 @@ void kr::_pri_::ARRCOPY<true>::ctor_move_r(T* dest, T* src, size_t size) noexcep
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_move_d(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_move_d(T* dest, T* src, size_t size) noexcept
 {
 	T * end = dest + size;
 	while (dest != end)
@@ -1215,7 +1343,7 @@ void kr::_pri_::ARRCOPY<true>::ctor_move_d(T* dest, T* src, size_t size) noexcep
 	}
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<true>::ctor_move_rd(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<true, false>::ctor_move_rd(T* dest, T* src, size_t size) noexcept
 {
 	dest--;
 	src--;
@@ -1230,61 +1358,61 @@ void kr::_pri_::ARRCOPY<true>::ctor_move_rd(T* dest, T* src, size_t size) noexce
 }
 
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::subs_fill(T* dest, const T& src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::subs_fill(T* dest, const T& src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::fill(dest, &src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::subs_copy(T* dest, const T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::subs_copy(T* dest, const T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::copy(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::subs_move(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::subs_move(T* dest, T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::copy(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor(T * dest, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor(T * dest, size_t size) noexcept
 {
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::dtor(T * dest, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::dtor(T * dest, size_t size) noexcept
 {
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_fill(T* dest, const T& src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_fill(T* dest, const T& src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::fill(dest, &src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_copy(T* dest, const T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_copy(T* dest, const T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::copy(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_move(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_move(T* dest, T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::copy(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_move_r(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_move_r(T* dest, T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::move(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_move_d(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_move_d(T* dest, T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::copy(dest, src, size);
 }
 template <typename T>
-void kr::_pri_::ARRCOPY<false>::ctor_move_rd(T* dest, T* src, size_t size) noexcept
+void kr::_pri_::ARRCOPY<false, false>::ctor_move_rd(T* dest, T* src, size_t size) noexcept
 {
 	SIZE_MEM<sizeof(T)>::move(dest, src, size);
 }
 
 
-template <typename T> T* kr::mema::find(const T* _src, const T &_tar) noexcept
+template <typename T> T* kr::mema::find(T* _src, add_const_t<T> &_tar) noexcept
 {
 	for (;;)
 	{
@@ -1292,9 +1420,9 @@ template <typename T> T* kr::mema::find(const T* _src, const T &_tar) noexcept
 		_src++;
 	}
 }
-template <typename T> T* kr::mema::find(const T* _src, const T &_tar, size_t _len) noexcept
+template <typename T> T* kr::mema::find(T* _src, add_const_t<T> &_tar, size_t _len) noexcept
 {
-	const T * srcend = _src + _len;
+	T * srcend = _src + _len;
 	while (_src != srcend)
 	{
 		if (*_src == _tar) return _src;
@@ -1302,11 +1430,11 @@ template <typename T> T* kr::mema::find(const T* _src, const T &_tar, size_t _le
 	}
 	return nullptr;
 }
-template <typename T> kr::dword kr::mema::pos(const T* _src, const T &_tar) noexcept
+template <typename T> size_t kr::mema::pos(const T* _src, const T &_tar) noexcept
 {
 	return find(_src, _tar) - _src;
 }
-template <typename T> kr::dword kr::mema::find(const T* _src, const T &_tar, size_t _len) noexcept
+template <typename T> size_t kr::mema::pos(const T* _src, const T &_tar, size_t _len) noexcept
 {
 	T* res = find(_src, _tar, _len);
 	if (res == nullptr) return -1;
@@ -1351,47 +1479,47 @@ template <typename T> T* kr::mema::alloc(const T* _src, size_t _len) noexcept
 
 template <typename T> void kr::mema::ctor(T* dest, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor<T>(dest, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor<T>(dest, size);
 }
 template <typename T> void kr::mema::dtor(T* dest, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template dtor<T>(dest, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template dtor<T>(dest, size);
 }
 template <typename T> void kr::mema::subs_fill(T* dest, const T& src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template subs_fill<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template subs_fill<T>(dest, src, size);
 }
 template <typename T> void kr::mema::subs_copy(T* dest, const T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template subs_copy<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template subs_copy<T>(dest, src, size);
 }
 template <typename T> void kr::mema::subs_move(T* dest, T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template subs_move<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template subs_move<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_fill(T* dest, const T& src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_fill<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_fill<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_copy(T* dest, const T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_copy<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_copy<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_move(T* dest, T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_move<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_move<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_move_r(T* dest, T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_move_r<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_move_r<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_move_d(T* dest, T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_move_d<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_move_d<T>(dest, src, size);
 }
 template <typename T> void kr::mema::ctor_move_rd(T* dest, T* src, size_t size) noexcept
 {
-	_pri_::ARRCOPY<std::is_class<T>::value>::template ctor_move_rd<T>(dest, src, size);
+	_pri_::ARRCOPY<!std::is_trivially_default_constructible<T>::value, std::is_void<T>::value>::template ctor_move_rd<T>(dest, src, size);
 }
 template <typename T, size_t size> void kr::mema::subs_copy(T(&dest)[size], const T(&src)[size]) noexcept
 {

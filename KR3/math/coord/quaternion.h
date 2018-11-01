@@ -171,31 +171,34 @@ namespace kr
 		template <bool aligned>
 		inline const kr::mat4a quaternionT<aligned>::toMatrix() const noexcept
 		{
-			union
+			struct
 			{
-				vec v1;
-				struct { float xx, yy, zz, ww; };
-			};
-			union
-			{
-				vec v2;
-				struct { float xy, yz, wz, wx; };
-			};
-			union
-			{
-				vec v3;
-				struct { float xz, wy, _t1, _t2; };
-			};
-			v1 = *(vec*)this * *(vec*)this;
-			v2 = *(vec*)this * this->template shuffle<1, 2, 3, 0>();
-			v3 = *(vec*)this * this->template shuffle<2, 3, 0, 0>();
+				union
+				{
+					vec v1;
+					struct { float xx, yy, zz, ww; };
+				};
+				union
+				{
+					vec v2;
+					struct { float xy, yz, wz, wx; };
+				};
+				union
+				{
+					vec v3;
+					struct { float xz, wy, _t1, _t2; };
+				};
+			} v;
+			v.v1 = *(vec*)this * *(vec*)this;
+			v.v2 = *(vec*)this * this->template shuffle<1, 2, 3, 0>();
+			v.v3 = *(vec*)this * this->template shuffle<2, 3, 0, 0>();
 
 			mat m;
 			float * o = (float*)(&m);
-			o[0] = ww + xx - yy - zz;	o[1] = 2 * (xy - wz);		o[2] = 2 * (xz + wy);		o[3] = 0;
-			o[4] = 2 * (xy + wz);		o[5] = ww - xx + yy - zz;   o[6] = 2 * (yz - wx);		o[7] = 0;
-			o[8] = 2 * (xz - wy);		o[9] = 2 * (yz + wx);		o[10] = ww - xx - yy + zz;  o[11] = 0;
-			o[12] = 0;					o[13] = 0;		            o[14] = 0;			        o[15] = 1;
+			o[0] = v.ww + v.xx - v.yy - v.zz;	o[1] = 2 * (v.xy - v.wz);			o[2] = 2 * (v.xz + v.wy);			o[3] = 0;
+			o[4] = 2 * (v.xy + v.wz);			o[5] = v.ww - v.xx + v.yy - v.zz;   o[6] = 2 * (v.yz - v.wx);			o[7] = 0;
+			o[8] = 2 * (v.xz - v.wy);			o[9] = 2 * (v.yz + v.wx);			o[10] = v.ww - v.xx - v.yy + v.zz;  o[11] = 0;
+			o[12] = 0;							o[13] = 0;							o[14] = 0;							o[15] = 1;
 			return m;
 		}
 		template <bool aligned>

@@ -14,7 +14,8 @@ namespace kr
 			static_assert(IsIStream<Base>::value, "Base is not InStream");
 			INHERIT_COMPONENT();
 
-			using Text = RefArray<Component>;
+			static constexpr int BUFFER_SIZE = 8192;
+			using Text = View<Component>;
 			template <size_t size> using BText = BArray<Component, size>;
 
 			SelfBufferedIStream(nullptr_t)
@@ -27,8 +28,8 @@ namespace kr
 				m_read = m_buffer.begin();
 				m_buffer.resize(0);
 			}
-			SelfBufferedIStream(typename Base::BaseStream * p) noexcept
-				: SelfBufferedIStream(p->template retype<Component>())
+			SelfBufferedIStream(typename Base::StreamableBase * p) noexcept
+				: SelfBufferedIStream(p->template stream<Component>())
 			{
 			}
 			~SelfBufferedIStream() noexcept
@@ -42,7 +43,22 @@ namespace kr
 				m_stream = nullptr;
 				return *this;
 			}
+			SelfBufferedIStream& operator = (SelfBufferedIStream&& _move) noexcept
+			{
+				m_stream = _move.m_stream;
+				m_read = _move.m_read - _move.m_buffer.data() + m_buffer.data();
+				m_buffer.copy(_move.m_buffer.data(), _move.m_buffer.size());
+				_move.m_stream = nullptr;
+				_move.m_buffer.clear();
+				_move.m_read = _move.m_buffer.data();
+				return *this;
+			}
 
+			void setPointer(const Component * pointer) noexcept
+			{
+				_assert(m_buffer.begin() <= pointer && pointer <= m_buffer.end());
+				m_read = pointer;
+			}
 			void resetIStream(nullptr_t) noexcept
 			{
 				resetIStream((Base*)nullptr);
@@ -53,9 +69,15 @@ namespace kr
 				m_read = m_buffer.begin();
 				m_buffer.resize(0);
 			}
-			void resetIStream(typename Base::BaseStream* stream) noexcept
+			void resetIStream(typename Base::StreamableBase* stream) noexcept
 			{
-				resetIStream(stream->template retype<Component>());
+				resetIStream(stream->template stream<Component>());
+			}
+			void close() noexcept
+			{
+				m_read = m_buffer.end();
+				delete m_stream;
+				m_stream = nullptr;
 			}
 
 			void need(size_t size)
@@ -69,22 +91,57 @@ namespace kr
 						if (m_read == m_buffer.begin()) throw TooBigException();
 						size_t left = m_buffer.end() - m_read;
 						m_buffer.copy(m_read, left);
-						m_buffer.resize(left);
 						m_read = m_buffer.begin();
 					}
 
 					txsz = m_stream->read(&m_buffer, m_buffer.left());
 				}
 			}
-			Component peek(size_t pos = 0)
+			Component peek()
+			{
+				need(1);
+				return m_read[0];
+			}
+			Component peekAt(size_t pos = 0)
 			{
 				need(pos + 1);
 				return m_read[pos];
 			}
-			Component read_chr()
+			Text peek(size_t count)
 			{
-				need(1);
-				return *(m_read++);
+				need(count);
+				return Text(m_read, count);
+			}
+
+			void forceEnqueue(Text data) noexcept
+			{
+				Component * dest = forceEnqueuePrepare(data);
+				data.copyTo(dest);
+			}
+			Component * forceEnqueuePadding(size_t size) // TooBigException
+			{
+				size_t left = m_buffer.left();
+				if (left < size)
+				{
+					if (m_read - m_buffer.begin() + left < size)
+					{
+						throw TooBigException();
+					}
+					m_buffer.copy(Text(m_read, left));
+					m_read = m_buffer.begin();
+				}
+				return m_buffer.padding(size);
+			}
+			Component * forceEnqueuePaddingAll(size_t *size) // TooBigException
+			{
+				size_t left = m_buffer.left();
+				if (left == 0) throw TooBigException();
+				*size = left;
+				return m_buffer.padding(left);
+			}
+			void forceEnqueueCommit(size_t size) // NotEnoughSpaceException
+			{
+				m_buffer.commit(size);
 			}
 
 			intptr_t request() // TooBigException, EofException
@@ -92,7 +149,6 @@ namespace kr
 				intptr_t shifted = m_buffer.begin() - m_read;
 				intptr_t left = m_buffer.end() - m_read;
 				m_buffer.copy(Text(m_read, left));
-				m_buffer.resize(left);
 				size_t remaining = m_buffer.left();
 				if (remaining == 0)
 					throw TooBigException();
@@ -113,7 +169,6 @@ namespace kr
 				intptr_t shifted = m_buffer.begin() - m_read;
 				intptr_t left = m_buffer.end() - m_read;
 				m_buffer.copy(Text(m_read, left));
-				m_buffer.resize(left);
 				size_t remaining = m_buffer.left();
 				if (remaining == 0)
 					throw TooBigException();
@@ -152,6 +207,24 @@ namespace kr
 					}
 					m_read = m_buffer.begin() + left;
 					sz -= left;
+				}
+			}
+			void skipLine() // EofException
+			{
+				try
+				{
+					Component last = skipto_y("\r\n");
+					m_read++;
+					if (last == '\r')
+					{
+						if (peek() == '\n') m_read++;
+					}
+				}
+				catch (EofException&)
+				{
+					Component * end = m_buffer.end();
+					if (end == m_read) throw;
+					m_read = m_buffer.end();
 				}
 			}
 			void skipto(InternalComponent _chr)
@@ -211,6 +284,10 @@ namespace kr
 				}
 				m_read = index.begin() + 1;
 				return *index;
+			}
+			Component skipspace()
+			{
+				return skipto_ny(Text::WHITE_SPACE);
 			}
 			void find_ye(Text _str, Text &index)
 			{
@@ -290,6 +367,13 @@ namespace kr
 			}
 
 			using Super::read;
+			Component * read_ptr(size_t sz)
+			{
+				need(sz);
+				const Component * out = m_read;
+				m_read += sz;
+				return (Component*)out;
+			}
 			Text read(size_t sz)
 			{
 				need(sz);
@@ -314,8 +398,6 @@ namespace kr
 			}
 			Text readLine() // EofException
 			{
-				if (m_stream == nullptr)
-					throw EofException();
 				try
 				{
 					size_t readlen = pos_y("\r\n");
@@ -339,13 +421,76 @@ namespace kr
 				catch (EofException&)
 				{
 					Text res = text();
+					if (res.empty()) throw;
 					m_read = res.end();
-					if(autoClose)
-						delete m_stream;
-					m_stream = nullptr;
 					return res;
 				}
 			}
+
+			Text readto(InternalComponent _chr)
+			{
+				size_t readlen = pos(_chr);
+				Text res = Text(m_read, readlen);
+				m_read += readlen;
+				return res;
+			}
+			Text readto(Text _str)
+			{
+				size_t readlen = pos(_str);
+				Text res = Text(m_read, readlen);
+				m_read += readlen;
+				return res;
+			}
+			Text readto_y(Text _str)
+			{
+				size_t readlen = pos_y(_str);
+				Text res = Text(m_read, readlen);
+				m_read += readlen;
+				return res;
+			}
+			Text readto_e(InternalComponent _chr)
+			{
+				Text res;
+				try
+				{
+					res = readto(_chr);
+				}
+				catch (EofException&)
+				{
+					res = text();
+					m_read = res.end();
+				}
+				return res;
+			}
+			Text readto_e(Text _str)
+			{
+				Text res;
+				try
+				{
+					res = readto(_str);
+				}
+				catch (EofException&)
+				{
+					res = text();
+					m_read = res.end();
+				}
+				return res;
+			}
+			Text readto_ye(Text _str)
+			{
+				Text res;
+				try
+				{
+					res = readto_y(_str);
+				}
+				catch (EofException&)
+				{
+					res = text();
+					m_read = res.end();
+				}
+				return res;
+			}
+
 			Text readwith(InternalComponent _chr)
 			{
 				size_t readlen = pos(_chr);
@@ -384,7 +529,7 @@ namespace kr
 				Text res;
 				try
 				{
-					res = read(_chr);
+					res = readwith(_chr);
 				}
 				catch (EofException&)
 				{
@@ -398,7 +543,7 @@ namespace kr
 				Text res;
 				try
 				{
-					res = read(_str);
+					res = readwith(_str);
 				}
 				catch (EofException&)
 				{
@@ -439,7 +584,37 @@ namespace kr
 			bool readif(InternalComponent _chr)
 			{
 				need(1);
-				return read_chr() == _chr;
+				return read() == _chr;
+			}
+			bool nextIs(const Component & comp)
+			{
+				try
+				{
+					if (comp != peek()) return false;
+					skip(1);
+					return true;
+				}
+				catch (EofException&)
+				{
+					return false;
+				}
+			}
+			bool nextIs(Ref comps)
+			{
+				try
+				{
+					if (comps != peek(comps.size())) return false;
+					skip(comps.size());
+					return true;
+				}
+				catch (EofException&)
+				{
+					return false;
+				}
+			}
+			bool hasBom()
+			{
+				return nextIs("\xEF\xBB\xBF");
 			}
 
 			Base* operator ->() const noexcept
@@ -462,6 +637,25 @@ namespace kr
 				_assert(m_buffer.end() >= m_read);
 				return Text(m_read, m_buffer.end());
 			}
+			Text text(size_t size) noexcept
+			{
+				need(size);
+
+				_assert(m_buffer.end() >= m_read);
+				Component * end = m_read + size;
+				_assert(m_buffer.end() >= end);
+				return Text(m_read, end);
+			}
+			Text text(size_t size, size_t offset) noexcept
+			{
+				size_t endpos = offset + size;
+				need(endpos);
+
+				_assert(m_buffer.end() >= m_read);
+				const Component * end = m_read + endpos;
+				_assert(m_buffer.end() >= end);
+				return Text(m_read + offset, end);
+			}
 			void clearBuffer()
 			{
 				m_buffer.clear();
@@ -469,7 +663,6 @@ namespace kr
 			}
 			
 		protected:
-			static const int BUFFER_SIZE = 8192;
 			Base* m_stream;
 			const Component * m_read;
 			BText<BUFFER_SIZE> m_buffer;

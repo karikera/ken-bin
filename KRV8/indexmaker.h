@@ -65,7 +65,7 @@ namespace kr
 	{
 		typedef StateConst<T> C;
 		int res = value - C::offset;
-		assert(res < C::count);
+		_assert(res < C::count);
 		return res;
 	}
 

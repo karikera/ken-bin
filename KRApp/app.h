@@ -3,7 +3,7 @@
 #include <KR3/main.h>
 #include <KR3/util/time.h>
 #ifdef WIN32
-#include <KRMessage/eventpump.h>
+#include <KRMessage/pump.h>
 #endif
 #include <emscripten.h>
 #include <EGL/egl.h>
@@ -158,12 +158,17 @@ namespace kr
 		virtual void onResize(int width, int height) noexcept;
 		virtual void onKeyDown(int key, bool repeat) noexcept;
 		virtual void onKeyUp(int key) noexcept;
+		virtual void onMouseMove(int x, int y) noexcept;
+		virtual void onMouseDown(int x, int y, int button) noexcept;
+		virtual void onMouseUp(int x, int y, int button) noexcept;
 
 	protected:
 		int m_width, m_height;
 		EGLNativeWindowType m_window;
 		EGLNativeDisplayType m_display;
 	};
+
+	void openDevTools() noexcept;
 }
 
 #ifdef __EMSCRIPTEN__

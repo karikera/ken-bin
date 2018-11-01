@@ -10,7 +10,7 @@
 namespace kr
 {
 
-	KR_EASYV8_DLLEXPORT void * CT_FASTCALL ezv8_malloc(size_t sz);
-	KR_EASYV8_DLLEXPORT void CT_FASTCALL ezv8_free(void * ptr);
+	KR_EASYV8_DLLEXPORT void * ezv8_malloc(size_t sz);
+	KR_EASYV8_DLLEXPORT void ezv8_free(void * ptr);
 
 }

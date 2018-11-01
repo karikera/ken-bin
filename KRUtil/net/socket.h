@@ -20,7 +20,7 @@ namespace kr
 	class SocketWriteFailException:public SocketException
 	{
 	public:
-		SocketWriteFailException(Buffer data) noexcept;
+		SocketWriteFailException(ABuffer data) noexcept;
 
 		ABuffer unsended;
 	};
@@ -36,28 +36,37 @@ namespace kr
 		Socket() noexcept = delete;
 		static Socket* create() noexcept;
 		static void operator delete(ptr socket) noexcept;
+		void shutdown() noexcept;
 
-		void connect(Ipv4Address add,word port); // SocketException
-		void connect(pcstr url,word port); // SocketException
-		void connect(pcstr16 url,word port); // SocketException
-		void connectAsync(Ipv4Address add,word port); // SocketException
+		void connect(Ipv4Address add,word port) throw(SocketException);
+		void connect(pcstr url, word port) throw(SocketException);
+		void connect(pcstr16 url, word port) throw(SocketException);
+		void connectAsync(Ipv4Address add, word port) throw(SocketException);
+		void setOption(int name, const void * data, int size) noexcept;
+		template <typename T>
+		void setOption(int name, T data) noexcept
+		{
+			setOption(name, &data, sizeof(data));
+		}
+		void setLinger(bool enabled, short sec) noexcept;
 		void setTimeout(long sec,long usec) noexcept;
-		void open(word port); // SocketException
+		void open(word port, Ipv4Address v4addr = nullptr) throw(SocketException);
 		Ipv4Address getIpAddress() noexcept;
-		Socket* accept(); // SocketException
-		void writeImpl(cptr binary, size_t len); // SocketException
-		size_t readImpl(ptr binary, size_t len); // SocketException, EofException
-		size_t readFully(ptr binary, size_t len); // SocketException, EofException
+		Socket* accept() throw(SocketException);
+		void writeImpl(cptr binary, size_t len) throw(SocketException);
+		size_t readImpl(ptr binary, size_t len) throw(SocketException, EofException);
+		size_t readFully(ptr binary, size_t len) throw(SocketException, EofException);
 
 		template <typename CHR>
-		static Ipv4Address findIp(const CHR * url); // SocketException
-		static Ipv4Address getCurrentIpAddress(); // SocketException
+		static Ipv4Address findIp(const CHR * url) throw(SocketException);
+		static Ipv4Address getCurrentIpAddress() throw(SocketException);
 	};
 
 	namespace io
 	{
 		template <typename C>
-		using SocketStream = RetypeStream<Socket, C>;
+		using SocketStream = StreamableStream<Socket, C>;
 	}
 
+	using SBISocketStream = io::SelfBufferedIStream<io::StreamableStream<Socket, char>>;
 }

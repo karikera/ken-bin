@@ -37,6 +37,8 @@ namespace kr
 			using Super::begin;
 			using Super::end;
 			using Super::size;
+			using Super::find_ny;
+			using Super::find_nry;
 
 			static const typename Info::Component (&WHITE_SPACE)[5];
 
@@ -48,30 +50,37 @@ namespace kr
 
 			uint64_t to_uint64_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<uint64_t>(begin(),_len,_radix);
 			}
 			int64_t to_int64_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<int64_t>(begin(), _len, _radix);
 			}
 			uint32_t to_uint_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<uint32_t>(begin(),_len,_radix);
 			}
 			int32_t to_int_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<int32_t>(begin(), _len, _radix);
 			}
 			uintptr_t to_uintp_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<uintptr_t>(begin(), _len, _radix);
 			}
 			intptr_t to_intp_x(uint _radix, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint<intptr_t>(begin(), _len, _radix);
 			}
 			float to_ufloat_x(size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				const ComponentRef * beg = begin();
 				const ComponentRef * finded = memm::find(beg, '.', _len);
 				if (finded == nullptr) return (float)to_uint_x(10, _len);
@@ -90,31 +99,38 @@ namespace kr
 			}
 			bool numberonly_x(size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				return (memm::numberonly(begin(), _len));
 			}
 
-			uint64_t to_uint64_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uint64_t to_uint64_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uint64_t>(data(), _len, _radix);
 			}
-			int64_t to_int64_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			int64_t to_int64_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<int64_t>(data(), _len, _radix);
 			}
-			uint32_t to_uint_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uint32_t to_uint_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uint32_t>(data(), _len, _radix);
 			}
-			int32_t to_int_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			int32_t to_int_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<int32_t>(data(), _len, _radix);
 			}
-			uintptr_t to_uintp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			uintptr_t to_uintp_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uintptr_t>(data(), _len, _radix);
 			}
-			intptr_t to_intp_limit_x(uint _radix, size_t _len) const // OutOfRangeException
+			intptr_t to_intp_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
 			{
+				KR_DEFINE_MMEM();
 				return memm::template toint_limit<intptr_t>(data(), _len, _radix);
 			}
 
@@ -213,12 +229,9 @@ namespace kr
 				return numberonly_x(size());
 			}
 
-			bool isdbcs(size_t n) const noexcept
-			{
-				return memm::isdbcs(begin(),n);
-			}
 			intptr_t compare(Ref _str) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				size_t len1 = size();
 				size_t len2 = _str.size();
 
@@ -232,6 +245,7 @@ namespace kr
 			}
 			bool equals_ix(Ref _v, size_t _len) const noexcept
 			{
+				KR_DEFINE_MMEM();
 				size_t len2 = _v.size();
 				if (_len != len2) return false;
 				else return memm::equals_i(begin(), _v.begin(), _len);
@@ -250,7 +264,7 @@ namespace kr
 			constexpr TextBuffer(const TextBuffer&) = default;
 			constexpr TextBuffer(TextBuffer&&) = default;
 			explicit TextBuffer(const Component* str) noexcept
-				:Super(str, memm::pos(str, 0))
+				:Super(str, memt<sizeof(InternalComponent)>::pos(str, 0))
 			{
 			}
 
@@ -274,12 +288,14 @@ namespace kr
 
 			void toLowerCase() noexcept
 			{
-				_assert(!std::is_class<Component>::value);
+				static_assert(std::is_trivially_default_constructible<Component>::value, "Need to use non class component");
+				KR_DEFINE_MMEM();
 				memm::tolower(begin(), size());
 			}
 			void toUpperCase() noexcept
 			{
-				_assert(!std::is_class<Component>::value);
+				static_assert(std::is_trivially_default_constructible<Component>::value, "Need to use non class component");
+				KR_DEFINE_MMEM();
 				memm::toupper(begin(), size());
 			}
 		};

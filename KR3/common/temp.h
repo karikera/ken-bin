@@ -41,6 +41,7 @@ namespace kr
 
 		StackAllocator(size_t reserve = 1024) noexcept;
 		~StackAllocator() noexcept;
+		void terminate() noexcept;
 		ATTR_CHECK_RETURN autoptr allocate(size_t sz) noexcept;
 		ATTR_CHECK_RETURN autoptr allocate(size_t sz, size_t align) noexcept;
 		ATTR_CHECK_RETURN autoptr allocate(size_t sz, size_t align, size_t offset) noexcept;
@@ -54,7 +55,7 @@ namespace kr
 		ATTR_CHECK_RETURN bool empty() noexcept;
 		ATTR_CHECK_RETURN bool isLastBlock(void * block) noexcept;
 
-		ATTR_CHECK_RETURN static StackAllocator * getThreadAllocator() noexcept;
+		ATTR_CHECK_RETURN static StackAllocator * getInstance() noexcept;
 
 	private:
 		ATTR_CHECK_RETURN Node * _allocateNewNode(size_t need) noexcept;
@@ -72,18 +73,18 @@ namespace kr
 	public:
 		Temp(TempExtendAllocate_t, size_t sz)
 		{
-			m_data = (T*)StackAllocator::getThreadAllocator()->allocate(sz, alignof(T));
+			m_data = (T*)StackAllocator::getInstance()->allocate(sz, alignof(T));
 			new(m_data) T;
 		}
 		template<typename ... ARGS>
 		Temp(const ARGS & ... args)
 		{
-			m_data = (T*)StackAllocator::getThreadAllocator()->allocate(sizeof(T), alignof(T));
+			m_data = (T*)StackAllocator::getInstance()->allocate(sizeof(T), alignof(T));
 			new(m_data) T(args ...);
 		}
 		~Temp()
 		{
-			StackAllocator::getThreadAllocator()->free(m_data);
+			StackAllocator::getInstance()->free(m_data);
 		}
 
 		Temp(const Temp&) = delete;

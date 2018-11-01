@@ -1,7 +1,5 @@
 #pragma once
 
-#include "stdafx.h"
-
 namespace kr
 {
 #ifdef WIN32
@@ -44,41 +42,60 @@ namespace kr
 	namespace _pri_
 	{
 		template <typename ... NEXTS>
-		struct Initializer_2;
+		struct InitializeTails;
 
-		template <typename T, bool isempty, typename ... NEXTS>
-		struct Initializer_1;
+		template <typename TO, typename ... FROM>
+		struct InitializeTailsReverse;
 
-		template <typename NEXT, typename ... NEXTS>
-		struct Initializer_2<NEXT, NEXTS ...> : Initializer_1<NEXT, std::is_empty<NEXT>::value, NEXTS ...>
+		template <typename T, bool isempty, typename NEXT>
+		struct InitializeThis;
+
+		template <typename T, typename NEXT>
+		struct InitializeThis<T, true, NEXT>: NEXT
 		{
+			T _;
+
+			InitializeThis() noexcept
+			{
+			}
+			~InitializeThis() noexcept
+			{
+			}
 		};
-		template <>
-		struct Initializer_2<>
-		{
-		};
 
-		template <typename T, typename ... NEXTS>
-		struct Initializer_1<T, true, NEXTS ...>: Initializer_2<NEXTS ...>
+		template <typename T, typename NEXT>
+		struct InitializeThis<T, false, NEXT> : NEXT
 		{
-			Initializer_1() noexcept
+			InitializeThis() noexcept
 			{
 				new((T*)this) T;
 			}
-			~Initializer_1() noexcept
+			~InitializeThis() noexcept
 			{
 				((T*)this)->~T();
 			}
 		};
-		template <typename T, typename ... NEXTS>
-		struct Initializer_1<T, false, NEXTS ...> : Initializer_2<NEXTS ...>
+
+		template <typename NEXT, typename ... NEXTS>
+		struct InitializeTails<NEXT, NEXTS ...> : InitializeThis<NEXT, std::is_empty<NEXT>::value, InitializeTails<NEXTS ...>>
 		{
-			T init;
+		};
+		template <>
+		struct InitializeTails<>
+		{
+		};
+		template <typename ... TO, typename FROM, typename ... FROMS>
+		struct InitializeTailsReverse<InitializeTails<TO...>, FROM, FROMS ...> : InitializeTailsReverse<InitializeTails<TO ..., FROM>, FROMS ...>
+		{
+		};
+		template <typename ... TO>
+		struct InitializeTailsReverse<InitializeTails<TO ...>>:InitializeTails<TO ... >
+		{
 		};
 	}
 
 	template <typename ... Inits>
-	class Initializer: _pri_::Initializer_2<typename Inits::Init ...>
+	class Initializer: _pri_::InitializeTailsReverse<_pri_::InitializeTails<>, typename Inits::Init ...>
 	{
 	};
 }
@@ -86,9 +103,10 @@ namespace kr
 #ifdef WIN32
 
 #ifdef _CONSOLE
-#define main() CT_CDECL main() 
+#define main() __cdecl main() 
 #else
-#define main() APIENTRY wWinMain(HINSTANCE,HINSTANCE,kr::pstr16,int)
+struct HINSTANCE__;
+#define main() __stdcall wWinMain(HINSTANCE__*,HINSTANCE__*,wchar_t *,int)
 #endif
 
 #else

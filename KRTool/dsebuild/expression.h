@@ -37,7 +37,7 @@ public:
 class StringExpression:public Expression
 {
 public:
-	StringExpression(Class * type, string exp);
+	StringExpression(Class * type, AText exp);
 	~StringExpression() override;
 	TText toString(Class * scope) override;
 

@@ -5,6 +5,12 @@
 #include "common.h"
 #include "reformatter.h"
 
+#ifdef _DEBUG
+#pragma comment(lib,"zlibstaticd.lib")
+#else
+#pragma comment(lib,"zlibstatic.lib")
+#endif
+
 class kr::gl::ImageData
 {
 public:
@@ -25,8 +31,8 @@ public:
 	void copyBitsReverseX(const void * data, int _srcPitch) noexcept;
 	void copyBitsReverseY(const void * data, int _srcPitch) noexcept;
 	void copyBitsReverseXY(const void * data, int _srcPitch) noexcept;
-	ImageData subimage(int _x, int _y, int _w, int _h) noexcept;
-	void copy(ImageData * _img, int _dstX, int _dstY, int _srcX, int _srcY, int _srcW, int _srcH) noexcept;
+	ImageData subimage(int _x, int _y, int _w, int _h) const noexcept;
+	void copy(const ImageData * _img, int _dstX, int _dstY, int _srcX, int _srcY, int _srcW, int _srcH) noexcept;
 
 	// _src: 픽셀 포멧이 this와 같아야 한다.
 	void imageProcessing(const ImageData * _src, const float * _weightTable, int _weightX, int _weightY, int _weightWidth, int _weightHeight) noexcept;
@@ -55,19 +61,20 @@ public:
 	PixelFormat getPixelFormat() const noexcept;
 	const FormatInfo * getPixelInfo() const noexcept;
 	int getPixelSize() const noexcept;
+	size_t getByteSize() const noexcept;
 
 	bool loadFromTgaFile(FILE * file, Palette * palette) noexcept;
 	bool loadFromBmpFile(FILE * file, Palette * palette) noexcept;
 	bool loadFromPngFile(FILE * file) noexcept;
 	bool loadFromJpgFile(FILE * file) noexcept;
-	bool loadFromTgaFile(pcwstr filename, Palette * palette) noexcept;
-	bool loadFromBmpFile(pcwstr filename, Palette * palette) noexcept;
-	bool loadFromPngFile(pcwstr filename) noexcept;
-	bool loadFromJpgFile(pcwstr filename) noexcept;
-	bool saveToBmpFile(pcwstr filename, Palette * palette) noexcept;
-	bool saveToTgaFile(pcwstr filename, Palette * palette) noexcept;
-	bool saveToPngFile(pcwstr filename) noexcept;
-	bool saveToJpgFile(pcwstr filename) noexcept;
+	bool loadFromTgaFile(pcstr16 filename, Palette * palette) noexcept;
+	bool loadFromBmpFile(pcstr16 filename, Palette * palette) noexcept;
+	bool loadFromPngFile(pcstr16 filename) noexcept;
+	bool loadFromJpgFile(pcstr16 filename) noexcept;
+	bool saveToBmpFile(pcstr16 filename, Palette * palette) noexcept;
+	bool saveToTgaFile(pcstr16 filename, Palette * palette) noexcept;
+	bool saveToPngFile(pcstr16 filename) noexcept;
+	bool saveToJpgFile(pcstr16 filename) noexcept;
 
 	static bvec4 color;
 

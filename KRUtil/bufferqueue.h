@@ -4,216 +4,183 @@
 
 namespace kr
 {
-	class BufferQueueWithSize;
+	class BufferQueue;
 	class BufferQueuePointer;
 	class BufferQueueWithRef;
+	struct BufferBlock;
 
-	class BufferQueue:public Bufferable<BufferQueue, BufferInfo<void, false, false, true, 
+	constexpr size_t BUFFER_BLOCK_SIZE = 4096;
+
+	struct BufferBlock
+	{
+		BufferBlock * next;
+		size_t size;
+		byte buffer[BUFFER_BLOCK_SIZE];
+
+		void * begin() noexcept;
+		size_t capacity() const noexcept;
+
+		Buffer getBuffer() noexcept;
+		WRefArray<byte> getRemaining() noexcept;
+		static BufferBlock * alloc() noexcept;
+		void free() noexcept;
+
+		BufferBlock() = delete;
+		~BufferBlock() = delete;
+	};
+
+	struct BufferBlockWithRef
+	{
+		static constexpr size_t SIZE_MASK = (size_t)-1 >> 1;
+		static constexpr size_t REFERENCE_BIT = ~SIZE_MASK;
+		BufferBlockWithRef * next;
+		size_t size;
+		union
+		{
+			const byte * bufferPtr;
+			struct
+			{
+				byte buffer[BUFFER_BLOCK_SIZE];
+			};
+		};
+
+		bool isReference() const noexcept;
+
+		const byte * begin() const noexcept;
+		size_t capacity() const noexcept;
+
+		Buffer getBuffer() noexcept;
+		static BufferBlockWithRef * alloc() noexcept;
+		void free() noexcept;
+
+		BufferBlockWithRef() = delete;
+		~BufferBlockWithRef() = delete;
+	};
+
+	class BufferQueue:public AddBufferable<BufferQueue, BufferInfo<void, false, false, true, 
 		OutStream<BufferQueue, void>
 	> >
 	{
-		friend BufferQueueWithSize;
+		friend BufferQueue;
 		friend BufferQueuePointer;
 		friend BufferQueueWithRef;
-	public:
-		static constexpr size_t BUFFER_SIZE = 4096;
-	
-		struct Buffer;
+	public:	
+		class Iterator;
 
 		BufferQueue() noexcept;
 		~BufferQueue() noexcept;
 		BufferQueue(BufferQueue&& _move) noexcept;
 		BufferQueue& operator = (BufferQueue&& _move) noexcept;
+		WRefArray<void> prepare() noexcept;
+		void commit(size_t size) noexcept;
 		void write(const void * data, size_t size) noexcept;
+		void peek(void * dest, size_t size) noexcept;
 		void read(void * dest, size_t size) noexcept;
+		Buffer read(size_t size, TBuffer * temp) noexcept;
+		Text readwith(char chr, TText * temp) noexcept;
+		bool readwith(Text chr, TText * temp) noexcept;
+		AText readAll() noexcept;
 		bool empty() noexcept;
 		void clear() noexcept;
-		void skip(size_t size) noexcept;
-		template <typename _Derived, typename _Info>
-		void recv(InStream<_Derived, void, _Info>* src);
-		template <typename _Derived, typename _Info>
-		void send(OutStream<_Derived, void, _Info>* dest); // SocketException
-
-		static void clearKeeped() noexcept;
-	
-	private:
-		Buffer * _makeBuffer() noexcept;
-		void _removeFrontNode() noexcept;
-		Buffer * _axis() noexcept;
-
-		Buffer *m_first;
-		Buffer *m_last;
-		size_t m_readed;
-	};
-	class BufferQueueWithSize :public BufferQueue
-	{
-		friend BufferQueuePointer;
-	public:
-		BufferQueueWithSize() noexcept;
-		BufferQueueWithSize(BufferQueueWithSize&& _move) noexcept;
-		BufferQueueWithSize& operator = (BufferQueueWithSize&& _move) noexcept;
-		template <typename _Derived, typename _Info>
-		void recv(InStream<_Derived, void, _Info>* src); //SocketException
-		template <typename _Derived, typename _Info>
-		void send(OutStream<_Derived, void, _Info>* dest); // SocketException
-		void write(const void * data, size_t size) noexcept;
-		void read(void * dest, size_t size) noexcept;
-		void clear() noexcept;
+		Buffer getFirstBlock() noexcept;
 		void skip(size_t size) noexcept;
 		size_t size() noexcept;
 		
+		static void clearKeeped() noexcept;
+
+		Iterator begin() noexcept;
+		Iterator end() noexcept;
+		size_t bufferCount() noexcept;
+		void checkBufferCorrution() noexcept;
+
+		template <typename T>
+		T readas() noexcept
+		{
+			T data;
+			read(&data, sizeof(T));
+			return data;
+		}
+
+		template <typename T>
+		T peekas() noexcept
+		{
+			T data;
+			peek(&data, sizeof(T));
+			return data;
+		}
+
 	private:
+		BufferBlock * _makeBuffer() noexcept;
+		void _removeFrontNode() noexcept;
+		BufferBlock * _axis() noexcept;
+
+		BufferBlock *m_first;
+		BufferBlock *m_last;
+		size_t m_count;
+		size_t m_readed;
 		size_t m_totalSize;
 	};
 	class BufferQueuePointer:public InStream<BufferQueuePointer, void>
 	{
 	public:
 		BufferQueuePointer(const BufferQueue & buf) noexcept;
-		byte read(); // EofException
-		void read(void * dest, size_t size); // EofException
-		template <typename T> T read() // EofException
+		byte read() throw(EofException);
+		void read(void * dest, size_t size) throw(EofException);
+		template <typename T> T read() throw(EofException)
 		{
 			T v;
 			read(&v, sizeof(v));
 			return v;
 		}
-		void skip(size_t size); // EofException
+		void skip(size_t size) throw(EofException);
 		size_t getReadSize() noexcept;
 		void clearSize() noexcept;
 
 	private:
-		BufferQueue::Buffer *m_buffer;
+		BufferBlock *m_buffer;
 		size_t m_readed;
 		size_t m_fullreaded;
 	};
-
 	class BufferQueueWithRef:public BufferQueue
 	{
 	public:
-		struct Buffer;
+		class Iterator;
 
-		template <typename _Derived, typename _Info>
-		void send(OutStream<_Derived, void, _Info>* dest); //SocketException
-
+		Buffer getFirstBlock() noexcept;
 		void write(const void * data, size_t size) noexcept;
 		void writeRef(const void * data, size_t size) noexcept;
 		void read(void * dest, size_t size) noexcept;
 
+		Iterator begin() noexcept;
+		Iterator end() noexcept;
+	};
+
+	class BufferQueue::Iterator
+	{
+	public:
+		Iterator(BufferBlock * buffer, size_t offset) noexcept;
+		Buffer operator *() const noexcept;
+		Iterator & operator ++() noexcept;
+		const Iterator operator ++(int) noexcept;
+		bool operator ==(const Iterator & other) const noexcept;
+		bool operator !=(const Iterator & other) const noexcept;
+
 	private:
-		using ParentBuffer = BufferQueue::Buffer;
-		using BufferQueue::recv;
+		size_t m_offset;
+		BufferBlock * m_buffer;
 	};
-
-	struct BufferQueue::Buffer
+	class BufferQueueWithRef::Iterator
 	{
-		Buffer * next;
-		size_t size;
-		byte buffer[BUFFER_SIZE];
+	public:
+		Iterator(BufferBlockWithRef * buffer, size_t offset) noexcept;
+		Buffer operator *() noexcept;
+		Iterator & operator ++() noexcept;
+		const Iterator operator ++(int) noexcept;
+		bool operator ==(const Iterator & other) noexcept;
+		bool operator !=(const Iterator & other) noexcept;
 
-		void * begin() noexcept;
-		size_t capacity() const noexcept;
+	private:
+		size_t m_offset;
+		BufferBlockWithRef * m_buffer;
 	};
-
-	struct BufferQueueWithRef::Buffer
-	{
-		Buffer * next;
-		size_t size;
-		bool isReference;
-		union
-		{
-			const byte * bufferPtr;
-			byte buffer[1];
-		};
-
-		const byte * begin() const noexcept;
-		size_t capacity() const noexcept;
-	};
-
-
-	template <typename _Derived, typename _Info>
-	void BufferQueue::recv(InStream<_Derived, void, _Info>* src)
-	{
-		size_t readed;
-		if (m_last != _axis())
-		{
-			Buffer* buff = m_last;
-			size_t left = buff->capacity() - buff->size;
-			readed = src->read(buff->buffer + buff->size, left);
-			if (readed == 0) return;
-			buff->size += readed;
-			if (readed != left) return;
-		}
-
-		size_t wantRead;
-		do
-		{
-			Buffer * buff = _makeBuffer();
-
-			wantRead = buff->capacity();
-			buff->size = readed = src->read(buff->buffer, wantRead);
-			if (readed == 0) return;
-		}
-		while (readed == wantRead);
-	}
-	template <typename _Derived, typename _Info>
-	void BufferQueue::send(OutStream<_Derived, void, _Info>* dest) // SocketException
-	{
-		while (!empty())
-		{
-			const char * data = (const char *)m_first->buffer + m_readed;
-			size_t size = m_first->size - m_readed;
-			dest->write(data, size);
-			_removeFrontNode();
-		}
-	}
-	template <typename _Derived, typename _Info>
-	void BufferQueueWithSize::recv(InStream<_Derived, void, _Info>* src) //SocketException
-	{
-		size_t readed;
-		if (m_last != _axis())
-		{
-			Buffer* buff = m_last;
-			size_t left = buff->capacity() - buff->size;
-			readed = src->read(buff->buffer + buff->size, left);
-			if (readed == 0) return;
-			buff->size += readed;
-			m_totalSize += readed;
-			if (readed != left) return;
-		}
-
-		size_t wantRead;
-		do
-		{
-			Buffer * buff = _makeBuffer();
-			wantRead = buff->capacity();
-			buff->size = readed = src->read(buff->buffer, wantRead);
-			if (readed == 0) return;
-			m_totalSize += readed;
-		}
-		while (readed == wantRead);
-	}
-	template <typename _Derived, typename _Info>
-	void BufferQueueWithSize::send(OutStream<_Derived, void, _Info>* dest) // SocketException
-	{
-		while (!empty())
-		{
-			Buffer * buff = m_first;
-			const char * data = (const char *)buff->buffer + m_readed;
-			size_t size = buff->size - m_readed;
-			dest->write(data, size);
-			_removeFrontNode();
-		}
-	}
-	template <typename _Derived, typename _Info>
-	void BufferQueueWithRef::send(OutStream<_Derived, void, _Info>* dest) //SocketException
-	{
-		while (!empty())
-		{
-			Buffer * buff = (Buffer*)m_first;
-			const byte * data = buff->begin() + m_readed;
-			size_t size = buff->size - m_readed;
-			dest->write(data, size);
-			_removeFrontNode();
-		}
-	}
 }

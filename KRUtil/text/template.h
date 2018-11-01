@@ -16,14 +16,14 @@ namespace kr
 		static_assert(IsOStream<Base>::value, "Base is not OutStream");
 		using Super = io::FilterOStream<TemplateWriter<Base>, Base, autoClose>;
 		using Component = typename Base::Component;
-		using Text = RefArray<Component>;
+		using Text = View<Component>;
 		using Super::base;
 
 		TemplateWriter(Base* _os, Text _open, Text _close) noexcept
 			:Super(_os), m_open(_open), m_close(_close)
 		{
 		}
-		TemplateWriter(typename Base::BaseStream * _os, Text _open, Text _close) noexcept
+		TemplateWriter(typename Base::StreamableBase * _os, Text _open, Text _close) noexcept
 			: Super(_os->template retype<Component>()), m_open(_open), m_close(_close)
 		{
 		}

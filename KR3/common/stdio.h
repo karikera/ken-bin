@@ -138,7 +138,7 @@ namespace kr
 	template <ConsoleType type, typename C>
 	inline void ConsoleOutputStream<type, C>::writeImpl(const C *chr, size_t sz) noexcept
 	{
-		ConsoleOutputStream<type, char>::out << (ToAcp<C>)RefArray<C>(chr, sz);
+		ConsoleOutputStream<type, char>::out << (ToAcp<C>)View<C>(chr, sz);
 	}
 	template <typename C>
 	inline void ConsoleOutputStream<ConsoleType::Debug, C>::writeImpl(const C *chr, size_t sz) noexcept
@@ -147,9 +147,9 @@ namespace kr
 		if (sizeof(C) == sizeof(char16))
 			udout << Text16((const char16*)chr, sz);
 		else
-			dout << toAcp(RefArray<C>(chr, sz));
+			dout << toAcp(View<C>(chr, sz));
 #else
-		dout << toAcp(RefArray<C>(chr, sz));
+		dout << toAcp(View<C>(chr, sz));
 #endif
 	}
 	template <typename C>

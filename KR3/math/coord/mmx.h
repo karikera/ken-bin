@@ -1,8 +1,14 @@
 #pragma once
 
 //#include <mmintrin.h>  //MMX
+#ifdef _M_IX86
 #include <xmmintrin.h> //SSE
-//#include <emmintrin.h> //SSE2
+#elif defined(_M_AMD64)
+#include <intrin.h>
+#include <emmintrin.h> //SSE2
+#else
+#error Unsupported machine
+#endif
 //#include <pmmintrin.h> //SSE3
 //#include <tmmintrin.h> //SSSE3
 //#include <smmintrin.h> //SSE4.1

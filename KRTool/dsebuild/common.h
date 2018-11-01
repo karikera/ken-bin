@@ -15,6 +15,8 @@ using std::wstring;
 using std::hash;
 using std::ifstream;
 using std::ofstream;
+using kr::Text;
+
 
 class ErrMessage
 {
@@ -27,6 +29,5 @@ private:
 };
 
 extern AText16 g_filename;
-extern int g_line;
 
 void must(char chr, char must);

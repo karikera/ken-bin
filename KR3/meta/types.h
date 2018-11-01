@@ -79,7 +79,7 @@ namespace kr
 			using expand = T<numbers ...>;
 
 			template <typename LAMBDA, typename ... args_t>
-			static void loop(const LAMBDA &lambda, args_t & ... args)
+			static void loop(LAMBDA &&lambda, args_t & ... args)
 			{
 				using next = remove_front;
 				lambda(args.template get<front>() ...);
@@ -94,7 +94,7 @@ namespace kr
 			using expand = T<>;
 
 			template <typename LAMBDA, typename ... args_t>
-			static void loop(const LAMBDA &lambda, args_t & ... args)
+			static void loop(LAMBDA &&lambda, args_t & ... args)
 			{
 			}
 		};
@@ -125,17 +125,66 @@ namespace kr
 
 		namespace _pri_
 		{
-			template <typename typelist, size_t index> struct types_skip :types_skip<typename typelist::next, index - 1> {};
-			template <typename typelist> struct types_skip<typelist, 0> { using type = typelist; };;
-			template <typename types, size_t index> struct sizeof_types :sizeof_types<typename types::next, index + 1> {};
+			template <typename typelist, size_t index> struct types_skip_32;
+			template <typename typelist, size_t index> struct types_skip_8;
+			template <typename typelist, size_t index> struct types_skip_1;
+			template <typename typelist, size_t index> struct types_skip;
+			template <
+				typename t1, typename t2, typename t3, typename t4, typename t5, typename t6, typename t7, typename t8,
+				typename t9, typename t10, typename t11, typename t12, typename t13, typename t14, typename t15, typename t16,
+				typename t17, typename t18, typename t19, typename t20, typename t21, typename t22, typename t23, typename t24,
+				typename t25, typename t26, typename t27, typename t28, typename t29, typename t30, typename t31, typename t32,
+				typename ... type, size_t index> struct types_skip_32<
+				types<
+					t1, t2, t3, t4, t5, t6, t7, t8, 
+					t9, t10, t11, t12, t13, t14, t15, t16,
+					t17, t18, t19, t20, t21, t22, t23, t24,
+					t25, t26, t27, t28, t29, t30, t31, t32, 
+					type ...
+				>, index>:types_skip<types<type ...>, index - 32> {
+			};
+			template <
+				typename t1, typename t2, typename t3, typename t4,
+				typename t5, typename t6, typename t7, typename t8,
+				typename ... type, size_t index> struct types_skip_8 <
+					types<t1, t2, t3, t4, t5, t6, t7, t8, type ...>
+				, index>:types_skip<types<type ...>, index - 8> {
+			};
+			template <typename t1, typename ... type, size_t index> 
+			struct types_skip_1<types<t1, type ...>, index> 
+				:types_skip<types<type ...>, index - 1> {
+			};
+			template <typename typelist, size_t index> 
+			struct types_skip : meta::if_t<
+				(index < 8),
+				types_skip_1<typelist, index>,
+				meta::if_t<
+					(index < 32),
+					types_skip_8<typelist, index>,
+					types_skip_32<typelist, index>
+				>
+			>
+			{
+			};
+
+			template <typename typelist>
+			struct types_skip<typelist, 0>
+			{
+				using type = typelist;
+			};
 
 			template <typename ... args> class itypes;
 
-			template <typename T, typename _first, typename ... args>
+			template <typename T, typename ... args>
 			struct itypes_index_of
 			{
-				using next = itypes<_first, args ...>;
-				static constexpr size_t value = next::template index_of<T>::value == -1 ? -1 : next::template index_of<T>::value + 1;
+				static constexpr size_t value = -1;
+			};
+			template <typename T, typename _first, typename ... args>
+			struct itypes_index_of<T, _first, args ...>
+			{
+				using next = itypes_index_of<T, args ...>;
+				static constexpr size_t value = next::value == -1 ? -1 : next::value + 1;
 			};
 			template <typename _first, typename ... args>
 			struct itypes_index_of<_first, _first, args ...>
@@ -250,24 +299,30 @@ namespace kr
 			template<size_t... nums> struct _callcls
 			{
 				template <typename LAMBDA>
-				static auto _call(types * host, const LAMBDA &lambda) -> decltype(lambda((*(args*)0) ...));
+				static auto _call(types * host, LAMBDA &&lambda) -> decltype(lambda((*(args*)0) ...));
 				template <typename LAMBDA>
-				static auto _call(const types * host, const LAMBDA &lambda) -> decltype(lambda((*(args*)0) ...));
+				static auto _call(const types * host, LAMBDA &&lambda) -> decltype(lambda((*(args*)0) ...));
 				template <typename LAMBDA>
-				static void _value_loop(types * host, const LAMBDA &lambda);
+				static void _value_loop(types * host, LAMBDA &&lambda);
 				template <typename LAMBDA>
-				static void _value_loop(const types * host, const LAMBDA &lambda);
+				static void _value_loop(const types * host, LAMBDA &&lambda);
 				template <typename LAMBDA>
-				static void _value_loop_r(types * host, const LAMBDA &lambda);
+				static void _value_loop_r(types * host, LAMBDA &&lambda);
 				template <typename LAMBDA>
-				static void _value_loop_r(const types * host, const LAMBDA &lambda);
+				static void _value_loop_r(const types * host, LAMBDA &&lambda);
 				template <typename LAMBDA, typename ... args_t>
-				static void _value_loop_with(types * host, const LAMBDA &lambda, const args_t & ... with);
+				static void _value_loop_with(types * host, LAMBDA &&lambda, const args_t & ... with);
 				template <typename LAMBDA, typename ... args_t>
-				static void _value_loop_with(const types * host, const LAMBDA &lambda, const args_t & ... with);
+				static void _value_loop_with(const types * host, LAMBDA &&lambda, const args_t & ... with);
 			};
 		public:
 			static constexpr size_t size = sizeof ... (args);
+
+			static const size_t(&getSizeArray() noexcept)[size]
+			{
+				static const size_t sizes[] = { sizeof(args)... };
+				return sizes;
+			}
 
 			template <template<typename...> class T>
 			using expand_type = typename unwrap_impl<T>::type;
@@ -282,21 +337,25 @@ namespace kr
 
 		public:
 			using super::super;
-			template <typename LAMBDA> auto call(const LAMBDA & lambda) -> decltype(lambda((*(args*)0) ...));
-			template <typename LAMBDA> auto call(const LAMBDA & lambda) const -> decltype(lambda((*(args*)0) ...));
-			template <typename LAMBDA> static auto castCall(const LAMBDA & lambda, args ... v) -> decltype(lambda((*(args*)0) ...));
 
-			template <typename LAMBDA> static void type_loop(const LAMBDA & lambda);
-			template <typename LAMBDA> static void type_loop_r(const LAMBDA & lambda);
-			template <typename LAMBDA> static void type_switch(size_t idx, const LAMBDA & lambda);
-			template <typename LAMBDA> void value_loop(const LAMBDA & lambda) const;
-			template <typename LAMBDA> void value_loop(const LAMBDA & lambda);
-			template <typename LAMBDA> void value_loop_r(const LAMBDA & lambda) const;
-			template <typename LAMBDA> void value_loop_r(const LAMBDA & lambda);
-			template <typename LAMBDA> void value_loop_with(const LAMBDA & lambda, const args & ... p) const;
-			template <typename LAMBDA> void value_loop_with(const LAMBDA & lambda, const args & ... p);
-			template <typename LAMBDA, typename ... types_list> void value_loop_with(const LAMBDA & lambda, const types_list & ... types_args) const;
-			template <typename LAMBDA, typename ... types_list> void value_loop_with(const LAMBDA & lambda, const types_list & ... types_args);
+			template <typename LAMBDA> auto call(LAMBDA && lambda) -> decltype(lambda((*(args*)0) ...));
+			template <typename LAMBDA> auto call(LAMBDA && lambda) const -> decltype(lambda((*(args*)0) ...));
+			template <typename LAMBDA> static auto castCall(LAMBDA && lambda, args ... v) -> decltype(lambda((*(args*)0) ...));
+
+			template <typename LAMBDA> static void type_loop(LAMBDA && lambda);
+			template <typename LAMBDA> static void type_loop_r(LAMBDA && lambda);
+			template <typename LAMBDA> static void type_switch(size_t idx, LAMBDA && lambda);
+			template <typename LAMBDA> static void type_switch(size_t idx, LAMBDA && lambda, void * value);
+			template <typename LAMBDA> static void type_switch(size_t idx, LAMBDA && lambda, const void * value);
+			static size_t type_sizeof_at(size_t idx) noexcept;
+			template <typename LAMBDA> void value_loop(LAMBDA && lambda) const;
+			template <typename LAMBDA> void value_loop(LAMBDA && lambda);
+			template <typename LAMBDA> void value_loop_r(LAMBDA && lambda) const;
+			template <typename LAMBDA> void value_loop_r(LAMBDA && lambda);
+			template <typename LAMBDA> void value_loop_with(LAMBDA && lambda, const args & ... p) const;
+			template <typename LAMBDA> void value_loop_with(LAMBDA && lambda, const args & ... p);
+			template <typename LAMBDA, typename ... types_list> void value_loop_with(LAMBDA && lambda, const types_list & ... types_args) const;
+			template <typename LAMBDA, typename ... types_list> void value_loop_with(LAMBDA && lambda, const types_list & ... types_args);
 
 			template <size_t from>
 			subarr_t<from>& subarr() noexcept;
@@ -315,56 +374,56 @@ namespace kr
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		auto types<args ... >::_callcls<nums ...>::_call(types<args ...> * host, const LAMBDA & lambda) -> decltype(lambda((*(args*)0) ...))
+		auto types<args ... >::_callcls<nums ...>::_call(types<args ...> * host, LAMBDA && lambda) -> decltype(lambda((*(args*)0) ...))
 		{
 			return lambda(host->get<nums>() ...);
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		auto types<args ... >::_callcls<nums ...>::_call(const types<args ...> * host, const LAMBDA & lambda) -> decltype(lambda((*(args*)0) ...))
+		auto types<args ... >::_callcls<nums ...>::_call(const types<args ...> * host, LAMBDA && lambda) -> decltype(lambda((*(args*)0) ...))
 		{
 			return lambda(host->get<nums>() ...);
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		void types<args ... >::_callcls<nums ...>::_value_loop(types * host, const LAMBDA & lambda)
+		void types<args ... >::_callcls<nums ...>::_value_loop(types * host, LAMBDA && lambda)
 		{
 			unpack(lambda(host->get<nums>()));
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		void types<args ... >::_callcls<nums ...>::_value_loop(const types * host, const LAMBDA & lambda)
+		void types<args ... >::_callcls<nums ...>::_value_loop(const types * host, LAMBDA && lambda)
 		{
 			unpack(lambda(host->get<nums>()));
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		void types<args ... >::_callcls<nums ...>::_value_loop_r(types * host, const LAMBDA & lambda)
+		void types<args ... >::_callcls<nums ...>::_value_loop_r(types * host, LAMBDA && lambda)
 		{
 			unpackR(lambda(host->get<nums>()));
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA>
-		void types<args ... >::_callcls<nums ...>::_value_loop_r(const types * host, const LAMBDA & lambda)
+		void types<args ... >::_callcls<nums ...>::_value_loop_r(const types * host, LAMBDA && lambda)
 		{
 			unpackR(lambda(host->get<nums>()));
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA, typename ... args_t>
-		void types<args ... >::_callcls<nums ...>::_value_loop_with(types * host, const LAMBDA & lambda, const args_t & ... with)
+		void types<args ... >::_callcls<nums ...>::_value_loop_with(types * host, LAMBDA && lambda, const args_t & ... with)
 		{
 			unpack(lambda(host->get<nums>(), with));
 		}
 		template <typename ... args>
 		template <size_t ... nums>
 		template <typename LAMBDA, typename ... args_t>
-		void types<args ... >::_callcls<nums ...>::_value_loop_with(const types * host, const LAMBDA & lambda, const args_t & ... with)
+		void types<args ... >::_callcls<nums ...>::_value_loop_with(const types * host, LAMBDA && lambda, const args_t & ... with)
 		{
 			unpack(lambda(host->get<nums>(), with));
 		}
@@ -397,87 +456,101 @@ namespace kr
 
 		template <typename ... args>
 		template <typename LAMBDA>
-		auto types<args ... >::call(const LAMBDA & lambda) -> decltype(lambda((*(args*)0) ...))
+		auto types<args ... >::call(LAMBDA && lambda) -> decltype(lambda((*(args*)0) ...))
 		{
 			return expand_func::_call(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		auto types<args ... >::call(const LAMBDA & lambda) const -> decltype(lambda((*(args*)0) ...))
+		auto types<args ... >::call(LAMBDA && lambda) const -> decltype(lambda((*(args*)0) ...))
 		{
 			return expand_func::_call(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		auto types<args ... >::castCall(const LAMBDA & lambda, args ... v) -> decltype(lambda((*(args*)0) ...))
+		auto types<args ... >::castCall(LAMBDA && lambda, args ... v) -> decltype(lambda((*(args*)0) ...))
 		{
 			return lambda(v ...);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::type_loop(const LAMBDA & lambda)
+		void types<args ... >::type_loop(LAMBDA && lambda)
 		{
 			unpack(lambda((args*)0));
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::type_loop_r(const LAMBDA & lambda)
+		void types<args ... >::type_loop_r(LAMBDA && lambda)
 		{
 			unpackR(lambda((args*)0));
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::type_switch(size_t idx, const LAMBDA & lambda)
+		void types<args ... >::type_switch(size_t idx, LAMBDA && lambda)
 		{
 			size_t i = 0;
 			unpack(([&]() { if (idx == i++) lambda((args*)0); }()));
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop(const LAMBDA & lambda) const
+		void types<args ... >::type_switch(size_t idx, LAMBDA && lambda, void * value)
+		{
+			size_t i = 0;
+			unpack(([&]() { if (idx == i++) lambda((args*)value); }()));
+		}
+		template <typename ... args>
+		template <typename LAMBDA>
+		void types<args ... >::type_switch(size_t idx, LAMBDA && lambda, const void * value)
+		{
+			size_t i = 0;
+			unpack(([&]() { if (idx == i++) lambda((const args*)value); }()));
+		}
+		template <typename ... args>
+		template <typename LAMBDA>
+		void types<args ... >::value_loop(LAMBDA && lambda) const
 		{
 			expand_func::_value_loop(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop(const LAMBDA & lambda)
+		void types<args ... >::value_loop(LAMBDA && lambda)
 		{
 			expand_func::_value_loop(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop_r(const LAMBDA & lambda) const
+		void types<args ... >::value_loop_r(LAMBDA && lambda) const
 		{
 			expand_func::_value_loop_r(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop_r(const LAMBDA & lambda)
+		void types<args ... >::value_loop_r(LAMBDA && lambda)
 		{
 			expand_func::_value_loop_r(this, lambda);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop_with(const LAMBDA & lambda, const args &... p) const
+		void types<args ... >::value_loop_with(LAMBDA && lambda, const args &... p) const
 		{
 			expand_func::_value_loop_with(this, lambda, p ...);
 		}
 		template <typename ... args>
 		template <typename LAMBDA>
-		void types<args ... >::value_loop_with(const LAMBDA & lambda, const args &... p)
+		void types<args ... >::value_loop_with(LAMBDA && lambda, const args &... p)
 		{
 			expand_func::_value_loop_with(this, lambda, p ...);
 		}
 		template <typename ... args>
 		template <typename LAMBDA, typename ... types_list>
-		void types<args ... >::value_loop_with(const LAMBDA & lambda, const types_list & ... types) const
+		void types<args ... >::value_loop_with(LAMBDA && lambda, const types_list & ... types) const
 		{
 			constexpr size_t minvalue = min(size, (types_list::size) ...);
 			make_numlist_counter<minvalue>::loop(lambda, *this, types ...);
 		}
 		template <typename ... args>
 		template <typename LAMBDA, typename ... types_list>
-		void types<args ... >::value_loop_with(const LAMBDA & lambda, const types_list & ... types_args)
+		void types<args ... >::value_loop_with(LAMBDA && lambda, const types_list & ... types_args)
 		{
 			constexpr size_t minvalue = min(size, (types_list::size) ...);
 			make_numlist_counter<minvalue>::loop(lambda, *this, types_args ...);
@@ -600,23 +673,5 @@ namespace kr
 			};
 		}
 		template <typename types, template<typename> class cast> using casts = typename _pri_::casts<types, cast>::type;
-
-		// varadic_cast
-		namespace _pri_
-		{
-			template <typename before, bool b> struct reference_cast_cls
-			{
-				typedef typename before::REFTYPE type;
-			};
-			template <typename before> struct reference_cast_cls<before, false>
-			{
-				typedef before type;
-			};;
-		}
-
-		template <typename T> 
-		using reference_cast = typename _pri_::reference_cast_cls<T, std::is_class<T>::value>::type;
-		template <typename T> 
-		using pointer_cast = T*;
 	}
 }

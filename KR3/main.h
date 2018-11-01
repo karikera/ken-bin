@@ -1,14 +1,17 @@
 #pragma once
 
 #define __KR3_INCLUDED
+#pragma warning(disable:4180)
+#pragma warning(disable:4290)
 
 #ifdef WIN32
 
 #ifndef WINVER
 #define WINVER 0x0501
-#define _WIN32_WINNT 0x0501
 #endif
-
+#ifndef _WIN32_WINNT
+#define _WIN32_WINNT WINVER
+#endif
 #include <SDKDDKVer.h>
 
 #endif
@@ -21,6 +24,7 @@ namespace kr
 {
 	using std::initializer_list;
 	using std::move;
+	using std::forward;
 }
 
 #include "common/compiler.h"

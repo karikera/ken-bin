@@ -143,7 +143,7 @@ namespace kr
 		template <typename T, size_t rows, size_t cols, bool aligned, matrix_data_type type>
 		inline const matrix<T, cols, rows, aligned, type> matrix<T, rows, cols, aligned, type>::transpose() const noexcept
 		{
-			matrix<T, cols, rows, type> out;
+			matrix<T, cols, rows, aligned, type> out;
 
 			float * dest = (float*)(&out);
 			const float * src = (float*)(&v);

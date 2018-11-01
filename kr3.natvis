@@ -7,6 +7,12 @@
       <ExpandedItem Condition="m_constructed">($T1*)m_buffer</ExpandedItem>
     </Expand>
   </Type>
+  <Type Name="kr::Com&lt;*&gt;">
+    <DisplayString>com {m_ptr}</DisplayString>
+    <Expand>
+      <ExpandedItem>m_ptr</ExpandedItem>
+    </Expand>
+  </Type>
   <Type Name="kr::Keep&lt;*&gt;">
     <DisplayString>keep {*m_ptr}</DisplayString>
     <Expand>
@@ -35,6 +41,12 @@
     <DisplayString>dynamic {m_ptr}</DisplayString>
     <Expand>
       <ExpandedItem>m_ptr</ExpandedItem>
+    </Expand>
+  </Type>
+  <Type Name="kr::Deferred&lt;*&gt;">
+    <DisplayString>deferred {*($T1*)this}</DisplayString>
+    <Expand>
+      <ExpandedItem>*($T1*)this</ExpandedItem>
     </Expand>
   </Type>
   <Type Name="kr::io::BufferedIStream&lt;*,*,*&gt;">
@@ -156,6 +168,128 @@
         <Size>$T3</Size>
         <ValuePointer>v</ValuePointer>
       </ArrayItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::PromiseRaw">
+    <DisplayString Condition="m_state==0">PromiseRaw[Pending]</DisplayString>
+    <DisplayString Condition="m_state==1">PromiseRaw[Resolved]</DisplayString>
+    <DisplayString Condition="m_state==2">PromiseRaw[Rejected]</DisplayString>
+    <Expand>
+      <Item Name="[end]">m_ending</Item>
+      <LinkedListItems>
+        <HeadPointer>m_next</HeadPointer>
+        <NextPointer>m_sibling</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::Promise&lt;void&gt;">
+    <DisplayString Condition="m_state==0">Promise[Pending]</DisplayString>
+    <DisplayString Condition="m_state==1">Promise[Resolved]</DisplayString>
+    <DisplayString Condition="m_state==2">Promise[Rejected]</DisplayString>
+    <Expand>
+      <Item Name="[end]">m_ending</Item>
+      <Item Name="[rejected]" Condition="m_state==2">m_data</Item>
+      <LinkedListItems>
+        <HeadPointer>m_next</HeadPointer>
+        <NextPointer>m_sibling</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::Promise&lt;*&gt;">
+    <DisplayString Condition="m_state==0">Promise[Pending]</DisplayString>
+    <DisplayString Condition="m_state==1">Promise[Resolved]</DisplayString>
+    <DisplayString Condition="m_state==2">Promise[Rejected]</DisplayString>
+    <Expand>
+      <Item Name="[end]">m_ending</Item>
+      <Item Name="[value]" Condition="m_state==1">($T1&amp;)m_data.resolved</Item>
+      <Item Name="[value]" Condition="m_state==2">m_data.rejected</Item>
+      <LinkedListItems>
+        <HeadPointer>m_next</HeadPointer>
+        <NextPointer>m_sibling</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::PromiseManager">
+    <Expand>
+      <LinkedListItems>
+        <HeadPointer>m_process</HeadPointer>
+        <NextPointer>m_sibling</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::ThreadId">
+    <DisplayString>{m_id}</DisplayString>
+  </Type>
+  <Type Name="kr::EventPump">
+    <Expand>
+      <Item Name="[Thread ID]">m_threadId</Item>
+      <Item Name="[onAfterProcess]">m_onAfterProcess</Item>
+      <Item Name="[onFinish]">m_onFinish</Item>
+      <LinkedListItems>
+        <HeadPointer>m_start.m_next</HeadPointer>
+        <NextPointer>m_next</NextPointer>
+        <ValueNode>this</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::Chain&lt;*&gt;">
+    <Expand HideRawView="true">
+      <CustomListItems>
+        <Variable Name="orig_head" InitialValue="&amp;m_axis"/>
+        <Variable Name="iter" InitialValue="m_axis.m_next"/>
+        <Loop>
+            <Break Condition="iter == orig_head"/>
+            <Item>*($T1*)iter</Item>
+            <Exec>iter = iter-&gt;m_next</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::LinkedList&lt;*&gt;">
+    <Expand HideRawView="true">
+      <Item Name="[size]">m_size</Item>
+      <CustomListItems>
+        <Variable Name="orig_head" InitialValue="&amp;m_axis"/>
+        <Variable Name="iter" InitialValue="m_axis.m_next"/>
+        <Loop>
+            <Break Condition="iter == orig_head"/>
+            <Item>*($T1*)iter</Item>
+            <Exec>iter = iter-&gt;m_next</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
+  </Type>
+  <Type Name="kr::Node&lt;*&gt;">
+  </Type>
+  <Type Name="kr::Ipv4Address">
+    <DisplayString>{(int)a}.{(int)b}.{(int)c}.{(int)d}</DisplayString>
+  </Type>
+  <Type Name="kr::BufferQueueWithRef">
+    <Expand>
+      <Item Name="[ref]">(m_size &amp; ~((size_t)-1)) >> 1) != 0</Item>
+      <Item Condition="[ref]" Name="[buffer]">m_bufferPtr</Item>
+      <Item Condition="![ref]" Name="[buffer]">m_buffer</Item>
+    </Expand>
+  </Type>
+  <Type Name="kr::TimeType&lt;unsigned int, int&gt;::duration">
+    <DisplayString>{m_time}ms</DisplayString>
+  </Type>
+  <Type Name="kr::BufferBlockReceiver">
+    <DisplayString Condition="m_buffer==0">null</DisplayString>
+    <Expand HideRawView="true">
+      <Item Name="[size]" Condition="m_buffer != 0">
+        m_buffer->buffer + m_buffer->size - m_read
+      </Item>
+      <Item Name="[readed]" Condition="m_buffer != 0">
+        m_read-m_buffer->buffer
+      </Item>
+      <Item Name="[remaining]" Condition="m_buffer != 0">
+        sizeof(m_buffer->buffer) - m_buffer->size
+      </Item>
     </Expand>
   </Type>
 </AutoVisualizer>

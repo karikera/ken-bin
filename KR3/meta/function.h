@@ -54,6 +54,9 @@ namespace kr
 			static constexpr bool is_const = true;
 		};;
 
+
+		template <typename func, size_t index>
+		using parameterAt = typeAt<typename meta::function<func>::args_t, index>;
 	}
 
 }

@@ -4,6 +4,7 @@
 
 void emscripten_set_main_loop(void(*func)(), int fps, int simulate_infinite_loop);
 void emscripten_set_canvas_size(int width, int height);
+void emscripten_set_canvas_element_size(const char * target, int width, int height);
 float emscripten_random(void);
 
 
@@ -11,6 +12,8 @@ float emscripten_random(void);
 
 typedef int EM_BOOL;
 typedef char EM_UTF8;
+
+typedef int emscripten_align1_int;
 
 #ifdef __EMSCRIPTEN__
 #define EM_ASM(x)	

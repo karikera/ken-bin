@@ -34,7 +34,7 @@ namespace kr
 				constexpr AllocatedData() noexcept = default;
 				constexpr AllocatedData(const AllocatedData&) = default;
 				constexpr AllocatedData(AllocatedData&&) = default;
-				friend void * CT_FASTCALL getAllocatedPointer(AllocatedData & data) noexcept
+				friend void * getAllocatedPointer(AllocatedData & data) noexcept
 				{
 					if(data.isNull()) return nullptr;
 					return (void*)((size_t*)data.begin() - 1);
@@ -69,7 +69,7 @@ namespace kr
 				template <typename T>
 				void print(const T & v) = delete;
 
-				void setBegin(const C* _beg) noexcept
+				void setBegin(const InternalComponent* _beg) noexcept
 				{
 					m_begin = _beg;
 				}
@@ -77,7 +77,7 @@ namespace kr
 				{
 					m_begin += n;
 				}
-				void setEnd(const C* end) noexcept
+				void setEnd(const InternalComponent* end) noexcept
 				{
 					m_end = end;
 				}
@@ -96,16 +96,17 @@ namespace kr
 					m_end = (InternalComponent*)end;
 				}
 
-				const C* begin() const noexcept
+				const InternalComponent* begin() const noexcept
 				{
 					return m_begin;
 				}
-				const C* end() const noexcept
+				const InternalComponent* end() const noexcept
 				{
 					return m_end;
 				}
 				size_t size() const noexcept
 				{
+					_assert(m_begin != nullptr);
 					return ((byte*)m_end - (byte*)m_begin) / sizeof(InternalComponent);
 				}
 				bool empty() const noexcept
@@ -118,7 +119,7 @@ namespace kr
 				}
 
 				// InStream
-				const C* readImpl(size_t *_len) // EofException
+				const C* readImpl(size_t *_len) throw(EofException)
 				{
 					const InternalComponent* out = (InternalComponent*)m_begin;
 					if (out == m_end)
@@ -150,6 +151,20 @@ namespace kr
 					: ReadableData(_list.begin(), _list.end())
 				{
 				}
+
+				template <size_t SIZE>
+				static Self fromArray(InternalComponent(&buffer)[SIZE]) noexcept
+				{
+					KR_DEFINE_MMEM();
+					InternalComponent chr = (InternalComponent)'\0';
+					InternalComponent * end = memm::find(buffer, chr, SIZE);
+					return Self((C*)buffer, (C*)(end == nullptr ? buffer +SIZE : end));
+				}
+				template <typename T>
+				static Self fromAny(const T & any) noexcept
+				{
+					return Self((C*)&any, (C*)((byte*)any + sizeof(T)));
+				}
 			};
 			template <typename C, class Parent> 
 			class AccessableData :public Common<C, true, true, false, true, Parent>
@@ -167,7 +182,7 @@ namespace kr
 				template <typename T>
 				void print(const T & v) = delete;
 
-				void setBegin(C* _beg) noexcept
+				void setBegin(InternalComponentRef* _beg) noexcept
 				{
 					m_begin = _beg;
 				}
@@ -175,7 +190,7 @@ namespace kr
 				{
 					m_begin += n;
 				}
-				void setEnd(C* end) noexcept
+				void setEnd(InternalComponentRef* end) noexcept
 				{
 					m_end = end;
 				}
@@ -190,11 +205,11 @@ namespace kr
 					m_end = (InternalComponent*)end;
 				}
 
-				C* begin() const noexcept
+				InternalComponentRef* begin() const noexcept
 				{
 					return m_begin;
 				}
-				C* end() const noexcept
+				InternalComponentRef* end() const noexcept
 				{
 					return m_end;
 				}
@@ -212,7 +227,7 @@ namespace kr
 				}
 
 				// InStream
-				C* readImpl(size_t *_len) // EofException
+				C* readImpl(size_t *_len) throw(EofException)
 				{
 					const C* out = m_begin;
 					if (out + *_len > m_end) throw EofException();
@@ -254,7 +269,7 @@ namespace kr
 				{
 					m_limit = str;
 				}
-				C* _extend(size_t inc) // NotEnoughSpaceException
+				C* _extend(size_t inc) throw(NotEnoughSpaceException)
 				{
 					C* out = m_end;
 					C* nptr = out + inc;
@@ -262,14 +277,14 @@ namespace kr
 					m_end = nptr;
 					return out;
 				}
-				C* _padding(size_t inc) // NotEnoughSpaceException
+				C* _padding(size_t inc) throw(NotEnoughSpaceException)
 				{
 					if (m_end + inc > m_limit) throw NotEnoughSpaceException();
 					return m_end;
 				}
 				void _init() = delete;
 
-				C* end() const noexcept
+				InternalComponentRef* end() const noexcept
 				{
 					return m_end;
 				}
@@ -277,7 +292,7 @@ namespace kr
 				{
 					return m_limit-m_end;
 				}
-				C* limit() const noexcept
+				InternalComponentRef* limit() const noexcept
 				{
 					return m_limit;
 				}

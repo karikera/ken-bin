@@ -35,7 +35,11 @@ namespace kr
 
 		ATTR_INLINE vec4a_ctor::vector_constructor(float _all) noexcept
 		{
+#if defined(EMSIMD) || defined(MSSIMD)
 			m_vector = _mm_set_ps1(_all);
+#else
+			m_vector.x = m_vector.y = m_vector.z = m_vector.w = _all;
+#endif
 		}
 		ATTR_INLINE vec4a_ctor::vector_constructor(const __vector4 & _v) noexcept
 		{
@@ -43,27 +47,48 @@ namespace kr
 		}
 		ATTR_INLINE vec4a_ctor::vector_constructor(float _x, float _y, float _z, float _w) noexcept
 		{
+#if defined(EMSIMD) || defined(MSSIMD)
 			m_vector = _mm_set_ps(_w, _z, _y, _x);
+#else
+			m_vector.x = x;
+			m_vector.y = y;
+			m_vector.z = z;
+			m_vector.w = w;
+#endif
 		}
 		ATTR_INLINE vec4a_ctor::vector_constructor(const ivec4a &_v) noexcept
 		{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 			m_vector = (__vector4)_v.m_vector;
-#else
+#elif defined(MSSIMD)
 			m_vector = _mm_cvtepi32_ps(_v.m_vector);
+#else
+			m_vector.x = (float)_v.x;
+			m_vector.y = (float)_v.y;
+			m_vector.z = (float)_v.z;
+			m_vector.w = (float)_v.w;
 #endif
 		}
 		ATTR_INLINE const ivec4a vec4a_ctor::ibits() const noexcept
 		{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 			return (__ivector4&)(m_vector);
-#else
+#elif defined(MSSIMD)
 			return _mm_castps_si128(m_vector);
+#else
+			return ivec4a{
+				(int&)x,
+				(int&)y,
+				(int&)z,
+				(int&)w
+			};
 #endif
 		}
 		ATTR_INLINE const ivec4a vec4a_ctor::itruncate() const noexcept
 		{
-#ifdef __EMSCRIPTEN__
+#ifdef MSSIMD
+			return _mm_cvttps_epi32(m_vector);
+#else
 			union {
 				int x[4];
 				__ivector4 m;
@@ -77,39 +102,54 @@ namespace kr
 					u.x[i] = (int)0x80000000;
 			}
 			return u.m;
-#else
-			return _mm_cvttps_epi32(m_vector);
 #endif
 		}
 		ATTR_INLINE const ivec4a vec4a_ctor::iround() const noexcept
 		{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 			return emscripten_int32x4_fromFloat32x4(m_vector);
-			//ivec4a out;
-			//out.m_vector[0] = lroundf(m_vector[0]);
-			//out.m_vector[1] = lroundf(m_vector[1]);
-			//out.m_vector[2] = lroundf(m_vector[2]);
-			//out.m_vector[3] = lroundf(m_vector[3]);
-			//return out;
-#else
+#elif defined(MSSIMD)
 			return _mm_cvtps_epi32(m_vector);
+#else
+			ivec4a out;
+			out.m_vector[0] = lroundf(m_vector[0]);
+			out.m_vector[1] = lroundf(m_vector[1]);
+			out.m_vector[2] = lroundf(m_vector[2]);
+			out.m_vector[3] = lroundf(m_vector[3]);
+			return out;
 #endif
 		}
 		ATTR_INLINE float vec4a_ctor::getX() const noexcept
 		{
+#if defined(EMSIMD) || defined(MSSIMD)
 			return _mm_cvtss_f32(m_vector);
+#else
+			return m_vector.x;
+#endif
 		}
 		ATTR_INLINE float vec4a_ctor::getY() const noexcept
 		{
+#ifdef USE_SIMD
 			return getYV().getX();
+#else
+			return m_vector.y;
+#endif
 		}
 		ATTR_INLINE float vec4a_ctor::getZ() const noexcept
 		{
+#ifdef USE_SIMD
 			return getZV().getX();
+#else
+			return m_vector.z;
+#endif
 		}
 		ATTR_INLINE float vec4a_ctor::getW() const noexcept
 		{
+#ifdef USE_SIMD
 			return getWV().getX();
+#else
+			return m_vector.w;
+#endif
 		}
 		ATTR_INLINE const vec4a vec4a_ctor::getXV() const noexcept
 		{
@@ -168,39 +208,51 @@ namespace kr
 		}
 		ATTR_INLINE ivec4a_ctor::vector_constructor(int _x, int _y, int _z, int _w) noexcept
 		{
-#ifdef __EMSCRIPTEN__
-			m_vector = __ivector4{ _w, _z, _y, _x };
-#else
+#ifdef MSSIMD
 			m_vector = _mm_set_epi32(_w, _z, _y, _x);
+#else
+			m_vector = __ivector4{ _w, _z, _y, _x };
 #endif
 		}
 		ATTR_INLINE const vec4a ivec4a_ctor::fbits() const noexcept
 		{
-#ifdef __EMSCRIPTEN__
-			return (__vector4&)m_vector;
-#else
+#ifdef MSSIMD
 			return _mm_castsi128_ps(m_vector);
+#else
+			return (__vector4&)m_vector;
 #endif
 		}
 		ATTR_INLINE int ivec4a_ctor::getX() const noexcept
 		{
-#ifdef __EMSCRIPTEN__
-			return m_vector[0];
-#else
+#ifdef MSSIMD
 			return _mm_cvtsi128_si32(m_vector);
+#else
+			return m_vector[0];
 #endif
 		}
 		ATTR_INLINE int ivec4a_ctor::getY() const noexcept
 		{
+#ifdef MSSIMD
 			return getYV().getX();
+#else
+			return m_vector[1];
+#endif
 		}
 		ATTR_INLINE int ivec4a_ctor::getZ() const noexcept
 		{
+#ifdef MSSIMD
 			return getZV().getX();
+#else
+			return m_vector[2];
+#endif
 		}
 		ATTR_INLINE int ivec4a_ctor::getW() const noexcept
 		{
+#ifdef MSSIMD
 			return getWV().getX();
+#else
+			return m_vector[3];
+#endif
 		}
 		ATTR_INLINE const ivec4a ivec4a_ctor::getXV() const noexcept
 		{

@@ -54,6 +54,13 @@ namespace kr
 				return a.compare(b);
 			}
 		};
+		template <typename T> struct _Comparator<T*, false>
+		{
+			static intptr_t compare(const T * a, const T * b)
+			{
+				return a->compare(b);
+			}
+		};
 		template <typename T> struct _Comparator<T, false>
 		{
 			static intptr_t compare(const T& a, const T&b) noexcept
@@ -65,26 +72,31 @@ namespace kr
 
 	}
 
-	template <typename T> struct Comparator: _pri_::_Comparator<T, std::is_class<T>::value>
-	{
-	};
 	template <typename T> struct Key: _pri_::_Key<T, std::is_class<T>::value>
 	{
 	};
+	template <typename K>
+	using GetKeyType = decltype(K::getKey(zerovar));
 
-	template <typename T, typename GetKey = Key<T>>
-	using GetKeyType = decltype(GetKey::getKey(*(T*)0));
-	template <typename T, typename GetKey = Key<T>>
-	using GetKeyComparator = Comparator<GetKeyType<T, GetKey>>;
+	template <typename Key> struct Comparator : _pri_::_Comparator<GetKeyType<Key>, std::is_class<GetKeyType<Key>>::value>, Key
+	{
+	};
+	struct GetPointerAsKey
+	{
+		static uintptr_t getKey(const void * value) noexcept
+		{
+			return (uintptr_t)value;
+		}
+	};
 
-	template <typename T, typename GetKey = Key<T>, typename Cmp = GetKeyComparator<T, GetKey>>
-	class Searcher:public Cmp, public GetKey
+	template <typename T, typename Cmp = Comparator<Key<T>>>
+	class Searcher:public Cmp
 	{
 	public:
 		using Cmp::compare;
-		using GetKey::getKey;
+		using Cmp::getKey;
 
-		using K = GetKeyType<T, GetKey>;
+		using K = GetKeyType<Cmp>;
 		static T* searchPointer(T* L, size_t size, K key)
 		{
 			L--;
@@ -136,5 +148,74 @@ namespace kr
 			return R;
 		}
 
+		static void swap(T & a, T& b)
+		{
+			T tmp = move(a);
+			a = move(b);
+			b = move(tmp);
+		}
+		static void sort(T* begin, T* end)
+		{
+			switch (end - begin)
+			{
+			case 0: return;
+			case 1: return;
+			case 2:
+				if (compare(getKey(begin[0]), getKey(begin[1])) > 0)
+				{
+					swap(begin[0], begin[1]);
+				}
+				return;
+			}
+			T * endm = end - 1;
+			T * L = begin;
+			T * R = endm;
+			T * C = endm;
+			K Ckey = getKey(*C);
+
+			while (L != R)
+			{
+				for (;;)
+				{
+					if (compare(getKey(*L), Ckey) > 0) break;
+					L++;
+					if (L == R) goto _fin;
+				}
+				for (;;)
+				{
+					R--;
+					if (L == R) goto _fin;
+					if (compare(getKey(*R), Ckey) < 0) break;
+				}
+				swap(*L++, *R);
+			}
+		_fin:
+			if (L != C) swap(*L, *C);
+			if (L > begin + 1) sort(begin, L);
+			L++;
+			if (L < endm) sort(L, end);
+		}
+		static void sort(WRefArray<T> array)
+		{
+			return sort(array.begin(), array.end());
+		}
+		static bool isSorted(View<T> array)
+		{
+			return isSorted(array.begin(), array.end());
+		}
+		static bool isSorted(const T * begin, const T * end) noexcept
+		{
+			if (end - begin < 2) return true;
+			K prevKey = getKey(begin);
+			begin++;
+
+			for (; begin != end; begin++)
+			{
+				K nkey = getKey(*begin);
+				if (compare(prevKey, nkey) > 0) return false;
+				prevKey = nkey;
+			}
+			return true;
+		}
 	};
 }

@@ -16,5 +16,5 @@ class kr::gl::Jpeg
 public:
 	static constexpr int QUALITY_MAX = 100;
 	static ImageData load(FILE * infile) noexcept;
-	static bool save(const ImageData & data, pcwstr filename, int quality) noexcept;
+	static bool save(const ImageData & data, pcstr16 filename, int quality) noexcept;
 };

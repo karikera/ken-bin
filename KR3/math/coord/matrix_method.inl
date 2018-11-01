@@ -7,6 +7,54 @@ namespace kr
 	namespace math
 	{
 		template <typename T, size_t cols, bool aligned>
+		template <typename LAMBDA, typename LAMBDA2>
+		bool matrix_method<T, 2, cols, aligned, matrix_data_type::right_bottom>::deltaCompare(const irect & dest, const LAMBDA & oldcallback, const LAMBDA2 & newcallback) const noexcept
+		{
+			int l = dest.from.x;
+			int t = dest.from.y;
+			int r = dest.to.x;
+			int b = dest.to.y;
+			int pl = from.x;
+			int pt = from.y;
+			int pr = to.x;
+			int pb = to.y;
+
+			if (l == pl && t == pt && r == pr && b == pb) return false;
+			if (pr < l || r < pl || pb < t || b < pt)
+			{
+				oldcallback(irect(pl, pt, pr, pb));
+				newcallback(irect(l, t, r, b));
+			}
+			else
+			{
+				int it = t > pt ? t : pt;
+				int ib = b > pb ? pb : b;
+
+				if (t > pt) oldcallback(irect(pl, pt, pr, t));
+				if (b < pb) oldcallback(irect(pl, b, pr, pb));
+
+				if (r < pr) oldcallback(irect(r, it, pr, ib));
+				if (l > pl) oldcallback(irect(pl, it, l, ib));
+
+				if (r > pr) newcallback(irect(pr, it, r, ib));
+				if (l < pl) newcallback(irect(l, it, pl, ib));
+
+				if (t < pt) newcallback(irect(l, t, r, pt));
+				if (b > pb) newcallback(irect(l, pb, r, b));
+			}
+			return true;
+		}
+
+		template <typename T, size_t cols, bool aligned>
+		template <typename LAMBDA, typename LAMBDA2>
+		bool matrix_method<T, 2, cols, aligned, matrix_data_type::right_bottom>::deltaMove(const irect & dest, const LAMBDA & oldcallback, const LAMBDA2 & newcallback) noexcept
+		{
+			if (!deltaCompare(dest, oldcallback, newcallback)) return false;
+			*this = dest;
+			return true;
+		}
+
+		template <typename T, size_t cols, bool aligned>
 		ATTR_INLINE const vector<T, cols, aligned> matrix_method<T, 2, cols, aligned, matrix_data_type::width_height>::clip(const vector<T, cols, aligned> & o) const noexcept
 		{
 			vector<T, cols, aligned> out;
@@ -128,6 +176,154 @@ namespace kr
 				{ 0,0,1 } };
 		}
 
+
+		template <typename T, bool aligned>
+		ATTR_INLINE const vector<T, 2, aligned> matrix_method<T, 3, 2, aligned>::getX() const noexcept
+		{
+			return v[0];
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const vector<T, 2, aligned> matrix_method<T, 3, 2, aligned>::getY() const noexcept
+		{
+			return v[1];
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const vector<T, 2, aligned> matrix_method<T, 3, 2, aligned>::getPos() const noexcept
+		{
+			return v[2];
+		}
+
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::inverse() const noexcept
+		{
+			T det = 1.f / (_11*_22 - _12 * _21);
+
+			float _22_det = _22 * det;
+			float _21_det = _21 * det;
+			float _12_det = _12 * det;
+			float _11_det = _11 * det;
+
+			return {
+				_22_det, -_12_det,
+				-_21_det, _11_det,
+				_32 * _21_det - _31 * _22_det,
+				_31 * _12_det - _32 * _11_det
+			};
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::scaling(T scale) noexcept
+		{
+			_11 *= scale;
+			_12 *= scale;
+			_21 *= scale;
+			_22 *= scale;
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::preScale(const vector<T, 2, aligned> & scale) noexcept
+		{
+			v[0] *= scale.x;
+			v[1] *= scale.y;
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::postScale(const vector<T, 2, aligned> & scale) noexcept
+		{
+			v[0] *= scale;
+			v[1] *= scale;
+			v[2] *= scale;
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::preRotate(T angle) noexcept
+		{
+			T c = (T)math::cos((float)angle);
+			T s = (T)math::sin((float)angle);
+			vec2 v_0_ = v[0];
+			v[0] = v_0_ * c + v[1] * s;
+			v[1] = v[1] * c - v_0_ * s;
+
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::postRotate(T angle) noexcept
+		{
+			T c = (T)math::cos((float)angle);
+			T s = (T)math::sin((float)angle);
+
+			float t = _11;
+			_11 = t * c - _12 * s;
+			_12 = t * s + _12 * c;
+			t = _21;
+			_21 = t * c - _22 * s;
+			_22 = t * s + _22 * c;
+			t = _31;
+			_31 = t * c - _32 * s;
+			_32 = t * s + _32 * c;
+
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::preTranslate(const vector<T, 2, aligned> & pos) noexcept
+		{
+			v[2] = v[0] * pos.x + v[1] * pos.y;
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE matrix<T, 3, 2, aligned>& matrix_method<T, 3, 2, aligned>::postTranslate(const vector<T, 2, aligned> & pos) noexcept
+		{
+			v[2] += pos;
+			return *static_cast<matrix<T, 3, 2, aligned>*>(this);
+		}
+
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::translate(vector<T, 2> pos) noexcept
+		{
+			return{
+				{ 1,0 },
+				{ 0,1 },
+				{ pos.x,pos.y }
+			};
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::identity() noexcept
+		{
+			return{
+				{ 1,0 },
+				{ 0,1 },
+				{ 0,0 }
+			};
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::scale(const vector<T, 2, aligned> &scale) noexcept
+		{
+			return{
+				{ scale.x,0 },
+				{ 0,scale.y },
+				{ 0,0 }
+			};
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::scale(T x) noexcept
+		{
+			return{
+				{ x,0 },
+				{ 0,x },
+				{ 0,0 }
+			};
+		}
+		template <typename T, bool aligned>
+		ATTR_INLINE const matrix<T, 3, 2, aligned> matrix_method<T, 3, 2, aligned>::rotate(T rad) noexcept
+		{
+			T c = (T)math::cos((float)rad);
+			T s = (T)math::sin((float)rad);
+			return{
+				{ c,s },
+				{ (T)-s,c },
+				{ 0,0 }
+			};
+		}
+
 		template <typename T, bool aligned>
 		ATTR_INLINE const vector<T, 4, aligned> matrix_method<T, 4, 4, aligned>::getX() const noexcept
 		{
@@ -149,7 +345,7 @@ namespace kr
 			return{ v[0][3],v[1][3],v[2][3],v[3][3] };
 		}
 		template <typename T, bool aligned>
-		inline const matrix<T, 4, 4, aligned> matrix_method<T, 4, 4, aligned>::inverse() const noexcept
+		ATTR_INLINE const matrix<T, 4, 4, aligned> matrix_method<T, 4, 4, aligned>::inverse() const noexcept
 		{
 			notImplementedYet();
 		}
@@ -304,16 +500,16 @@ namespace kr
 			};
 		}
 		template <typename T, bool aligned>
-		ATTR_INLINE const matrix<T, 4, 4, aligned> matrix_method<T, 4, 4, aligned>::orthogonal(T left, T top, T right, T bottom, T near, T far) noexcept
+		ATTR_INLINE const matrix<T, 4, 4, aligned> matrix_method<T, 4, 4, aligned>::orthogonal(T left, T top, T right, T bottom, T _near, T _far) noexcept
 		{
 			T _w = 1 / (left - right);
 			T _h = 1 / (bottom - top);
-			T _z = 1 / (near - far);
+			T _z = 1 / (_near - _far);
 
 			return{
 				{ (T)(-2 * _w), 0, 0, (T)((right + left)*_w) },
 				{ 0, (T)(-2 * _h), 0, (T)((top + bottom)*_h) },
-				{ 0, 0, _z, (T)(-far*_z) },
+				{ 0, 0, _z, (T)(-_far*_z) },
 				{ 0, 0, 0, 1 }
 			};
 		}

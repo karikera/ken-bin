@@ -37,9 +37,9 @@ namespace kr
 		void start() noexcept;
 		bool closed() noexcept;
 		template <typename LAMBDA>
-		bool postLambda(LAMBDA lambda)
+		bool postL(LAMBDA lambda)
 		{
-			return m_thread->postLambda(lambda);
+			return m_thread->post(lambda);
 		}
 		void quit(int exitCode) noexcept;
 		void join() noexcept;
@@ -47,13 +47,11 @@ namespace kr
 		int64_t getLength() noexcept;
 		void setProgress(int64_t progress) noexcept;
 		void setProgress(int64_t progress, int64_t length) noexcept;
+		void checkPoint() throw(QuitException);
+		void checkPoint(long long nProgress) throw(QuitException);
 		virtual int progressor() noexcept = 0;
 		virtual void onProgress() noexcept override = 0;
-
-	protected:
-		void _checkPoint(); // QuitException
-		void _checkPoint(long long nProgress); // QuitException
-
+		
 	private:
 		union
 		{

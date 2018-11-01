@@ -34,8 +34,8 @@ namespace kr
 		void linkSzBuf(Text name, char (&buf)[sz]) noexcept;
 		template <size_t sz>
 		void linkSzBuf(Text name, char16(&buf)[sz]) noexcept;
-		void save(pcstr16 filename); // Error
-		void load(pcstr16 filename); // EofException, InvalidSourceException, Error
+		void save(pcstr16 filename) throw(Error);
+		void load(pcstr16 filename) throw(EofException, InvalidSourceException, Error);
 	};
 
 
@@ -98,7 +98,7 @@ namespace kr
 		}
 		void load(JsonParser * parser) override
 		{
-			m_set(parser->getQword());
+			m_set(parser->uinteger64());
 		}
 	};
 	template <typename GET, typename SET>
@@ -173,7 +173,7 @@ namespace kr
 		{
 			*fout << "\"" << name << "\": [";
 			Array<T> arr = m_get();
-			RefArray<T> ref = arr;
+			View<T> ref = arr;
 			if (arr.empty())
 			{
 				*fout << ']';
@@ -214,7 +214,7 @@ namespace kr
 		void save(io::FOStream<char> * fout) override
 		{
 			*fout << "\"" << name << "\": \"";
-			m_get().replace<WideToUtf8>(fout, u"\"", "\\\"");
+			m_get().replace<Utf16ToUtf8>(fout, u"\"", "\\\"");
 			*fout << "\"";
 		}
 		void load(JsonParser * parser) override

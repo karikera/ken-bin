@@ -14,16 +14,16 @@ namespace kr
 			using Super = FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>;
 			using Component = typename Base::Component;
 			using m = memt<sizeof(Component)>;
-			using Ref = RefArray<Component>;
+			using Ref = View<Component>;
 			using TSZ = TempSzText<Component>;
 			using AText = Array<Component>;
 
-			void _refill() // EofException
+			void _refill() throw(EofException)
 			{
 				m_filled = m_read = m_buffer;
 				m_filled += base()->read(m_buffer, BUFFER_SIZE);
 			}
-			void _remainFill() // EofException
+			void _remainFill() throw(EofException)
 			{
 				size_t remaining = m_filled - m_read;
 				if (remaining == 0)
@@ -56,8 +56,8 @@ namespace kr
 			{
 				m_filled = m_read = m_buffer;
 			}
-			BufferedIStream(typename Base::BaseStream* p) noexcept
-				: BufferedIStream(p->template retype<Component>())
+			BufferedIStream(typename Base::StreamableBase* p) noexcept
+				: BufferedIStream(p->template stream<Component>())
 			{
 			}
 
@@ -70,17 +70,17 @@ namespace kr
 			{
 				resetStream((Base*)nullptr);
 			}
-			void resetStream(typename Base::BaseStream* p) noexcept
+			void resetStream(typename Base::StreamableBase* p) noexcept
 			{
-				resetStream(p->template retype<Component>());
+				resetStream(p->template stream<Component>());
 			}
 
-			void clearBuffer()
+			void clearBuffer() noexcept
 			{
 				m_filled = m_read = m_buffer;
 			}
 
-			Component peek()
+			Component peek() throw(EofException)
 			{
 				for (;;)
 				{
@@ -92,7 +92,7 @@ namespace kr
 					_refill();
 				}
 			}
-			Ref peek(size_t count) // TooBigException
+			Ref peek(size_t count) throw(EofException, TooBigException)
 			{
 				if (count > BUFFER_SIZE) throw TooBigException();
 				for (;;)
@@ -107,28 +107,49 @@ namespace kr
 			}
 			bool nextIs(const Component & comp)
 			{
-				if (comp != peek()) return false;
-				skip(1);
-				return true;
+				try
+				{
+					if (comp != peek()) return false;
+					skip(1);
+					return true;
+				}
+				catch (EofException&)
+				{
+					return false;
+				}
 			}
 			bool nextIs(Ref comps)
 			{
-				if (comps != peek(comps.size())) return false;
-				skip(comps.size());
-				return true;
+				try
+				{
+					if (comps != peek(comps.size())) return false;
+					skip(comps.size());
+					return true;
+				}
+				catch (EofException&)
+				{
+					return false;
+				}
 			}
-			void must(const Component & comp)
+			void must(const Component & comp) throw(InvalidSourceException)
 			{
 				if (!nextIs(comp)) throw InvalidSourceException();
 			}
-			void must(Ref comps)
+			void must(Ref comps) throw(InvalidSourceException)
 			{
 				TmpArray<Component> tmp((size_t)0, comps.size());
-				read(&tmp, comps.size());
-				if (tmp != comps) throw InvalidSourceException();
+				try
+				{
+					read(&tmp, comps.size());
+					if (tmp != comps) throw InvalidSourceException();
+				}
+				catch (EofException&)
+				{
+					throw InvalidSourceException();
+				}
 			}
 
-			void skip(size_t sz = 1)
+			void skip(size_t sz = 1) throw(EofException)
 			{
 				Component * line;
 				for (;;)
@@ -141,9 +162,16 @@ namespace kr
 
 				m_read = line;
 			}
+			size_t skipAll()
+			{
+				size_t size = m_filled - m_read;
+				size += base()->skipAll();
+				clearBuffer();
+				return size;
+			}
 
 			template <typename _Derived, typename _Info>
-			size_t readLine(OutStream<_Derived, Component, _Info> * dest)
+			size_t readLine(OutStream<_Derived, Component, _Info> * dest) throw(EofException, NotEnoughSpaceException)
 			{
 				size_t readed = 0;
 				Component * line;
@@ -191,13 +219,13 @@ namespace kr
 				m_read += len + 1;
 				return readed + len;
 			}
-			TSZ readLine()
+			TSZ readLine() throw(EofException)
 			{
 				TSZ tsz;
 				readLine(&tsz);
 				return tsz;
 			}
-			size_t skipLine()
+			size_t skipLine() throw(EofException)
 			{
 				size_t readed = 0;
 				Component * line;
@@ -242,7 +270,7 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info, typename LAMBDA>
-			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda)
+			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda) throw(NotEnoughSpaceException, EofException)
 			{
 				size_t totalReaded = 0;
 				Component * line;
@@ -251,7 +279,7 @@ namespace kr
 					size_t size = m_filled - m_read;
 					if (size != 0)
 					{
-						line = (Component*)lambda(RefArray<Component>(m_read, size));
+						line = (Component*)lambda(View<Component>(m_read, size));
 						if (line != nullptr) break;
 						dest->write(m_read, size);
 						totalReaded += size;
@@ -266,14 +294,14 @@ namespace kr
 				return totalReaded + len;
 			}
 			template <typename LAMBDA>
-			TSZ readto_F(const LAMBDA &lambda)
+			TSZ readto_F(const LAMBDA &lambda) throw(EofException)
 			{
 				TSZ tsz;
 				readto_F(&tsz, lambda);
 				return tsz;
 			}
 			template <typename LAMBDA>
-			size_t skipto_F(const LAMBDA &lambda)
+			size_t skipto_F(const LAMBDA &lambda) throw(EofException)
 			{
 				size_t readlen = 0;
 				Component * line;
@@ -282,7 +310,7 @@ namespace kr
 					size_t size = m_filled - m_read;
 					if (size != 0)
 					{
-						line = (Component*)lambda(RefArray<Component>(m_read, size));
+						line = (Component*)lambda(View<Component>(m_read, size));
 						if (line != nullptr) break;
 						Component * last = m_filled;
 						readlen += size;
@@ -297,18 +325,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &needle) // TooBigException
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &needle) throw(EofException)
 			{
 				return readto_F(dest, [&](Ref text) {
 					return text.find(needle).begin();
 				});
 			}
-			TSZ readto(const Component &chr) // TooBigException
+			TSZ readto(const Component &chr) throw(EofException)
 			{
 				TSZ tsz;
 				return readto(&tsz, chr);
 			}
-			size_t skipto(const Component &needle)
+			size_t skipto(const Component &needle) throw(EofException)
 			{
 				return skipto_F([&](Ref text) {
 					return text.find(needle).begin();
@@ -316,7 +344,7 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto(OutStream<_Derived, Component, _Info> * dest, Ref needle) // TooBigException
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, Ref needle) throw(EofException, TooBigException)
 			{
 				size_t totalReaded = 0;
 				size_t needlesize = needle.size();
@@ -354,13 +382,13 @@ namespace kr
 					return totalReaded;
 				}
 			}
-			AText readto(Ref needle) // TooBigException
+			AText readto(Ref needle) throw(EofException, TooBigException)
 			{
 				AText text;
 				readto(&text, needle);
 				return text;
 			}
-			size_t skipto(Ref needle)
+			size_t skipto(Ref needle) throw(EofException, TooBigException)
 			{
 				size_t totalReaded = 0;
 				size_t needlesize = needle.size();
@@ -395,19 +423,19 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readwith(OutStream<_Derived, Component, _Info> * dest, const Component &chr) // TooBigException
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, const Component &chr) throw(EofException, NotEnoughSpaceException)
 			{
 				size_t sz = readto(dest, chr);
 				skip(1);
 				return sz;
 			}
-			TSZ readwith(const Component &chr) // TooBigException
+			TSZ readwith(const Component &chr) throw(EofException)
 			{
 				TSZ tsz;
 				readwith(&tsz, chr);
 				return tsz;
 			}
-			size_t skipwith(const Component &chr) // TooBigException
+			size_t skipwith(const Component &chr) throw(EofException)
 			{
 				size_t sz = skipto(chr);
 				skip(1);
@@ -415,18 +443,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readwith(OutStream<_Derived, Component, _Info> * dest, Ref needle) // TooBigException
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, Ref needle) throw(EofException, NotEnoughSpaceException, TooBigException)
 			{
 				size_t sz = readto(dest, needle);
 				skip(needle.size());
 				return sz;
 			}
-			TSZ readwith(Ref needle) // TooBigException
+			TSZ readwith(Ref needle) throw(EofException, TooBigException)
 			{
 				TSZ tsz;
 				return readwith(&tsz, needle);
 			}
-			size_t skipwith(Ref needle) // TooBigException
+			size_t skipwith(Ref needle) throw(EofException, TooBigException)
 			{
 				size_t sz = skipto(needle);
 				skip(needle.size());
@@ -434,19 +462,19 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_y(OutStream<_Derived, Component, _Info> * dest, Ref chr)
+			size_t readto_y(OutStream<_Derived, Component, _Info> * dest, Ref chr) throw(NotEnoughSpaceException, EofException, TooBigException)
 			{
 				return readto_F(dest, [chr](Ref text) {
 					return text.find_y(chr).begin();
 				});
 			}
-			TSZ readto_y(Ref chr)
+			TSZ readto_y(Ref chr) throw(EofException, TooBigException)
 			{
 				TSZ tsz;
 				readto_y(&tsz, chr);
 				return tsz;
 			}
-			size_t skipto_y(Ref chr)
+			size_t skipto_y(Ref chr) throw(EofException, TooBigException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_y(chr).begin();
@@ -454,18 +482,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, const Component & chr)
+			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, const Component & chr) throw(NotEnoughSpaceException, EofException)
 			{
 				return readto_F(dest, [&](Ref text) {
 					return text.find_n(chr).begin();
 				});
 			}
-			TSZ readto_n(const Component &chr)
+			TSZ readto_n(const Component &chr) throw(EofException)
 			{
 				TSZ tsz;
 				return readto_n(&tsz, chr);
 			}
-			size_t skipto_n(Component chr)
+			size_t skipto_n(Component chr) throw(EofException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_n(chr).begin();
@@ -473,30 +501,30 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_ny(OutStream<_Derived, Component, _Info> * dest, Ref chr)
+			size_t readto_ny(OutStream<_Derived, Component, _Info> * dest, Ref chr) throw(NotEnoughSpaceException, EofException, TooBigException)
 			{
 				return readto_F(dest, [chr](Ref text) {
 					return text.find_ny(chr).begin();
 				});
 			}
-			TSZ readto_ny(Ref chr)
+			TSZ readto_ny(Ref chr) throw(EofException, TooBigException)
 			{
 				TSZ tsz;
 				readto_ny(&tsz, chr);
 				return tsz;
 			}
-			size_t skipto_ny(Ref chr)
+			size_t skipto_ny(Ref chr) throw(EofException, TooBigException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_ny(chr).begin();
 				});
 			}
 
-			RefArray<Component> getBuffer() noexcept
+			View<Component> getBuffer() noexcept
 			{
-				return RefArray<Component>(m_read, m_filled);
+				return View<Component>(m_read, m_filled);
 			}
-			size_t readImpl(Component * dest, size_t need)
+			size_t readImpl(Component * dest, size_t need) throw(EofException)
 			{
 				{
 					Component* to = m_read + need;
@@ -568,15 +596,16 @@ namespace kr
 				: BufferedOStream((Base*)nullptr)
 			{
 			}
-			BufferedOStream(typename Base::BaseStream * p) noexcept 
-				: BufferedOStream(p->template retype<Component>())
+			BufferedOStream(typename Base::StreamableBase * p) noexcept
+				: BufferedOStream(p->template stream<Component>())
 			{
 			}
 			~BufferedOStream() noexcept
 			{
-				if (endFlush)
-					flush();
+				if (endFlush) flush();
 			}
+
+			BufferedOStream & operator = (const BufferedOStream &) noexcept = delete;
 
 			void resetStream(nullptr_t) noexcept
 			{
@@ -588,7 +617,7 @@ namespace kr
 				m_filled = m_buffer;
 				Super::resetStream(p);
 			}
-			void resetStream(typename Base::BaseStream * p) noexcept
+			void resetStream(typename Base::StreamableBase * p) noexcept
 			{
 				m_filled = m_buffer;
 				Super::resetStream(p);
@@ -621,9 +650,16 @@ namespace kr
 			}
 			void flush()
 			{
+				Base * s = base();
+				if (s == nullptr) return;
 				InternalComponent* ptr = (InternalComponent*)m_buffer;
-				base()->write((Component*)m_buffer, m_filled - ptr);
+				s->write((Component*)m_buffer, m_filled - ptr);
 				m_filled = m_buffer;
+			}
+			void close() noexcept
+			{
+				if (endFlush) flush();
+				Super::close();
 			}
 
 		private:

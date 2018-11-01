@@ -8,7 +8,7 @@ namespace kr
 	template <typename C> class TextSwitchT:public Container<C, true, Empty>
 	{
 	public:
-		using Text = RefArray<C>;
+		using Text = View<C>;
 
 		inline TextSwitchT(initializer_list<Text> strs) noexcept
 		{

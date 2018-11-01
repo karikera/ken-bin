@@ -82,7 +82,7 @@ namespace kr
 	template <typename T>
 	class JsClass;
 	typedef JsAny(*JSCallback)(const JsArguments &);
-	typedef RefArray<JsAny> JsArgumentsIn;
+	typedef View<JsAny> JsArgumentsIn;
 
 	enum undefined_t
 	{

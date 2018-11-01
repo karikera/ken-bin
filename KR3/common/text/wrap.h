@@ -68,7 +68,7 @@ namespace kr
 				{
 					return equals(ref);
 				}
-				template <typename T> WrapImpl& operator << (const T& arrayable) // NotEnoughSpaceException
+				template <typename T> WrapImpl& operator << (const T& arrayable) throw(NotEnoughSpaceException)
 				{
 					print(arrayable);
 					return *this;

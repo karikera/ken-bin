@@ -3,37 +3,69 @@
 #include <KR3/main.h>
 #include <KR3/data/switch.h>
 #include <KR3/io/bufferedstream.h>
+#include <KR3/meta/function.h>
 #include "parser.h"
 
 namespace kr
 {
+	template <typename T>
+	struct JsonParsable;
+	class JsonParser;
+	class JsonField;
+	class JsonArray;
+
+	template <typename T>
+	struct JsonFieldCaller;
+
+	template <>
+	struct JsonFieldCaller<JsonField>
+	{
+		template <typename LAMBDA>
+		static void call(JsonParser * parser, const LAMBDA & lambda) throw(InvalidSourceException);
+	};
+
+	template <>
+	struct JsonFieldCaller<JsonArray>
+	{
+		template <typename LAMBDA>
+		static void call(JsonParser * parser, const LAMBDA & lambda) throw(InvalidSourceException);
+	};
+
 	class JsonParser: private Parser
 	{
+		friend JsonFieldCaller<JsonField>;
+		friend JsonFieldCaller<JsonArray>;
 	public:
 		enum Type
 		{
+			Null,
 			Number,
 			String,
 			Array,
+			Boolean,
 			Object
 		};
+
 		JsonParser(io::VIStream<char> is) noexcept;
 		~JsonParser() noexcept;
 		using Parser::getLine;
-		Type getNextType(); // kr::InvalidSourceException
-		float floatNumber(); // kr::InvalidSourceException
-		int integer(); // kr::InvalidSourceException
-		qword getQword(); // kr::InvalidSourceException
-		bool boolean(); // kr::InvalidSourceException
-		AText16 text16(); // InvalidSourceException
-		AText text(); // InvalidSourceException
-		TText ttext(); // InvalidSourceException
-		void skipValue(); // InvalidSourceException
+		Type getNextType() throw(InvalidSourceException);
+		float floatNumber() throw(InvalidSourceException);
+		int integer() throw(InvalidSourceException);
+		int64_t integer64() throw(InvalidSourceException);
+		uint uinteger() throw(InvalidSourceException);
+		uint64_t uinteger64() throw(InvalidSourceException);
+		bool boolean() throw(InvalidSourceException);
+		AText16 text16() throw(InvalidSourceException);
+		AText text() throw(InvalidSourceException);
+		TText ttext() throw(InvalidSourceException);
+		void skipValue() throw(InvalidSourceException);
 
 		template <typename LAMBDA>
-		void array(const LAMBDA & lambda) // InvalidSourceException
+		void array(const LAMBDA & lambda) throw(InvalidSourceException)
 		{
-			char oldchr = _open('[', ']');			
+			if (_skipIfNot('[')) return;
+			char oldchr = _open(']');			
 			size_t idx = 0;
 			while (m_closeCharacter != 0)
 			{
@@ -43,10 +75,24 @@ namespace kr
 			_closeTest();
 		}
 
-		template <typename LAMBDA>
-		void object(const LAMBDA & lambda) // InvalidSourceException
+		template <typename T>
+		T read() throw(InvalidSourceException)
 		{
-			char oldchr = _open('{', '}');
+			T value;
+			read(&value);
+			return value;
+		}
+		template <typename T>
+		void read(T * value) throw(InvalidSourceException)
+		{
+			JsonParsable<T>::parse(*this, value);
+		}
+
+		template <typename LAMBDA>
+		void object(const LAMBDA & lambda) throw(InvalidSourceException)
+		{
+			if (_skipIfNot('{')) return;
+			char oldchr = _open('}');
 			while (m_closeCharacter != 0)
 			{
 				lambda(_getName());
@@ -55,16 +101,273 @@ namespace kr
 			_closeTest();
 		}
 
+		template <typename LAMBDA>
+		void fields(const LAMBDA & lambda) throw(InvalidSourceException)
+		{
+			using param_t = remove_reference_t<meta::typeAt<typename meta::function<LAMBDA>::args_t, 0>>;
+			JsonFieldCaller<param_t>::call(this, lambda);
+		}
+
 	private:
-		char _open(char chr, char closechr); // InvalidSourceException
-		kr::TText _getName();  // kr::InvalidSourceException
-		void _skipInteger(); // kr::InvalidSourceException
-		void _skipIdentifier(); // kr::InvalidSourceException
-		void _closeTest();  // kr::InvalidSourceException
+		char _open(char closechr) throw(InvalidSourceException);
+		kr::TText _getName() throw(InvalidSourceException);
+		void _skipInteger() throw(InvalidSourceException);
+		void _skipIdentifier() throw(InvalidSourceException);
+		bool _skipIfNot(char chr) throw(InvalidSourceException);
+		void _readNumber(TText * dest, uint * radix, bool * negative) throw(InvalidSourceException);
+		void _closeTest() throw(InvalidSourceException);
 
 		char m_closeCharacter;
 
-		void _nextIs(char chr); // kr::InvalidSourceException
-		char _nextIs_y(kr::Text chr); // kr::InvalidSourceException
+		void _nextIsNull() throw(InvalidSourceException);
+		void _nextIs(char chr) throw(InvalidSourceException);
+		char _nextIs_y(kr::Text chr) throw(InvalidSourceException);
 	};
+
+	struct JsonFieldDone{};
+
+	class JsonField
+	{
+	private:
+		JsonParser * m_parser;
+		Text m_name;
+		
+	public:
+		JsonField(JsonParser * parser, Text name) noexcept
+			:m_parser(parser), m_name(name)
+		{
+		}
+		template <typename T>
+		void operator ()(Text name, T * value)
+		{
+			if (name != m_name) return;
+			m_parser->read(value);
+			throw JsonFieldDone();
+		}
+		template <typename T>
+		void operator ()(Text name, const KeepPointer<T> &value)
+		{
+			if (name != m_name) return;
+			m_parser->read<Keep<T>>(value);
+			throw JsonFieldDone();
+		}
+		template <typename LAMBDA>
+		void operator ()(Text name, const LAMBDA & lambda)
+		{
+			if (name != m_name) return;
+			Keep<int>::Pointer;
+			m_parser->fields(lambda);
+			throw JsonFieldDone();
+		}
+	};
+
+	class JsonArray
+	{
+	private:
+		JsonParser * m_parser;
+		size_t m_index;
+
+	public:
+		JsonArray(JsonParser * parser, size_t index) noexcept
+			:m_parser(parser), m_index(index)
+		{
+		}
+		template <typename T>
+		void operator ()(T * value)
+		{
+			m_parser->read(value);
+			throw JsonFieldDone();
+		}
+		template <typename T>
+		void operator ()(size_t index, T * value)
+		{
+			if (index != m_index) return;
+			m_parser->read(value);
+			throw JsonFieldDone();
+		}
+		template <typename LAMBDA>
+		void operator ()(size_t index, const LAMBDA & lambda)
+		{
+			if (index != m_index) return;
+			m_parser->fields(lambda);
+			throw JsonFieldDone();
+		}
+		template <typename LAMBDA>
+		void operator ()(const LAMBDA & lambda)
+		{
+			m_parser->fields(lambda);
+			throw JsonFieldDone();
+		}
+	};
+
+	template <typename T>
+	struct JsonParsable
+	{
+		static void parse(JsonParser & parser, T * dest) noexcept
+		{
+			dest->parseJson(parser);
+		}
+	};
+
+	template <typename T>
+	struct JsonParsable<Keep<T>>
+	{
+		static void parse(JsonParser & parser, Keep<T> * dest) noexcept
+		{
+			T * p = _new T;
+			*dest = p;
+			JsonParsable<T>::parse(parser, p);
+		}
+	};
+
+	template <>
+	struct JsonParsable<AText>
+	{
+		static void parse(JsonParser & parser, AText * dest) noexcept
+		{
+			*dest = parser.text();
+		}
+	};
+
+	template <>
+	struct JsonParsable<AText16>
+	{
+		static void parse(JsonParser & parser, AText16 * dest) noexcept
+		{
+			*dest = parser.text16();
+		}
+	};
+
+	template <typename T>
+	struct JsonParsable<Array<T>>
+	{
+		static void parse(JsonParser & parser, Array<T> * dest) noexcept
+		{
+			parser.array([&](size_t) { dest->push(parser.read<T>()); });
+		}
+	};
+
+	template <typename Value>
+	struct JsonParsable<MapWrapper<Text, ABuffer, Value>>
+	{
+		static void parse(JsonParser & parser, Map<Text, Value> * dest) noexcept
+		{
+			parser.object([&](Text name) { dest->insert(name, parser.read<Value>()); });
+		}
+	};
+
+	template <>
+	struct JsonParsable<bool>
+	{
+		inline static void parse(JsonParser & parser, bool * dest) noexcept
+		{
+			*dest = parser.boolean();
+		}
+	};
+	template <>
+	struct JsonParsable<int>
+	{
+		inline static void parse(JsonParser & parser, int * dest) noexcept
+		{
+			*dest = parser.integer();
+		}
+	};
+	template <>
+	struct JsonParsable<uint>
+	{
+		inline static void parse(JsonParser & parser, uint * dest) noexcept
+		{
+			*dest = parser.uinteger();
+		}
+	};
+	template <>
+	struct JsonParsable<int64_t>
+	{
+		inline static void parse(JsonParser & parser, int64_t * dest) noexcept
+		{
+			try
+			{
+				*dest = parser.integer64();
+			}
+			catch (InvalidSourceException&)
+			{
+				*dest = parser.ttext().to_int64();
+			}
+		}
+	};
+	template <>
+	struct JsonParsable<uint64_t>
+	{
+		inline static void parse(JsonParser & parser, uint64_t * dest) noexcept
+		{
+			try
+			{
+				*dest = parser.uinteger64();
+			}
+			catch (InvalidSourceException&)
+			{
+				*dest = parser.ttext().to_uint64();
+			}
+		}
+	};
+	template <>
+	struct JsonParsable<float>
+	{
+		inline static void parse(JsonParser & parser, float * dest) noexcept
+		{
+			*dest = parser.floatNumber();
+		}
+	};
+	template <>
+	struct JsonParsable<double>
+	{
+		inline static void parse(JsonParser & parser, double * dest) noexcept
+		{
+			*dest = parser.floatNumber();
+		}
+	};
+
+	template <typename LAMBDA>
+	void JsonFieldCaller<JsonField>::call(JsonParser * parser, const LAMBDA & lambda) throw(InvalidSourceException)
+	{
+		if (parser->_skipIfNot('{')) return;
+		char oldchr = parser->_open('}');
+		while (parser->m_closeCharacter != 0)
+		{
+			TText text = parser->_getName();
+			try
+			{
+				lambda(JsonField(parser, text));
+				parser->skipValue();
+			}
+			catch (JsonFieldDone&)
+			{
+			}
+		}
+		parser->m_closeCharacter = oldchr;
+		parser->_closeTest();
+	}
+
+	template <typename LAMBDA>
+	void JsonFieldCaller<JsonArray>::call(JsonParser * parser, const LAMBDA & lambda) throw(InvalidSourceException)
+	{
+		if (parser->_skipIfNot('[')) return;
+		char oldchr = parser->_open(']');
+		size_t idx = 0;
+		while (parser->m_closeCharacter != 0)
+		{
+			try
+			{
+				lambda(JsonArray(parser, idx++));
+				parser->skipValue();
+			}
+			catch (JsonFieldDone&)
+			{
+			}
+		}
+		parser->m_closeCharacter = oldchr;
+		parser->_closeTest();
+	}
+
 }
+

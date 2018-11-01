@@ -1,46 +1,18 @@
 #pragma once
 
+#include <KR3/main.h>
 #include <KRMessage/net/wsevent.h>
 #include <KR3/io/protocol.h>
 #include <KR3/io/selfbufferedstream.h>
-#include <KR3/data/map.h>
 #include <KR3/data/crypt.h>
-#include <KRUtil/uts.h>
 #include <KRUtil/net/socket.h>
-#include "httpstatus.h"
+
+#include "common/httpstatus.h"
+#include "common/header.h"
+
 
 namespace kr
 {
-
-	struct CHAHECONTROL
-	{
-		dword maxage;
-	};
-
-	struct KEEPALIVE
-	{
-		dword timeout;
-	};
-
-	struct HttpHeader
-	{
-		UnixTimeStamp date;
-		AText server;
-		CHAHECONTROL cacheControl;
-		dword expires;
-		UnixTimeStamp lastModified;
-		AText eTag;
-		dword contentLength;
-		KEEPALIVE keepAlive;
-		AText connection;
-		AText contentType;
-		AText location;
-	
-		HttpStatus statusCode;
-
-		HttpHeader();
-		~HttpHeader();
-	};
 
 	class HttpHeaderBuilder
 	{
@@ -84,26 +56,20 @@ namespace kr
 	class HttpConnection :public InStream<HttpConnection, char>
 	{
 	public:
-		using PROC = void (*)(HttpConnection * conn, Text value);
 
 		HttpConnection() noexcept;
 		~HttpConnection() noexcept;
-	
-		void registeProc(Text key, PROC proc) noexcept;
-		HttpStatus open(Text url, Text reqheader, Text data); // SocketException
+
+		HttpStatus open(Text url, const HttpConnectionRequest * request, AHttpHeader * response); // SocketException
 		void close() noexcept;
 		Text get() noexcept;
-		bool next(); // SocketException
-		void download(pcstr16 filename); // Error
+		bool next() throw(SocketException);
+		void download(pcstr16 filename) throw(Error);
 
 		size_t readImpl(char * dest, size_t size);
-	
-		HttpHeader header;
 
 	private:
-		Map<Text, PROC> m_procs;
-		
-		io::SelfBufferedIStream<io::RetypeStream<Socket, char>> m_socket;
+		io::SelfBufferedIStream<io::SocketStream<char>> m_socket;
 	
 	};
 
@@ -119,5 +85,9 @@ namespace kr
 	//	HTTPConnection m_webfile;
 	//};
 
-
+	namespace contentType
+	{
+		const Text URL_ENCODED = "application/x-www-form-urlencoded";
+		const Text JSON = "application/json; charset=utf-8";
+	}
 }

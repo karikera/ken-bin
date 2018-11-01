@@ -18,7 +18,7 @@ namespace kr
 			public:
 				static InternalComponent * _mem_alloc_bytes(size_t sz) noexcept
 				{
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					if (align <= 1)
 					{
 						return (InternalComponent*)((byte*)allocator->allocate(sz + offset) + offset);
@@ -38,16 +38,16 @@ namespace kr
 				}
 				static size_t _mem_msize_bytes(InternalComponent * p) noexcept
 				{
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					return (allocator->msize((byte*)p - offset) - offset);
 				}
 				static size_t _mem_msize(InternalComponent * p) noexcept
 				{
 					return _mem_msize_bytes(p) / sizeof(InternalComponent);
 				}
-				static bool _mem_expand(InternalComponent * p, size_t sz) // NotEnoughSpaceException
+				static bool _mem_expand(InternalComponent * p, size_t sz) throw(NotEnoughSpaceException)
 				{
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					if (allocator->isLastBlock((byte*)p - offset))
 					{
 						return allocator->expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
@@ -62,20 +62,20 @@ namespace kr
 				static void _mem_reduce(InternalComponent * p, size_t sz) noexcept
 				{
 					_assert(sz <= _mem_msize(p));
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					if (!allocator->isLastBlock((byte*)p - offset)) return;
 					allocator->expand((byte*)p - offset, sz * sizeof(InternalComponent) + offset);
 				}
 				static void _mem_free(InternalComponent * p) noexcept
 				{
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					allocator->free((byte*)p - offset);
 				}
 
 				template <typename LAMBDA>
-				static InternalComponent* _obj_move(InternalComponent * from, size_t ncap, const LAMBDA & ctor_move_d) // NotEnoughSpaceException
+				static InternalComponent* _obj_move(InternalComponent * from, size_t ncap, const LAMBDA & ctor_move_d) throw(NotEnoughSpaceException)
 				{
-					StackAllocator * allocator = StackAllocator::getThreadAllocator();
+					StackAllocator * allocator = StackAllocator::getInstance();
 					byte* allocpoint = (byte*)from - offset;
 					if (!allocator->isLastBlock(allocpoint))
 						throw NotEnoughSpaceException();

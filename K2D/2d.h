@@ -62,9 +62,9 @@ namespace kr
 			void fillOval(const frectwh &rect) noexcept;
 			void strokeOval(const frectwh &rect) noexcept;
 			void fillText(Text text, vec2 pt) noexcept;
-			void fillText(TextW text, vec2 pt) noexcept;
+			void fillText(Text16 text, vec2 pt) noexcept;
 			void fillText(pcstr text, vec2 pt) noexcept;
-			void fillText(pcwstr text, vec2 pt) noexcept;
+			void fillText(pcstr16 text, vec2 pt) noexcept;
 			void fillPoly(const vec2 * poly, std::size_t count) noexcept;
 
 #ifndef C2D_PRIVATE

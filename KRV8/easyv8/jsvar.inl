@@ -539,8 +539,8 @@ template <typename LAMBDA> inline void kr::V8Object::setFunctionRaw(Text16 name,
 
 template <typename RET, typename ... ARGS> inline RET kr::V8Object::call(Text16 name, const ARGS & ... args) const
 {
-	JsAny args[] = { JsAny(args) ... };
-	return callRaw(name, JsArgumentsIn(args)).cast<RET>();
+	JsAny nargs[] = { JsAny(args) ... };
+	return callRaw(name, JsArgumentsIn(nargs)).cast<RET>();
 }
 template <typename LAMBDA> inline void kr::V8Object::setFunction(Text16 name, LAMBDA lambda)
 {

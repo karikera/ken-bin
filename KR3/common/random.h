@@ -20,6 +20,7 @@ namespace kr
 		template <typename T> T get() noexcept;
 		template <typename T> T getSigned(T value) noexcept;
 		template <typename T> T get(T value) noexcept;
+		template <typename T> T get(T from, T to) noexcept;
 
 	private:
 		dword _getExp8() noexcept;

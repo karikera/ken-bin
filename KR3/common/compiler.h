@@ -17,6 +17,7 @@
 #define ATTR_NOALIAS		__declspec(noalias)
 #define ATTR_NORETURN		__declspec(noreturn)
 #define ATTR_IMPORT			__declspec(dllimport)
+#define ATTR_EXPORT			__declspec(dllexport)
 #define ATTR_DEPRECATED		__declspec(deprecated)
 #define ATTR_ANY			__declspec(selectany)
 #define CT_STDCALL			__stdcall
@@ -115,11 +116,11 @@ extern "C" void vem__debug_break();
 
 namespace kr
 {
-	bool CT_FASTCALL checkDebugging() noexcept;
-	bool CT_FASTCALL requestDebugger() noexcept;
-	ATTR_NORETURN void CT_FASTCALL terminate(int err) noexcept;
-	ATTR_NORETURN void CT_FASTCALL notEnoughMemory() noexcept;
-	unsigned long long CT_FASTCALL rdtsc() noexcept;
+	bool checkDebugging() noexcept;
+	bool requestDebugger() noexcept;
+	ATTR_NORETURN void terminate(int err) noexcept;
+	ATTR_NORETURN void notEnoughMemory() noexcept;
+	unsigned long long rdtsc() noexcept;
 }
 
 #define EMPTY_SOURCE namespace { char __kr_pri_dummy_for_LNK4221; }

@@ -13,9 +13,9 @@
 namespace kr
 {
 	template <typename C, bool _accessable, bool _szable, bool _readonly, class Parent>
-	class BufferInfo : public Container<C, _readonly, Parent>
+	class BufferInfo : public AddContainer<C, _readonly, Parent>
 	{
-		CLASS_HEADER(BufferInfo, Container<C, _readonly, Parent>);
+		CLASS_HEADER(BufferInfo, AddContainer<C, _readonly, Parent>);
 	public:
 		INHERIT_COMPONENT();
 		using Super::Super;
@@ -75,9 +75,9 @@ namespace kr
 	};
 
 	template <class Derived, typename Component, typename Parent>
-	class Printable :public Bufferable<Derived, BufferInfo<Component, false, false, true, Parent> >
+	class Printable :public AddBufferable<Derived, BufferInfo<Component, false, false, true, Parent> >
 	{
-		CLASS_HEADER(Printable, Bufferable<Derived, BufferInfo<Component, false, false, true, Parent> >);
+		CLASS_HEADER(Printable, AddBufferable<Derived, BufferInfo<Component, false, false, true, Parent> >);
 	public:
 		INHERIT_COMPONENT();
 
@@ -106,9 +106,9 @@ namespace kr
 
 	template <class Derived, typename Parent>
 	class Printable<Derived, AutoComponent, Parent>
-		:public Bufferable<Derived, BufferInfo<AutoComponent, false, false, true, Parent> >
+		:public AddBufferable<Derived, BufferInfo<AutoComponent, false, false, true, Parent> >
 	{
-		CLASS_HEADER(Printable, Bufferable<Derived, BufferInfo<AutoComponent, false, false, true, Parent> >);
+		CLASS_HEADER(Printable, AddBufferable<Derived, BufferInfo<AutoComponent, false, false, true, Parent> >);
 	public:
 		INHERIT_COMPONENT();
 
@@ -179,7 +179,7 @@ namespace kr
 	namespace _pri_
 	{
 		template <typename C> 
-		class SingleWrite:public Bufferable<SingleWrite<C>, BufferInfo<C, true, false, true, Empty>>
+		class SingleWrite:public Bufferable<SingleWrite<C>, BufferInfo<C, true, false, true>>
 		{
 		private:
 			const C m_value;
@@ -203,7 +203,7 @@ namespace kr
 				return &m_value+1;
 			}
 		};
-		class BooleanWrite :public Bufferable<BooleanWrite, BufferInfo<AutoComponent, false, false, true, Empty>>
+		class BooleanWrite :public Bufferable<BooleanWrite, BufferInfo<AutoComponent, false, false, true>>
 		{
 		private:
 			const bool m_value;
@@ -273,12 +273,12 @@ namespace kr
 	>
 	{
 	};;
-	template <typename T, typename C> struct Bufferize<const T*, C> { using type = RefArray<T>; };
-	template <typename T, typename C> struct Bufferize<T*, C> { using type = RefArray<T>; };
+	template <typename T, typename C> struct Bufferize<const T*, C> { using type = View<T>; };
+	template <typename T, typename C> struct Bufferize<T*, C> { using type = View<T>; };
 	template <typename C> struct Bufferize<const void*, C> { using type = NumberAddress; };
 	template <typename C> struct Bufferize<void*, C> { using type = NumberAddress; };
-	template <typename T, typename C, size_t sz> struct Bufferize<T[sz], C> { using type = RefArray<T>; };
+	template <typename T, typename C, size_t sz> struct Bufferize<T[sz], C> { using type = View<T>; };
 	template <typename C> struct Bufferize<nullterm_t, C> { using type = nullterm_t; };
 	template <typename C> struct Bufferize<bool, C> { using type = _pri_::BooleanWrite; };
-	template <typename C, typename _Traits, typename _Alloc> struct Bufferize<std::basic_string<C, _Traits, _Alloc>, C> { using type = kr::RefArray<C>; };
+	template <typename C, typename _Traits, typename _Alloc> struct Bufferize<std::basic_string<C, _Traits, _Alloc>, C> { using type = kr::View<C>; };
 }

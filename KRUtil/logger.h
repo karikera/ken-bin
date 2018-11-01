@@ -6,7 +6,7 @@
 namespace kr
 {
 	using Logger = Node<io::VOStream<char>>;
-	class LogManager:public LinkedList<io::VOStream<char>>
+	class LogManager:public LinkedList<Logger>
 	{
 	public:
 		void write(kr::Text text) noexcept;

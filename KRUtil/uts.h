@@ -12,8 +12,8 @@ namespace kr
 		
 		template <typename C> struct DATETEXT
 		{
-			static RefArray<C> wkday[];
-			static RefArray<C> month[];
+			static View<C> wkday[];
+			static View<C> month[];
 		};
 
 	}
@@ -46,16 +46,20 @@ namespace kr
 	class UnixTimeStamp
 	{
 	public:
-		UnixTimeStamp() noexcept;
+		UnixTimeStamp() = default;
 		UnixTimeStamp(time_t uts) noexcept;
 		UnixTimeStamp(filetime_t filetime) noexcept;
-		UnixTimeStamp(Text strGMT); // OutOfRangeException, InvalidSourceException
-		UnixTimeStamp(Text16 strGMT); // OutOfRangeException, InvalidSourceException
+		UnixTimeStamp(Text strGMT) throw(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp(Text16 strGMT) throw(InvalidSourceException, OutOfRangeException);
 		time_t getUTS() noexcept;
 		filetime_t getFileTime() noexcept;
 		UnixTimeStamp & operator =(time_t uts) noexcept;
-		UnixTimeStamp & operator =(Text strGMT); // OutOfRangeException, InvalidSourceException
-		UnixTimeStamp & operator =(Text16 strGMT); // OutOfRangeException, InvalidSourceException
+		UnixTimeStamp & operator =(Text strGMT) throw(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp & operator =(Text16 strGMT) throw(InvalidSourceException, OutOfRangeException);
+
+		UnixTimeStamp & operator += (int64_t dura) noexcept;
+		const UnixTimeStamp operator + (int64_t dura) const noexcept;
+		int64_t operator - (const UnixTimeStamp &other) const noexcept;
 
 		bool operator <= (UnixTimeStamp uts) const noexcept;
 		bool operator >= (UnixTimeStamp uts) const noexcept;

@@ -257,3 +257,12 @@ inline kr::duration operator ""_s(unsigned long long v) noexcept
 	return kr::duration((int32_t)(v * 1000));
 }
 
+inline kr::duration operator ""_min(unsigned long long v) noexcept
+{
+	return kr::duration((int32_t)(v * (1000 * 60)));
+}
+
+inline kr::duration operator ""_hours(unsigned long long v) noexcept
+{
+	return kr::duration((int32_t)(v * (1000 * 60 * 60)));
+}

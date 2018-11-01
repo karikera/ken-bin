@@ -4,24 +4,28 @@
 #include <KR3/mt/thread.h>
 #include <KRUtil/fs/file.h>
 
+#include "../eventdispatcher.h"
+
 namespace kr
 {
-	class DirectoryObserver :private Threadable<DirectoryObserver>
+	class DirectoryObserver
 	{
-		friend Threadable<DirectoryObserver>;
 	public:
 		DirectoryObserver() noexcept;
 		~DirectoryObserver() noexcept;
-		void start(const char16 * dir); // Error
-		void quit(int exitCode) noexcept;
-		int thread() noexcept;
+		void open(const char16 * dir) throw(Error);
+		void close() noexcept;
 		virtual void onCreate(Text16 name) noexcept = 0;
 		virtual void onDelete(Text16 name) noexcept = 0;
 		virtual void onModified(Text16 name) noexcept = 0;
 		virtual void onRename(Text16 oldname, Text16 newname) noexcept = 0;
 
 	private:
+		void _request(EventHandle * notify) noexcept;
+
 		File * m_dir;
-		dword m_id;
+		DispatchedEvent * m_event;
+		byte m_buffer[8192];
+		BText16<File::NAMELEN> m_oldfilename;
 	};
 }

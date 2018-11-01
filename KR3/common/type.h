@@ -2,9 +2,13 @@
 
 #include "compiler.h"
 
-#include <type_traits>
 #include <stdint.h>
+#include <type_traits>
 #include <ostream>
+
+using std::max_align_t;
+
+typedef unsigned char byte;
 
 namespace kr
 {
@@ -15,7 +19,7 @@ namespace kr
 	using qword = uint64_t;
 	using dword = uint32_t;
 	using word = uint16_t;
-	using byte = uint8_t;
+	using ::byte;
 	using filesize_t = uint64_t;
 
 	using ptr = void *;
@@ -50,32 +54,32 @@ namespace kr
 		nullref_t(const nullref_t&) = delete;
 		nullref_t& operator =(const nullref_t&) = delete;
 
-		template <typename T> bool operator ==(const T &t)
+		template <typename T> bool operator ==(const T &t) const noexcept
 		{
 			return &t == nullptr;
 		}
-		template <typename T> bool operator !=(const T &t)
+		template <typename T> bool operator !=(const T &t) const noexcept
 		{
 			return &t != nullptr;
 		}
-		template <typename T> operator T&()
+		template <typename T> operator T&() const noexcept
 		{
 #pragma warning(push)
 #pragma warning(disable:6011)
-			return *(T*)nullptr;
+			return *(T*)(1-1);
 #pragma warning(pop)
 		}
-		template <typename T> friend bool operator ==(const T &t, nullref_t&)
+		template <typename T> friend bool operator ==(const T &t, const nullref_t&) noexcept
 		{
 			return &t == nullptr;
 		}
-		template <typename T> friend bool operator !=(const T &t, nullref_t&)
+		template <typename T> friend bool operator !=(const T &t, const nullref_t&) noexcept
 		{
 			return &t != nullptr;
 		}
 	};
 	
-	static nullref_t &nullref = *(nullref_t*)nullptr;
+	static const nullref_t &nullref = *(nullref_t*)(1-1);
 
 	using std::endl;
 

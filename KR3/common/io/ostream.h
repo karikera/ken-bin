@@ -7,21 +7,21 @@ namespace kr
 {
 	namespace _pri_
 	{
-		template <class Derived, typename C, class Parent>
-		class OStream_cmpAccessable<Derived, C, StreamInfo<false, Parent>>
-			:public Container<C, false, StreamInfo<false, Parent>>
+		template <class Base, typename C, class Parent>
+		class OStream_cmpAccessable<Base, C, StreamInfo<false, Parent>>
+			:public AddContainer<C, true, StreamInfo<false, Parent>>
 		{
-			CLASS_HEADER(OStream_cmpAccessable, Container<C, false, StreamInfo<false, Parent>>);
+			CLASS_HEADER(OStream_cmpAccessable, AddContainer<C, true, StreamInfo<false, Parent>>);
 		public:
 			using Super::Super;
 			using typename Super::Component;
 			using typename Super::InternalComponent;
 
-			inline void write(const C * comp, size_t size) // NotEnoughSpaceException
+			inline void write(const C * comp, size_t size) throw(NotEnoughSpaceException)
 			{
-				return static_cast<Derived*>(this)->writeImpl(comp, size);
+				return static_cast<Base*>(this)->writeImpl(comp, size);
 			}
-			inline void writeFill(const InternalComponent & data, size_t size) // NotEnoughSpaceException
+			inline void writeFill(const InternalComponent & data, size_t size) throw(NotEnoughSpaceException)
 			{
 				TmpArray<Component> arr(size);
 				arr.fill(data);
@@ -31,9 +31,9 @@ namespace kr
 
 		template <class Derived, typename C, class Parent>
 		class OStream_cmpAccessable<Derived, C, StreamInfo<true, Parent>>
-			:public Container<C, false, StreamInfo<true, Parent>>
+			:public AddContainer<C, false, StreamInfo<true, Parent>>
 		{
-			CLASS_HEADER(OStream_cmpAccessable, Container<C, false, StreamInfo<true, Parent>>);
+			CLASS_HEADER(OStream_cmpAccessable, AddContainer<C, false, StreamInfo<true, Parent>>);
 		public:
 			INHERIT_COMPONENT();
 
@@ -59,41 +59,41 @@ namespace kr
 				mema::ctor(e, size);
 				return e;
 			}
-			inline Component* prepare(size_t size) // NotEnoughSpaceException
+			inline Component* prepare(size_t size) throw(NotEnoughSpaceException)
 			{
 				Component * e = derived()->_extend(size);
 				mema::ctor(e, size);
 				return e;
 			}
-			inline void writeForce(const InternalComponent & data) // NotEnoughSpaceException
+			inline void writeForce(const InternalComponent & data) noexcept
 			{
 				*derived()->end() = data;
 				derived()->_addEnd(1);
 			}
-			inline void writeForce(const Component * data, size_t size) // NotEnoughSpaceException
+			inline void writeForce(const Component * data, size_t size) noexcept
 			{
 				Component * e = derived()->end();
 				derived()->_addEnd(size);
 				mema::ctor_copy((InternalComponent*)e, (const InternalComponent*)data, size);
 			}
-			inline void write(const Component * data, size_t size) // NotEnoughSpaceException
+			inline void write(const Component * data, size_t size) throw(NotEnoughSpaceException)
 			{
 				Component * e = derived()->_extend(size);
 				mema::ctor_copy((InternalComponent*)e, (const InternalComponent*)data, size);
 			}
-			inline void writeFill(const InternalComponent & data, size_t size) // NotEnoughSpaceException
+			inline void writeFill(const InternalComponent & data, size_t size) throw(NotEnoughSpaceException)
 			{
 				Component * e = derived()->_extend(size);
 				mema::ctor_fill(e, data, size);
 			}
 			template <typename T>
-			inline void writeas(const T &value)
+			inline void writeas(const T &value) throw(NotEnoughSpaceException)
 			{
-				static_assert(sizeof(T) % sizeof(Component) == 0, "Size of T must aligned by size of component");
-				return write((Component*)&value, sizeof(T) / sizeof(Component));
+				static_assert(sizeof(T) % sizeof(InternalComponent) == 0, "Size of T must aligned by size of component");
+				return write((Component*)&value, sizeof(T) / sizeof(InternalComponent));
 			}
 			// without constructor
-			inline Component * padding(size_t size) // NotEnoughSpaceException
+			inline Component * padding(size_t size) throw(NotEnoughSpaceException)
 			{
 				if (size == 0) return ownerEnd();
 				return derived()->_padding(size);
@@ -106,22 +106,19 @@ namespace kr
 				derived()->_addEnd(sz);
 			}
 			template <typename ... ARGS>
-			void prints(const ARGS & ... args) // NotEnoughSphaceException
+			void prints(const ARGS & ... args) throw(NotEnoughSpaceException)
 			{
 				meta::types<bufferize_t<ARGS, Component> ...> datas = { ((bufferize_t<ARGS, Component>)args) ... };
 				size_t size = 0;
-				datas.value_loop([&size](auto & data) { 
-#ifdef _MSC_VER
-					size += data.sizeAs<Component>();
-#else
+				datas.value_loop([&size](auto & data) {
 					size += data.template sizeAs<Component>();
-#endif
 				});
 				padding(size);
 				datas.value_loop([this](auto & data) { data.writeTo(derived()); });
 			}
 		};
 
+		/// C2504: Info must be StreamInfo class
 		template <class Derived, typename C, typename Info>
 		class OStream_cmpComponent :public OStream_cmpAccessable<Derived, C, Info>
 		{
@@ -241,17 +238,41 @@ namespace kr
 		using Super::Super;
 		using Super::write;
 
-		void push(const InternalComponent& data) // NotEnoughSpaceException
+		void write(const InternalComponent & data) throw(NotEnoughSpaceException)
 		{
 			write((const Component*)&data, 1);
 		}
-		void write(const InternalComponent & data) // NotEnoughSpaceException
-		{
-			write((const Component*)&data, 1);
-		}
-		void write(Ref data) // NotEnoughSpaceException
+		void write(Ref data) throw(NotEnoughSpaceException)
 		{
 			write(data.begin(), data.size());
+		}
+		void writeLeb128(dword value) throw(NotEnoughSpaceException)
+		{
+			InternalComponent result;
+			for (;;)
+			{
+				result = (InternalComponent)(value & 0x7f);
+				value >>= 7;
+				if (value == 0)
+					break;
+				result |= 0x80;
+				write((Component*)&result, 1);
+			}
+			write((Component*)&result, 1);
+		}
+		void writeLeb128(qword value) throw(NotEnoughSpaceException)
+		{
+			InternalComponent result;
+			for (;;)
+			{
+				result = (InternalComponent)(value & 0x7f);
+				value >>= 7;
+				if (value == 0)
+					break;
+				result |= 0x80;
+				write((Component*)&result, 1);
+			}
+			write((Component*)&result, 1);
 		}
 
 		template <typename _Derived, typename _Info>
@@ -268,19 +289,25 @@ namespace kr
 		}
 
 		template <typename T>
-		void print(const T & v)// NotEnoughSpaceException
+		void print(const T & v) throw(NotEnoughSpaceException)
 		{
 			using buffer_ref_t = bufferize_t<T, Component>;
 			using buffer_t = remove_constref_t<buffer_ref_t>;
 			using buffer_component_t = typename buffer_t::Component;
 			static_assert_with_type(
 				(is_same<buffer_component_t, AutoComponent>::value || is_same<buffer_component_t, Component>::value),
-				buffer_ref_t, buffer_t, buffer_component_t>::value); // Unmatch component type
+				buffer_ref_t, buffer_t, buffer_component_t); // Unmatch component type
 			buffer_ref_t(v).writeTo(this);
+		}
+		template <typename T>
+		void writeas(const T & data) throw(NotEnoughSpaceException)
+		{
+			static_assert(sizeof(T) % sizeof(InternalComponent) == 0, "component size unmatch");
+			write((const Component*)&data, sizeof(T) / sizeof(InternalComponent));
 		}
 
 		template <typename T>
-		OutStream& operator << (const T& arrayable) // NotEnoughSpaceException
+		OutStream& operator << (const T& arrayable) throw(NotEnoughSpaceException)
 		{
 			print(arrayable);
 			return *this;

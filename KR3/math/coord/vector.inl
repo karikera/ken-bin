@@ -292,6 +292,16 @@ namespace kr
 			return (T)sqrt((T)length_sq());
 		}
 		template <typename T, size_t _size, bool aligned, typename order>
+		ATTR_INLINE const vector<T, _size, aligned, order> vector<T, _size, aligned, order>::sqrtV() const noexcept
+		{
+			vector<T, _size, aligned, order> out;
+			for (size_t i = 0; i < _size; i++)
+			{
+				out.m_data[i] = (T)sqrt((T)m_data[i]);
+			}
+			return out;
+		}
+		template <typename T, size_t _size, bool aligned, typename order>
 		ATTR_INLINE const vector<T, _size, aligned, order> vector<T, _size, aligned, order>::length_sqV() const noexcept
 		{
 			return vector<T, _size, aligned, order>(length_sq());
@@ -349,7 +359,16 @@ inline kr::vec4a XMVectorIsInfinite(const kr::vec4a& V) noexcept
 }
 inline kr::vec4a XMVectorReciprocalEst(const kr::vec4a& V) noexcept
 {
+#if defined(EMSIMD) || defined(MSSIMD)
 	return _mm_rcp_ps(V.m_vector);
+#else
+	return kr::vec4a{
+		1.f / V.x,
+		1.f / V.y,
+		1.f / V.z,
+		1.f / V.w,
+	};
+#endif
 }
 
 inline const kr::vec4a roundv(const kr::vec4a& V) noexcept
@@ -646,27 +665,66 @@ inline void sincosv(kr::vec4a * psin, kr::vec4a * pcos, const kr::vec4a& rad) no
 
 ATTR_INLINE const kr::vec4a unpack_low(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_unpacklo_ps(a.m_vector, b.m_vector);
+#else
+	return kr::vec4a(a.x, b.x, a.y, b.y);
+#endif
 }
 ATTR_INLINE const kr::vec4a unpack_high(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_unpackhi_ps(a.m_vector, b.m_vector);
+#else
+	return kr::vec4a(a.z, b.z, a.w, b.w);
+#endif
 }
 ATTR_INLINE const kr::vec4a sqrtv(const kr::vec4a & v) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_sqrt_ps(v.m_vector);
+#else
+	return kr::vec4a(sqrtf(v.x), sqrtf(v.y), sqrtf(v.z), sqrtf(v.w));
+#endif
 }
 ATTR_INLINE const kr::vec4a maxv(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_max_ps(a.m_vector, b.m_vector);
+#else
+	return kr::vec4a(
+		a.x > b.x ? a.x : b.x,
+		a.y > b.y ? a.y : b.y,
+		a.z > b.z ? a.z : b.z,
+		a.w > b.w ? a.w : b.w
+	);
+#endif
 }
 ATTR_INLINE const kr::vec4a minv(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_min_ps(a.m_vector, b.m_vector);
+#else
+	return kr::vec4a(
+		a.x < b.x ? a.x : b.x,
+		a.y < b.y ? a.y : b.y,
+		a.z < b.z ? a.z : b.z,
+		a.w < b.w ? a.w : b.w
+	);
+#endif
 }
 ATTR_INLINE const kr::vec4a clampv(const kr::vec4a & a, const kr::vec4a & v, const kr::vec4a & b) noexcept
 {
+#ifdef USE_SIMD
 	return minv(maxv(v, a), b);
+#else
+	return kr::vec4a(
+		kr::math::clamp(a.x, v.x, b.x),
+		kr::math::clamp(a.y, v.y, b.y),
+		kr::math::clamp(a.z, v.z, b.z),
+		kr::math::clamp(a.w, v.w, b.w)
+	);
+#endif
 }
 ATTR_INLINE const kr::vec4a absv(const kr::vec4a& V) noexcept
 {
@@ -677,36 +735,99 @@ ATTR_INLINE const kr::vec4a mad(const kr::vec4a & a, const kr::vec4a & b, const 
 #ifdef _AVX2_
 	return _mm_fmadd_ps(a.m_vector, b.m_vector, c.m_vector);
 #else
-	return a*b + c;
+	return a * b + c;
 #endif
 }
 ATTR_INLINE const kr::vec4a andnot(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_andnot_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		~(int&)a.x & (int&)b.x,
+		~(int&)a.y & (int&)b.y,
+		~(int&)a.z & (int&)b.z,
+		~(int&)a.w & (int&)b.w
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a operator <=(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmple_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x <= b.x ? -1 : 0,
+		a.y <= b.y ? -1 : 0,
+		a.z <= b.z ? -1 : 0,
+		a.w <= b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a operator >=(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmpge_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x >= b.x ? -1 : 0,
+		a.y >= b.y ? -1 : 0,
+		a.z >= b.z ? -1 : 0,
+		a.w >= b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a operator <(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmplt_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x < b.x ? -1 : 0,
+		a.y < b.y ? -1 : 0,
+		a.z < b.z ? -1 : 0,
+		a.w < b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a operator >(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmpgt_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x > b.x ? -1 : 0,
+		a.y > b.y ? -1 : 0,
+		a.z > b.z ? -1 : 0,
+		a.w > b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a equal(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmpeq_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x == b.x ? -1 : 0,
+		a.y == b.y ? -1 : 0,
+		a.z == b.z ? -1 : 0,
+		a.w == b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::vec4a notequal(const kr::vec4a & a, const kr::vec4a & b) noexcept
 {
+#if defined(MSSIMD) || defined(EMSIMD)
 	return _mm_cmpneq_ps(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x != b.x ? -1 : 0,
+		a.y != b.y ? -1 : 0,
+		a.z != b.z ? -1 : 0,
+		a.w != b.w ? -1 : 0
+	).fbits();
+#endif
 }
 ATTR_INLINE const kr::ivec4a mad(const kr::ivec4a & a, const kr::ivec4a & b, const kr::ivec4a & c) noexcept
 {
@@ -718,18 +839,32 @@ ATTR_INLINE const kr::ivec4a mad(const kr::ivec4a & a, const kr::ivec4a & b, con
 }
 ATTR_INLINE const kr::ivec4a andnot(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 	return emscripten_int32x4_and(emscripten_int32x4_not(a.m_vector), b.m_vector);
-#else
+#elif defined(MSSIMD)
 	return _mm_andnot_si128(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		~a.x & b.x,
+		~a.y & b.y,
+		~a.z & b.z,
+		~a.w & b.w
+	);
 #endif
 }
 ATTR_INLINE const kr::ivec4a operator <=(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 	return emscripten_int32x4_lessThanOrEqual(a.m_vector, b.m_vector);
-#else
+#elif defined(MSSIMD)
 	return equal((kr::ivec4a)_mm_min_epu32(a.m_vector, b.m_vector), a);
+#else
+	return kr::ivec4a(
+		a.x <= b.x ? -1 : 0,
+		a.y <= b.y ? -1 : 0,
+		a.z <= b.z ? -1 : 0,
+		a.w <= b.w ? -1 : 0
+	);
 #endif
 }
 ATTR_INLINE const kr::ivec4a operator >=(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
@@ -738,35 +873,74 @@ ATTR_INLINE const kr::ivec4a operator >=(const kr::ivec4a & a, const kr::ivec4a 
 }
 ATTR_INLINE const kr::ivec4a operator <(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 	return emscripten_int32x4_lessThan(a.m_vector, b.m_vector);
-#else
+#elif defined(MSSIMD)
 	return _mm_cmplt_epi32(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x < b.x ? -1 : 0,
+		a.y < b.y ? -1 : 0,
+		a.z < b.z ? -1 : 0,
+		a.w < b.w ? -1 : 0
+	);
 #endif
 }
 ATTR_INLINE const kr::ivec4a operator >(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 	return emscripten_int32x4_greaterThan(a.m_vector, b.m_vector);
-#else
+#elif defined(MSSIMD)
 	return _mm_cmpgt_epi32(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x > b.x ? -1 : 0,
+		a.y > b.y ? -1 : 0,
+		a.z > b.z ? -1 : 0,
+		a.w > b.w ? -1 : 0
+	);
 #endif
 }
 ATTR_INLINE const kr::ivec4a equal(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 	return emscripten_int32x4_equal(a.m_vector, b.m_vector);
-#else
+#elif defined(MSSIMD)
 	return _mm_cmpeq_epi32(a.m_vector, b.m_vector);
+#else
+	return kr::ivec4a(
+		a.x == b.x ? -1 : 0,
+		a.y == b.y ? -1 : 0,
+		a.z == b.z ? -1 : 0,
+		a.w == b.w ? -1 : 0
+	);
 #endif
 }
 ATTR_INLINE const kr::ivec4a notequal(const kr::ivec4a & a, const kr::ivec4a & b) noexcept
 {
+#ifdef USE_SIMD
 	return !equal(a, b);
+#else
+	return kr::ivec4a(
+		a.x != b.x ? -1 : 0,
+		a.y != b.y ? -1 : 0,
+		a.z != b.z ? -1 : 0,
+		a.w != b.w ? -1 : 0
+	);
+#endif
 }
 ATTR_INLINE const kr::ivec4a operator !(const kr::ivec4a & a) noexcept
 {
+#ifdef USE_SIMD
 	return a ^ kr::math::CV_ALL_BITS;
+#else
+	return kr::ivec4a(
+		~a.x,
+		~a.y,
+		~a.z,
+		~a.w
+	);
+#endif
 }
 
 template <typename T, size_t _size, bool aligned, typename order>
@@ -859,67 +1033,149 @@ namespace kr
 	template<>
 	ATTR_INLINE const vec4a vec4a::makez() noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_setzero_ps();
+#else
+		return {0, 0, 0, 0};
+#endif
 	}
 	template<>
 	ATTR_INLINE const vec4a vec4a::makes(float v) noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_set_ss(v);
+#else
+		return { v, 0, 0, 0 };
+#endif
 	}
 	template<>
 	ATTR_INLINE const vec4a vec4a::make(const float * ptr) noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_loadu_ps(ptr);
+#else
+		return *(vec4a*)ptr;
+#endif
 	}
 	template<>
 	ATTR_INLINE void vec4a::get(float * ptr) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		_mm_storeu_ps(ptr, m_vector);
+#else
+		*(vec4a*)ptr = *this;
+#endif
 	}
 	template<>
 	ATTR_INLINE const vec4a vec4a::movs(const vec4a & o) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_move_ss(m_vector, o.m_vector);
+#else
+		return {o.x, y, z, w};
+#endif
 	}
 	template<>
 	ATTR_INLINE const vec4a vec4a::adds(const vec4a & o) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_add_ss(m_vector, o.m_vector);
+#else
+		return { x + o.x,y,z,w };
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator -() const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return *this ^ (vec4a&)CV_SIGNMASK;
+#else
+		return { -x, -y, -z, -w };
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator +(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_add_ps(m_vector, v.m_vector);
+#else
+		return {
+			x + v.x,
+			y + v.y,
+			z + v.z,
+			w + v.w
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator -(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_sub_ps(m_vector, v.m_vector);
+#else
+		return {
+			x - v.x,
+			y - v.y,
+			z - v.z,
+			w - v.w
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator *(float value) const noexcept
 	{
+#ifdef USE_SIMD
 		return *this * vec4a(value);
+#else
+		return {
+			x * value,
+			y * value,
+			z * value,
+			w * value
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator /(float value) const noexcept
 	{
+#ifdef USE_SIMD
 		return *this / vec4a(value);
+#else
+		return {
+			x / value,
+			y / value,
+			z / value,
+			w / value
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator *(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_mul_ps(m_vector, v.m_vector);
+#else
+		return {
+			x * v.x,
+			y * v.y,
+			z * v.z,
+			w * v.w
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator /(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_div_ps(m_vector, v.m_vector);
+#else
+		return {
+			x / v.x,
+			y / v.y,
+			z / v.z,
+			w / v.w
+		};
+#endif
 	}
 	template <>
 	template <>
@@ -937,22 +1193,53 @@ namespace kr
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator &(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_and_ps(m_vector, v.m_vector);
+#else
+		return ivec4a(
+			(int&)x & (int&)v.x,
+			(int&)y & (int&)v.y,
+			(int&)z & (int&)v.z,
+			(int&)w & (int&)v.w
+		).fbits();
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator |(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_or_ps(m_vector, v.m_vector);
+#else
+		return ivec4a(
+			(int&)x | (int&)v.x,
+			(int&)y | (int&)v.y,
+			(int&)z | (int&)v.z,
+			(int&)w | (int&)v.w
+		).fbits();
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::operator ^(const vec4a & v) const noexcept
 	{
+#if defined(EMSIMD) || defined(MSSIMD)
 		return _mm_xor_ps(m_vector, v.m_vector);
+#else
+		return ivec4a(
+			(int&)x ^ (int&)v.x,
+			(int&)y ^ (int&)v.y,
+			(int&)z ^ (int&)v.z,
+			(int&)w ^ (int&)v.w
+		).fbits();
+#endif
 	}
 	template <>
 	ATTR_INLINE float vec4a::length_sq() const noexcept
 	{
+#ifdef USE_SIMD
 		return length_sqV().getX();
+#else
+		return ((vec4*)this)->length_sq();
+#endif
 	}
 	template <>
 	ATTR_INLINE float vec4a::length() const noexcept
@@ -962,122 +1249,196 @@ namespace kr
 	template <>
 	ATTR_INLINE const vec4a vec4a::length_sqV() const noexcept
 	{
+#ifdef USE_SIMD
 		return dotV(*this, *this);
+#else
+		return (vec4a)length_sq();
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::lengthV() const noexcept
 	{
+#ifdef USE_SIMD
 		return sqrtv(length_sqV());
+#else
+		return (vec4a)length();
+#endif
 	}
 	template <>
 	ATTR_INLINE const vec4a vec4a::normalize() const noexcept
 	{
+#ifdef USE_SIMD
 		return *this / lengthV();
+#else
+		return *this / length();
+#endif
 	}
 
 	template<>
 	ATTR_INLINE const ivec4a ivec4a::makez() noexcept
 	{
-#ifdef __EMSCRIPTEN__
-		return __ivector4{0, 0, 0, 0};
-#else
+#ifdef MSSIMD
 		return _mm_setzero_si128();
+#else
+		return __ivector4{ 0, 0, 0, 0 };
 #endif
 	}
 	template<>
 	ATTR_INLINE const ivec4a ivec4a::makes(int v) noexcept
 	{
-#ifdef __EMSCRIPTEN__
-		return __ivector4{ v, 0, 0, 0 };
-#else
+#ifdef MSSIMD
 		return _mm_set_epi32(v, 0, 0, 0);
+#else
+		return __ivector4{ v, 0, 0, 0 };
 #endif
 	}
 	template<>
 	ATTR_INLINE const ivec4a ivec4a::make(const int * ptr) noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		struct unaligned_t {
 			__ivector4 __v;
 		} __attribute__((__packed__, __may_alias__));
 
 		return ((struct unaligned_t *)ptr)->__v;
-#else
+#elif defined(MSSIMD)
 		return _mm_loadu_si128((__m128i*)ptr);
+#else
+		return *(ivec4a*)ptr;
 #endif
 	}
 	template<>
 	ATTR_INLINE void ivec4a::get(int * ptr) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		struct unaligned_t {
 			__ivector4 __v;
 		} __attribute__((__packed__, __may_alias__));
 
 		((struct unaligned_t *)ptr)->__v = m_vector;
-#else
+#elif defined(MSSIMD)
 		_mm_storeu_si128((__m128i*)ptr, m_vector);
+#else
+		*(ivec4a*)ptr = *this;
 #endif
 	}
 	template<>
 	ATTR_INLINE const ivec4a ivec4a::movs(const ivec4a& o) const noexcept
 	{
+#ifdef USE_SIMD
 		return (o & CV_MASK_X) | ((*this) & CV_MASK_YZW);
+#else
+		return ivec4a{o.x, y,z,w};
+#endif
 	}
 	template<>
 	ATTR_INLINE const ivec4a ivec4a::adds(const ivec4a& o) const noexcept
 	{
+#ifdef USE_SIMD
 		return *this + (o & CV_MASK_X);
+#else
+		return ivec4a{ x + o.x, y,z,w };
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator -() const noexcept
 	{
+#ifdef USE_SIMD
 		return CV_ZERO - *this;
+#else
+		return ivec4a{ -x, -y, -z, -w};
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator +(const ivec4a & v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return m_vector + v.m_vector;
-#else
+#elif defined(MSSIMD)
 		return _mm_add_epi32(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x + v.x,
+			y + v.y,
+			z + v.z,
+			w + v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator -(const ivec4a & v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return m_vector - v.m_vector;
-#else
+#elif defined(MSSIMD)
 		return _mm_sub_epi32(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x - v.x,
+			y - v.y,
+			z - v.z,
+			w - v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator *(int value) const noexcept
 	{
+#ifdef USE_SIMD
 		return *this * ivec4a(value);
+#else
+		return ivec4a{
+			x * value,
+			y * value,
+			z * value,
+			w * value
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator /(int value) const noexcept
 	{
+#ifdef USE_SIMD
 		return *this / ivec4a(value);
+#else
+		return ivec4a{
+			x / value,
+			y / value,
+			z / value,
+			w / value
+		};
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator *(const ivec4a & v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return m_vector * v.m_vector;
-#else
+#elif defined(MSSIMD)
 		return _mm_mul_epi32(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x * v.x,
+			y * v.y,
+			z * v.z,
+			w * v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator /(const ivec4a & v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return m_vector / v.m_vector;
-#else
+#elif defined(MSSIMD)
 		return ((vec4a)*this / (vec4a)v).itruncate();
+#else
+		return ivec4a{
+			x / v.x,
+			y / v.y,
+			z / v.z,
+			w / v.w
+		};
 #endif
 	}
 	template <>
@@ -1096,39 +1457,68 @@ namespace kr
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator &(const ivec4a& v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return emscripten_int32x4_and(m_vector, v.m_vector);
-#else
+#elif defined(MSSIMD)
 		return _mm_and_si128(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x & v.x,
+			y & v.y,
+			z & v.z,
+			w & v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator |(const ivec4a& v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return emscripten_int32x4_or(m_vector, v.m_vector);
-#else
+#elif defined(MSSIMD)
 		return _mm_or_si128(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x | v.x,
+			y | v.y,
+			z | v.z,
+			w | v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::operator ^(const ivec4a& v) const noexcept
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		return emscripten_int32x4_xor(m_vector, v.m_vector);
-#else
+#elif defined(MSSIMD)
 		return _mm_xor_si128(m_vector, v.m_vector);
+#else
+		return ivec4a{
+			x ^ v.x,
+			y ^ v.y,
+			z ^ v.z,
+			w ^ v.w
+		};
 #endif
 	}
 	template <>
 	ATTR_INLINE int ivec4a::length_sq() const noexcept
 	{
+#ifdef USE_SIMD
 		return length_sqV().getX();
+#else
+		return ((ivec4*)this)->length_sq();
+#endif
 	}
 	template <>
 	ATTR_INLINE int ivec4a::length() const noexcept
 	{
+#ifdef USE_SIMD
 		return math::sqrt(lengthV().getX());
+#else
+		return ((ivec4*)this)->length();
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::length_sqV() const noexcept
@@ -1138,14 +1528,21 @@ namespace kr
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::lengthV() const noexcept
 	{
+#ifdef USE_SIMD
 		return sqrtv((vec4a)length_sqV()).iround();
+#else
+		return (ivec4a)length();
+#endif
 	}
 	template <>
 	ATTR_INLINE const ivec4a ivec4a::normalize() const noexcept
 	{
+#ifdef USE_SIMD
 		return *this / lengthV();
+#else
+		return *this / length();
+#endif
 	}
-
 
 
 	namespace math

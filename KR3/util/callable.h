@@ -2,65 +2,139 @@
 
 namespace kr
 {
+	template <typename func_t> class CallableT;
+	template <typename func_t, typename LAMBDA> class LambdaCallable;
+	template <typename func_t> class CallablePtrT;
+	template <typename func_t> struct LambdaTable;
+	template <size_t sz, typename func_t> class Lambda;
+	template <typename func_t>
+	class CallableListT;
 
-	class Callable
+	using Callable = CallableT<void()>;
+	using CallablePtr = CallablePtrT<void()>;
+	using CallableList = CallableListT<void()>;
+
+	template <typename RET, typename ... ARGS>
+	class CallableT<RET(ARGS...)>
 	{
 	public:
-		Callable() noexcept;
-		virtual ~Callable() noexcept;
-		virtual void operator ()() = 0;
+		CallableT() noexcept
+		{
+		}
+		virtual ~CallableT() noexcept
+		{
+		}
+		virtual RET operator ()(ARGS ... args) = 0;
+		RET call(ARGS ... args)
+		{
+			return (*this)(args ...);
+		}
 
 		template <typename LAMBDA>
-		static Callable * wrap(LAMBDA lambda);
+		static CallableT * wrap(LAMBDA lambda);
 	};
 
-	template <typename LAMBDA> 
-	class CallableT:public Callable
+	template <typename RET, typename ... ARGS, typename LAMBDA> 
+	class LambdaCallable<RET(ARGS...), LAMBDA>:public CallableT<RET(ARGS...)>
 	{
 	private:
 		LAMBDA m_lambda;
 
 	public:
-		inline CallableT(LAMBDA lambda)
+		inline LambdaCallable(LAMBDA lambda)
 			:m_lambda(move(lambda))
 		{
 		}
-		~CallableT() noexcept override
+		~LambdaCallable() noexcept override
 		{
 		}
-		void operator ()() override
+		RET operator ()(ARGS ... args) override
 		{
-			m_lambda();
+			return m_lambda(args ...);
 		}
 	};
 
-	class CallablePtr
+	template <typename RET, typename ... ARGS>
+	class CallablePtrT<RET(ARGS...)>
 	{
-	public:
-		CallablePtr() noexcept = default;
-		CallablePtr(Callable * _callable) noexcept;
-		template <typename LAMBDA>
-		CallablePtr(LAMBDA _lambda)
-			:CallablePtr(Callable::wrap(move(_lambda)))
-		{
-		}
-		operator Callable*() noexcept;
-		Callable & operator *() noexcept;
-		Callable * operator ->() noexcept;
-
 	private:
-		Callable * m_callable;
+		CallableT<RET(ARGS...)> * m_callable;
+
+	public:
+		CallablePtrT() noexcept = default;
+		CallablePtrT(CallableT<RET(ARGS...)> * _callable) noexcept
+		{
+			m_callable = _callable;
+		}
+		template <typename LAMBDA>
+		CallablePtrT(LAMBDA _lambda)
+			:CallablePtrT(CallableT<RET(ARGS...)>::wrap(move(_lambda)))
+		{
+		}
+		operator CallableT<RET(ARGS...)>* () const noexcept
+		{
+			return m_callable;
+		}
+		CallableT<RET(ARGS...)> & operator *() const noexcept
+		{
+			return *m_callable;
+		}
+		CallableT<RET(ARGS...)> * operator ->() const noexcept
+		{
+			return m_callable;
+		}
 	};
 
-
-	template <typename LAMBDA>
-	Callable * Callable::wrap(LAMBDA lambda)
+	template <typename RET, typename ... ARGS>
+	class CallableListT<RET(ARGS ...)>
 	{
-		return _new CallableT<LAMBDA>(move(lambda));
-	}
+	private:
+		Array<CallableT<RET(ARGS ...)>*> m_list;
 
-	template <typename func_t> struct LambdaTable;
-	template <size_t sz, typename func_t> class Lambda;
+	public:
+		CallableT<RET(ARGS ...)> * add(CallablePtrT<RET(ARGS ...)> cb) noexcept
+		{
+			CallableT<RET(ARGS ...)> * pcb = cb;
+			reline_new(pcb);
+			m_list.push(pcb);
+			return pcb;
+		}
+		bool detach(CallableT<RET(ARGS ...)> * cb) noexcept
+		{
+			return m_list.removeMatch(cb);
+		}
+		bool remove(CallableT<RET(ARGS ...)> * cb) noexcept
+		{
+			if (m_list.removeMatch(cb))
+			{
+				delete cb;
+				return true;
+			}
+			return false;
+		}
+		void clear() noexcept
+		{
+			for (auto * func : m_list)
+			{
+				delete func;
+			}
+			m_list.clear();
+		}
+		void fire(ARGS ... args) noexcept
+		{
+			for (auto * func : m_list)
+			{
+				func->call(args ...);
+			}
+		}
+	};
+
+	template <typename RET, typename ... ARGS>
+	template <typename LAMBDA>
+	CallableT<RET(ARGS...)> * CallableT<RET(ARGS...)>::wrap(LAMBDA lambda)
+	{
+		return _new LambdaCallable<RET(ARGS...), LAMBDA>(move(lambda));
+	}
 
 	template <typename RET, typename ... ARGS>
 	struct LambdaTable<RET(ARGS ...)>
@@ -88,7 +162,7 @@ namespace kr
 		bool empty() noexcept;
 		Lambda& operator =(const Lambda & _copy) noexcept;
 		Lambda& operator =(Lambda && _move) noexcept;
-		RET operator ()(const ARGS &... args);
+		RET operator ()(ARGS ... args);
 
 	private:
 		const LambdaTable<RET(ARGS ...)>* _getEmptyTable() noexcept;
@@ -172,7 +246,7 @@ namespace kr
 		return *this;
 	}
 	template <size_t sz, typename RET, typename ... ARGS>
-	RET Lambda<sz, RET(ARGS ...)>::operator ()(const ARGS & ... args)
+	RET Lambda<sz, RET(ARGS ...)>::operator ()(ARGS ... args)
 	{
 		return m_table->call(args ..., m_lambda);
 	}

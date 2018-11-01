@@ -14,13 +14,17 @@ namespace kr
 		{
 			return static_cast<Derived*>(this)->data();
 		}
-		size_t _sizep() noexcept
+		const uintptr_t * _data() const noexcept
 		{
-			return static_cast<Derived*>(this)->sizep();
+			return static_cast<const Derived*>(this)->data();
 		}
-		size_t _size() noexcept
+		size_t _sizep() const noexcept
 		{
-			return static_cast<Derived*>(this)->size();
+			return static_cast<const Derived*>(this)->sizep();
+		}
+		size_t _size() const noexcept
+		{
+			return static_cast<const Derived*>(this)->size();
 		}
 
 	public:
@@ -28,9 +32,13 @@ namespace kr
 		static constexpr size_t bitmask = bitsize - 1;
 		static constexpr size_t bitshift = meta::ilog2(bitsize);
 
-		bool isAllDisabled() noexcept
+		Buffer buffer() const noexcept
 		{
-			return memd::filled(_data(), 0, (_size() + bitsize - 1) >> bitshift);
+			return Buffer(_data(), (_size()+7)/8);
+		}
+		bool isAllDisabled() const noexcept
+		{
+			return mem32::filled(_data(), 0, (_size() + bitsize - 1) >> bitshift);
 		}
 		void enable(size_t n) noexcept
 		{
@@ -120,16 +128,16 @@ namespace kr
 			n = v << (n & bitmask);
 			*pmap = (*pmap & ~n) | n;
 		}
-		bool get(size_t n) noexcept
+		bool get(size_t n) const noexcept
 		{
 			_assert(n < _size());
 			return ((_data()[n >> bitshift]) & ((size_t)1 << (n & bitmask))) != 0;
 		}
-		size_t findEnabled(size_t index) noexcept
+		size_t findEnabled(size_t index) const noexcept
 		{
-			uintptr_t * data = _data();
-			uintptr_t * end = data + _sizep();
-			uintptr_t * p = data + (index >> bitshift);
+			const uintptr_t * data = _data();
+			const uintptr_t * end = data + _sizep();
+			const uintptr_t * p = data + (index >> bitshift);
 			if (p >= end) return -1;
 
 			uint left = index  & bitmask;
@@ -161,7 +169,7 @@ namespace kr
 			}
 			return -1;
 		}
-		const bool operator [](size_t n) noexcept
+		const bool operator [](size_t n) const noexcept
 		{
 			return get(n);
 		}
@@ -177,11 +185,15 @@ namespace kr
 		{
 			return m_map;
 		}
-		size_t size() noexcept
+		const uintptr_t * data() const noexcept
+		{
+			return m_map;
+		}
+		size_t size() const noexcept
 		{
 			return SIZE;
 		}
-		size_t sizep() noexcept
+		size_t sizep() const noexcept
 		{
 			return _sizep;
 		}
@@ -198,8 +210,9 @@ namespace kr
 		~BinArray() noexcept;
 		void alloc(size_t size) noexcept;
 		uintptr_t * data() noexcept;
-		size_t size() noexcept;
-		size_t sizep() noexcept;
+		const uintptr_t * data() const noexcept;
+		size_t size() const noexcept;
+		size_t sizep() const noexcept;
 		void resizeAsFalse(size_t to) noexcept;
 		void free() noexcept;
 

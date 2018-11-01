@@ -1,5 +1,7 @@
 #pragma once
 
+#include <KR3/main.h>
+
 #define GL_GLEXT_PROTOTYPES
 #include <EGL/egl.h>
 #include <GLES2/gl2.h>

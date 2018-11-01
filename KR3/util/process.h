@@ -18,13 +18,16 @@ namespace kr
 		void shell(Text16 command, pcstr16 curdir = nullptr);
 		void exec(pcstr16 fileName, pstr16 parameter, pcstr16 curdir = nullptr);
 		size_t readImpl(char * dest, size_t sz);
+		void wait() noexcept;
+		bool wait(int millis) noexcept;
 
 		int getExitCode() noexcept;
+		void * getCloseEventHandle() noexcept;
 
 #ifdef WIN32
-		void executeOpen(pcstr16 path) noexcept;
+		static void executeOpen(pcstr16 path) noexcept;
 #else
-		void executeOpen(pcstr path) noexcept;
+		static void executeOpen(pcstr path) noexcept;
 #endif
 
 		// 0을 반환하면 성공.
@@ -39,5 +42,19 @@ namespace kr
 		void* m_stdout_read;
 #endif
 
+	};
+
+	class ProcessId
+	{
+	public:
+		ProcessId() = default;
+		ProcessId(dword id) noexcept;
+		static ProcessId findByName(Text16 name) noexcept;
+		static TmpArray<ProcessId> findsByName(Text16 name) noexcept;
+
+		dword value() noexcept;
+
+	private:
+		dword m_id;
 	};
 }

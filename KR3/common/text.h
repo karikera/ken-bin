@@ -5,6 +5,7 @@
 #include "container.h"
 #include "io/lock.h"
 #include "io/stream.h"
+#include "text/iterator.h"
 #include "text/buffer.h"
 #include "text/method/buffer_i.h"
 #include "text/method/buffer_io.h"
@@ -77,9 +78,9 @@ namespace kr
 }
 
 template <typename C>
-struct std::hash<kr::RefArray<C>>
+struct std::hash<kr::View<C>>
 {
-	size_t operator ()(const kr::RefArray<C> & buffer) const noexcept
+	size_t operator ()(const kr::View<C> & buffer) const noexcept
 	{
 		return kr::mem::hash(buffer.begin(), buffer.sizeBytes());
 	}
@@ -87,7 +88,7 @@ struct std::hash<kr::RefArray<C>>
 template <typename C>
 struct std::hash<kr::Array<C>>
 {
-	size_t operator ()(const kr::RefArray<C> & buffer) const noexcept
+	size_t operator ()(const kr::View<C> & buffer) const noexcept
 	{
 		return kr::mem::hash(buffer.begin(), buffer.sizeBytes());
 	}

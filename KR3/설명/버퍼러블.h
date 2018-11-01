@@ -3,8 +3,8 @@
 // 파라미터에 자식을 넣어야한다.
 // 컴포넌트 타입을 정할 수 있다.
 // 
-// RefArray, Array, BArray 또한 버퍼러블이며,
-// Text, AText, BText<N>는 RefArray<char>, Array<char>, BArray<char, N> 와 동일한 클래스로, 역시 버퍼러블이다.
+// View, Array, BArray 또한 버퍼러블이며,
+// Text, AText, BText<N>는 View<char>, Array<char>, BArray<char, N> 와 동일한 클래스로, 역시 버퍼러블이다.
 // 
 // 버퍼러블은 실 버퍼러블과 가상 버퍼드 버퍼러블로 나뉘어,
 // 실 버퍼러블은 begin()과 end() 범위를 가져, 메모리에서 읽어올 수 있다.

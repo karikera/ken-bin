@@ -4,13 +4,18 @@
 #include <KR3/meta/array.h>
 #include <KR3/meta/types.h>
 #include <KR3/meta/text.h>
+#include <KR3/data/binarray.h>
 
 #include "db.h"
+#include "exception.h"
 
 namespace kr
 {
 	namespace sql
 	{
+		using mysql_size_t = unsigned long;
+		static_assert(sizeof(mysql_size_t) <= sizeof(size_t), "Size overflow");
+
 		template <typename params_t, typename results_t> class Statement;
 
 		template <typename T, enum_field_types type, my_bool unsign> struct MysqlTypeImpl
@@ -22,16 +27,19 @@ namespace kr
 			static void allocate(MYSQL_BIND& bind) noexcept;
 		};
 		template <typename T> struct MysqlType;
-		template <> struct MysqlType<int>:MysqlTypeImpl<int, MYSQL_TYPE_LONG, false>{};;
-		template <> struct MysqlType<long long> :MysqlTypeImpl<long long, MYSQL_TYPE_LONGLONG, false>{};;
-		template <> struct MysqlType<long> :MysqlTypeImpl<long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), false>{};;
-		template <> struct MysqlType<short> :MysqlTypeImpl<short, MYSQL_TYPE_SHORT, false>{};;
-		template <> struct MysqlType<char>:MysqlTypeImpl<char, MYSQL_TYPE_TINY, false>{};;
-		template <> struct MysqlType<uint>:MysqlTypeImpl<uint, MYSQL_TYPE_LONG, true>{};;
-		template <> struct MysqlType<unsigned long long>:MysqlTypeImpl<unsigned long long, MYSQL_TYPE_LONGLONG, true>{};;
-		template <> struct MysqlType<unsigned long>:MysqlTypeImpl<unsigned long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), true>{};;
-		template <> struct MysqlType<unsigned short>:MysqlTypeImpl<unsigned short, MYSQL_TYPE_SHORT, true>{};;
-		template <> struct MysqlType<unsigned char>:MysqlTypeImpl<unsigned char, MYSQL_TYPE_TINY, true>{};;
+		template <> struct MysqlType<int>:MysqlTypeImpl<int, MYSQL_TYPE_LONG, false>{};
+		template <> struct MysqlType<long long> :MysqlTypeImpl<long long, MYSQL_TYPE_LONGLONG, false>{};
+		template <> struct MysqlType<long> :MysqlTypeImpl<long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), false>{};
+		template <> struct MysqlType<short> :MysqlTypeImpl<short, MYSQL_TYPE_SHORT, false>{};
+		template <> struct MysqlType<char>:MysqlTypeImpl<char, MYSQL_TYPE_TINY, false>{};
+		template <> struct MysqlType<uint>:MysqlTypeImpl<uint, MYSQL_TYPE_LONG, true>{};
+		template <> struct MysqlType<unsigned long long>:MysqlTypeImpl<unsigned long long, MYSQL_TYPE_LONGLONG, true>{};
+		template <> struct MysqlType<unsigned long>:MysqlTypeImpl<unsigned long, (sizeof(unsigned long) > 4 ? MYSQL_TYPE_LONGLONG : MYSQL_TYPE_LONG), true>{};
+		template <> struct MysqlType<unsigned short>:MysqlTypeImpl<unsigned short, MYSQL_TYPE_SHORT, true>{};
+		template <> struct MysqlType<unsigned char>:MysqlTypeImpl<unsigned char, MYSQL_TYPE_TINY, true>{};
+		template <> struct MysqlType<bool> :MysqlTypeImpl<bool, MYSQL_TYPE_TINY, true> {};
+		template <> struct MysqlType<float> :MysqlTypeImpl<float, MYSQL_TYPE_FLOAT, false> {};
+		template <> struct MysqlType<double> :MysqlTypeImpl<double, MYSQL_TYPE_DOUBLE, false> {};
 		template <> struct MysqlType<Text>
 		{
 			static void initParam(MYSQL_BIND& bind) noexcept;
@@ -45,6 +53,19 @@ namespace kr
 			static void bindResult(MYSQL_BIND& bind, AText * str) noexcept;
 			static void allocate(MYSQL_BIND& bind) noexcept;
 		};;
+		template <> struct MysqlType<Buffer>
+		{
+			static void initParam(MYSQL_BIND& bind) noexcept;
+			static void bindParam(MYSQL_BIND& bind, Buffer * str) noexcept;
+		};;
+		template <> struct MysqlType<ABuffer>
+		{
+			static void initParam(MYSQL_BIND& bind) noexcept;
+			static void bindParam(MYSQL_BIND& bind, ABuffer * str) noexcept;
+			static void initResult(MYSQL_BIND& bind) noexcept;
+			static void bindResult(MYSQL_BIND& bind, ABuffer * str) noexcept;
+			static void allocate(MYSQL_BIND& bind) noexcept;
+		};;
 		template <size_t sz> struct MysqlType<BText<sz>>
 		{
 			static void initParam(MYSQL_BIND& bind) noexcept;
@@ -53,11 +74,11 @@ namespace kr
 			static void bindResult(MYSQL_BIND& bind, BText<sz> * str) noexcept;
 			static void allocate(MYSQL_BIND& bind);
 		};
-		template <typename C> struct MysqlType<RefArray<C>>
+		template <typename C> struct MysqlType<View<C>>
 		{
 			static_assert(sizeof(internal_component_t<C>) == 1, "Component size must be 1");
 			static void initParam(MYSQL_BIND& bind) noexcept;
-			static void bindParam(MYSQL_BIND& bind, RefArray<C> * str) noexcept;
+			static void bindParam(MYSQL_BIND& bind, View<C> * str) noexcept;
 		};;
 		template <typename C> struct MysqlType<Array<C>>
 		{
@@ -77,38 +98,27 @@ namespace kr
 			static void bindResult(MYSQL_BIND& bind, BArray<C, sz> * str) noexcept;
 			static void allocate(MYSQL_BIND& bind);
 		};
-		//template <> struct MysqlType<RefArray<byte>>
-		//{
-		//	static void initParam(MYSQL_BIND& bind) noexcept;
-		//	static void bindParam(MYSQL_BIND& bind, RefArray<byte> * str) noexcept;
-		//};;
-		//template <> struct MysqlType<Array<byte>>
-		//{
-		//	static void initResult(MYSQL_BIND& bind) noexcept;
-		//	static void bindResult(MYSQL_BIND& bind, Array<byte> * str) noexcept;
-		//	static void allocate(MYSQL_BIND& bind) noexcept;
-		//};;
 
 		class PreparedStatementImpl
 		{
 		public:
 			qword getInsertId() noexcept;
 			qword affactedRows() noexcept;
-			void execute(); // ThrowRetry, Exception
-			void execute(MySQL & db); // Exception
+			void execute() throw(ThrowRetry, SqlException);
+			void execute(MySQL & db) throw(SqlException);
 
 		protected:
-			PreparedStatementImpl(MySQL& sql, Text query); // Exception
+			PreparedStatementImpl(MySQL& sql, Text query) throw(SqlException);
 			~PreparedStatementImpl() noexcept;
 			
-			void _bindParam(MYSQL_BIND * bind); // Exception
-			void _bindResult(MYSQL_BIND * bind); // Exception
-			void _storeResult(); // ThrowRetry, Exception
-			void _storeResult(MySQL & db); // Exception
+			void _bindParam(MYSQL_BIND * bind) throw(SqlException);
+			void _bindResult(MYSQL_BIND * bind) throw(SqlException);
+			void _storeResult() throw(ThrowRetry, SqlException);
+			void _storeResult(MySQL & db) throw(SqlException);
 			void _freeResult() noexcept;
-			bool _fetch(); // ThrowRetry, ThrowAllocate, Exception
-			bool _fetch(MySQL & db); // ThrowAllocate, Exception
-			void _fetchColumn(MYSQL_BIND * bind, uint index); // ThrowRetry, Exception
+			bool _fetch() throw(ThrowRetry, ThrowAllocate, SqlException);
+			bool _fetch(MySQL & db) throw(ThrowAllocate, SqlException);
+			void _fetchColumn(MYSQL_BIND * bind, uint index) throw(ThrowRetry, SqlException);
 
 		private:
 			MYSQL_STMT * m_stmt;
@@ -143,13 +153,13 @@ namespace kr
 
 		public:
 			using paramTypes = params;
-			using paramPtrTypes = meta::casts<params, meta::pointer_cast>;
+			using paramPtrTypes = meta::casts<params, add_pointer_t>;
 
 			ParameterBind() noexcept;
 			ParameterBind(const paramPtrTypes &values) noexcept;
-			ParameterBind(paramTypes * values) noexcept;
+			ParameterBind(const paramTypes * values) noexcept;
 			ParameterBind& operator =(const paramPtrTypes &values) noexcept;
-			ParameterBind& operator =(paramTypes * values) noexcept;
+			ParameterBind& operator =(const paramTypes * values) noexcept;
 		};
 
 		template <typename results> class ResultBind
@@ -161,7 +171,7 @@ namespace kr
 
 		public:
 			using resultTypes = results;
-			using resultPtrTypes = meta::casts<results, meta::pointer_cast>;
+			using resultPtrTypes = meta::casts<results, add_pointer_t>;
 
 			ResultBind() noexcept;
 			ResultBind(const resultPtrTypes &values) noexcept;
@@ -177,8 +187,8 @@ namespace kr
 
 			using PreparedStatementImpl::execute;
 
-			bool _fetch(); // ThrowRetry, Exception
-			bool _fetch(MySQL& db); // Exception
+			bool _fetch() throw(ThrowRetry, SqlException);
+			bool _fetch(MySQL& db) throw(SqlException);
 			
 		public:
 			class Fetcher
@@ -187,37 +197,39 @@ namespace kr
 				Statement * const m_host;
 			
 			public:
-				Fetcher(Statement * st); // ThrowRetry, Exception
-				Fetcher(MySQL & db, Statement * st); // ThrowRetry, Exception
+				Fetcher(Statement * st) throw(ThrowRetry, SqlException);
+				Fetcher(MySQL & db, Statement * st) throw(ThrowRetry, SqlException);
 				~Fetcher() noexcept;
-				bool fetch(); // ThrowRetry, Exception
-				bool fetch(MySQL& db); // Exception
+				bool fetch() throw(ThrowRetry, SqlException);
+				bool fetch(MySQL& db) throw(SqlException);
 			};
 			
 			using resultTypes = results_t;
-			using typename Statement<params_t, void>::paramPtrTypes;
-			using resultPtrTypes = meta::casts<results_t, meta::pointer_cast>;
+			using resultPtrTypes = meta::casts<results_t, add_pointer_t>;
+			using Super = Statement<params_t, void>;
+			using Super::bindParams;
+			using typename Super::paramPtrTypes;
 
 			void bind(const paramPtrTypes &param, const resultPtrTypes &res) noexcept;
 			void bindResults(resultTypes * values) noexcept;
 			void bindResults(const resultPtrTypes &values) noexcept;
-			Statement(MySQL& sql, Text text); // Exception
-			void fetchColumn(uint index); // ThrowRetry, Exception
-			void allocateFetch(); // ThrowRetry, Exception
+			Statement(MySQL& sql, Text text) throw(SqlException);
+			void fetchColumn(uint index) throw(ThrowRetry, SqlException);
+			void allocateFetch() throw(ThrowRetry, SqlException);
 
-			bool fetchOnce(); // ThrowRetry, Exception
-			bool fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res); // ThrowRetry, Exception
-			template <typename LAMBDA> void fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda); // Exception
-			template <typename LAMBDA> void fetch(const paramPtrTypes &param, LAMBDA lambda); // Exception
-			template <typename LAMBDA> void fetch(LAMBDA lambda); // ThrowRetry, Exception
-			template <typename LAMBDA> int fetchCount(LAMBDA lambda); // ThrowRetry, Exception
+			bool fetchOnce() throw(ThrowRetry, SqlException);
+			bool fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> int fetchCount(LAMBDA lambda) throw(ThrowRetry, SqlException);
 
-			bool fetchOnce(MySQL & db); // Exception
-			bool fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res); // Exception
-			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda); // Exception
-			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda); // Exception
-			template <typename LAMBDA> void fetch(MySQL & db, LAMBDA lambda); // Exception
-			template <typename LAMBDA> int fetchCount(MySQL & db, LAMBDA lambda); // Exception
+			bool fetchOnce(MySQL & db) throw(ThrowRetry, SqlException);
+			bool fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			template <typename LAMBDA> int fetchCount(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException);
 		};;
 
 		template <typename params_t> class Statement<params_t, void>:public PreparedStatementImpl
@@ -227,32 +239,19 @@ namespace kr
 
 		public:
 			using paramTypes = params_t;
-			using paramPtrTypes = meta::casts<params_t, meta::pointer_cast>;
+			using paramPtrTypes = meta::casts<params_t, add_pointer_t>;
 
 			void bind(const paramPtrTypes &values) noexcept;
-			void bindParams(paramTypes * values) noexcept;
+			void bindParams(const paramTypes * values) noexcept;
 			void bindParams(const paramPtrTypes &values) noexcept;
-			Statement(MySQL& sql, Text text); // Exception
+			Statement(MySQL& sql, Text text) throw(SqlException);
 			void execute(const paramPtrTypes &values) noexcept;
 			void execute(MySQL & db, const paramPtrTypes &values) noexcept;
+			void execute(MySQL & db, const paramTypes *values) noexcept;
+			void executeWith(MySQL & db, const paramTypes &values) noexcept;
 			using PreparedStatementImpl::execute;
 		};;
 
-
-		class Exception
-		{
-		public:
-			Exception(MYSQL * con) noexcept;
-			Exception(MYSQL_STMT* stmt) noexcept;
-		};
-		class ThrowRetry
-		{
-		};
-		class ThrowAllocate
-		{
-		};
-
-	
 	}
 }
 

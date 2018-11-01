@@ -2,6 +2,7 @@
 
 #include <KR3/main.h>
 #include "mysql_ref.h"
+#include "exception.h"
 
 namespace kr
 {
@@ -22,44 +23,45 @@ namespace kr
 			password - keep reference
 			db - keep reference
 			*/
-			MySQL(const char * id, const char * password, const char * db, const char * charset = nullptr) noexcept;
+			MySQL(const char * host, const char * id, const char * password, const char * db, const char * charset = nullptr) noexcept;
 			~MySQL() noexcept;
 			MYSQL* get() noexcept;
 			void ready() noexcept;
 			void commit() noexcept;
 			void rollback() noexcept;
-			void reconnect(); // Exception
+			void reconnect() throw(SqlException);
 			bool setCharset(Text charset) noexcept;
-			void query(Text query); // kr::ThrowRetry, kr::sql::Exception
-			void query(MySQL & db, Text qr); // kr::sql::Exception
-			void storeResult(); // kr::ThrowRetry, kr::sql::Exception
-			void storeResult(MySQL & db); // kr::sql::Exception
+			void query(Text query) throw(ThrowRetry, SqlException);
+			void query(MySQL & db, Text qr) throw(SqlException);
+			void storeResult() throw(ThrowRetry, SqlException);
+			void storeResult(MySQL & db) throw(SqlException);
 			qword affectedRows() noexcept;
 			qword getInsertId() noexcept;
 			
 			template <typename LAMBDA>
-			inline bool connection(LAMBDA &lambda); // sql::Exception
+			inline bool connection(LAMBDA &lambda) throw(SqlException);
 			template <typename LAMBDA>
-			inline bool transection(LAMBDA &lambda); // sql::Exception
+			inline bool transection(LAMBDA &lambda) throw(SqlException);
 
 		private:
 			MYSQL * m_conn;
+			const char * const m_host;
 			const char * const m_id;
 			const char * const m_password;
 			const char * const m_db;
 			const char * const m_charset;
 
 			template <typename LAMBDA>
-			inline bool _transectionSEH(LAMBDA &lambda); // sql::Exception
-			void _connect(); // kr::sql::Exception
-			void _clearResult(); // kr::ThrowRetry, kr::sql::Exception
+			inline bool _transectionSEH(LAMBDA &lambda) throw(SqlException);
+			void _connect() throw(SqlException);
+			void _clearResult() throw(ThrowRetry, SqlException);
 		};
 
 	}
 }
 		
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::connection(LAMBDA &lambda) // sql::Exception
+inline bool kr::sql::MySQL::connection(LAMBDA &lambda) throw(SqlException)
 {
 	for (;;)
 	{
@@ -71,14 +73,14 @@ inline bool kr::sql::MySQL::connection(LAMBDA &lambda) // sql::Exception
 		{
 			reconnect();
 		}
-		catch (Exception&e)
+		catch (SqlException&e)
 		{
 			throw e;
 		}
 	}
 }
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::transection(LAMBDA &lambda) // sql::Exception
+inline bool kr::sql::MySQL::transection(LAMBDA &lambda) throw(SqlException)
 {
 	for (;;)
 	{
@@ -93,7 +95,7 @@ inline bool kr::sql::MySQL::transection(LAMBDA &lambda) // sql::Exception
 		{
 			reconnect();
 		}
-		catch (Exception&e)
+		catch (SqlException&e)
 		{
 			rollback();
 			throw e;
@@ -101,7 +103,7 @@ inline bool kr::sql::MySQL::transection(LAMBDA &lambda) // sql::Exception
 	}
 }
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::_transectionSEH(LAMBDA &lambda) // sql::Exception
+inline bool kr::sql::MySQL::_transectionSEH(LAMBDA &lambda) throw(SqlException)
 {
 	__try
 	{
@@ -110,7 +112,7 @@ inline bool kr::sql::MySQL::_transectionSEH(LAMBDA &lambda) // sql::Exception
 	__except(1)
 	{
 		rollback();
-		assert(!"Transection Error");
+		_assert(!"Transection Error");
 		throw;
 	}
 }

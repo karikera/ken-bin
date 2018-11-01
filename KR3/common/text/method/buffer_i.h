@@ -7,9 +7,9 @@ namespace kr
 		namespace method
 		{
 			template <class Parent> class BufferIMethod : 
-				public Bufferable<Parent, BufferInfo<typename Parent::Component, true, false, !Parent::writable, Parent>>
+				public AddBufferable<Parent, BufferInfo<typename Parent::Component, true, false, !Parent::writable, Parent>>
 			{
-				CLASS_HEADER(BufferIMethod, Bufferable<Parent, BufferInfo<typename Parent::Component, true, false, !Parent::writable, Parent>>);
+				CLASS_HEADER(BufferIMethod, AddBufferable<Parent, BufferInfo<typename Parent::Component, true, false, !Parent::writable, Parent>>);
 			public:
 				INHERIT_ARRAY();
 

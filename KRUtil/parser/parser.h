@@ -2,6 +2,7 @@
 
 #include <KR3/main.h>
 #include <KR3/io/bufferedstream.h>
+#include "../text/slash.h"
 
 namespace kr
 {
@@ -12,14 +13,14 @@ namespace kr
 
 		bool isNextWhiteSpace();
 		void skipWhiteSpace();
-		void mustWhiteSpace(); // InvalidSourceException
+		void mustWhiteSpace() throw(InvalidSourceException);
 		int getLine() noexcept;
 		template <typename _Derived, typename _Info>
-		size_t readToSpace(OutStream<_Derived, char, _Info> * os);
+		size_t readToSpace(OutStream<_Derived, char, _Info> * os) throw(NotEnoughSpaceException);
 		TSZ readToSpace();
 
 		template <typename _Derived, typename _Info>
-		void readWithUnslash(OutStream<_Derived, char, _Info> * dest, char needle)
+		void readWithUnslash(OutStream<_Derived, char, _Info> * dest, char needle) throw(EofException, NotEnoughSpaceException)
 		{
 			for (;;)
 			{
@@ -34,22 +35,7 @@ namespace kr
 
 				if (findedchr == '\\')
 				{
-					char chr = m_is.read();
-					switch (chr)
-					{
-					case 'a': dest->write('\a'); break;
-					case 'b': dest->write('\b'); break;
-					case 'f': dest->write('\f'); break;
-					case 'r': dest->write('\r'); break;
-					case 'n': dest->write('\n'); break;
-					case 't': dest->write('\t'); break;
-					case '\"':
-					case '\'':
-					case '\\':
-					default:
-						dest->write(chr);
-						break;
-					}
+					parseUnslashCharacter(dest, &m_is);
 				}
 				else return;
 			}
@@ -57,13 +43,16 @@ namespace kr
 		TSZ readWithUnslash(char needle);
 		void skipWithUnslash(char needle);
 
+		io::BufferedIStream<io::VIStream<char>, true> * is() noexcept;
+		io::BufferedIStream<io::VIStream<char>, true> * operator->() noexcept;
+
 	protected:
 		io::BufferedIStream<io::VIStream<char>, true> m_is;
 		int m_line;
 	};
 
 	template <typename _Derived, typename _Info>
-	size_t Parser::readToSpace(OutStream<_Derived, char, _Info> * os)
+	size_t Parser::readToSpace(OutStream<_Derived, char, _Info> * os) throw(NotEnoughSpaceException)
 	{
 		return m_is.readto_y(os, Text::WHITE_SPACE);
 	}

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stream.h"
+#include "../main.h"
 
 namespace kr
 {
@@ -14,20 +14,21 @@ namespace kr
 		private:
 			OS * m_os;
 			dword m_key;
-			dword m_add;
+			uintp_t m_offset;
 
 		public:
-			XorOStream(OS * os, dword key, dword add = 3508816465) noexcept
-				:m_os(os), m_key(key), m_add(add)
+			XorOStream(OS * os, dword key) noexcept
+				:m_os(os), m_key(key)
 			{
+				m_offset = 0;
 			}
 
 			void writeImpl(typename const OS::Component * data, size_t sz)
 			{
 				WriteLock<OS> lock(sz);
-				lock.lock(m_os);
-				mem::
-				lock.begin()
+				size_t size = lock.lock(m_os);
+				mem::xor_copy();
+				lock.begin();
 				lock.unlock(m_os);
 			}
 		};
@@ -39,12 +40,13 @@ namespace kr
 		private:
 			IS * m_is;
 			dword m_key;
-			dword m_add;
+			uintp_t m_offset;
 
 		public:
-			XorIStream(IS * is, dword key, dword add = 3508816465) noexcept
-				: m_is(is), m_key(key), m_add(add)
+			XorIStream(IS * is, dword key) noexcept
+				: m_is(is), m_key(key)
 			{
+				m_offset = 0;
 			}
 
 			size_t readImpl(typename IS::Component * data, size_t sz)

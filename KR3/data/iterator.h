@@ -82,7 +82,7 @@ namespace kr
 		C * m_pt;
 	};
 
-	template <class ITERABLE> class TIterable
+	template <class ITERABLE, class PARENT = Empty> class TIterable: public PARENT
 	{
 	public:
 
@@ -105,12 +105,10 @@ namespace kr
 			ITERABLE & m_iterable;
 		};
 
-		ReverseIterable getReverseIterable()
+		ReverseIterable reverse()
 		{
 			return ReverseIterable(*static_cast<ITERABLE*>(this));
 		}
-
-		__declspec(property(get=getReverseIterable)) ReverseIterable reverse;
 	};
 
 	template <class Iterable>

@@ -99,27 +99,40 @@ namespace kr
 				using Super::Super;
 				using Super::begin;
 				using Super::end;
+				using Super::size;
 				using Super::setEnd;
 				using Super::empty;
 
-				void skipBack() // EofException
+				void skipBack() throw(EofException)
 				{
 					if (empty())
 						throw EofException();
 					setEnd(end() - 1);
 				}
-				InternalComponent readBack() // EofException
+				void skipBack(size_t count) throw(EofException)
 				{
-					if (empty())
-						throw EofException();
+					if (size() < count) throw EofException();
+					setEnd(end()-count);
+				}
+				InternalComponent readBack() throw(EofException)
+				{
+					if (empty()) throw EofException();
 					const InternalComponent * comp = (InternalComponent *)end() - 1;
-					setEnd((Component*)comp);
+					setEnd(comp);
 					return *comp;
+				}
+				Ref readBack(size_t count) throw(EofException)
+				{
+					if (size() < count) throw EofException();
+					const InternalComponent * endptr = (InternalComponent *)end();
+					const InternalComponent * comp = endptr - count;
+					setEnd(comp);
+					return Ref(comp, endptr);
 				}
 				void cut_self(const ComponentRef* newend) noexcept
 				{
 					_assert(begin() <= newend && newend <= end());
-					setEnd((Component*)newend);
+					setEnd((InternalComponent*)newend);
 				}
 				void cut_self(Ref _v) noexcept
 				{
@@ -130,6 +143,13 @@ namespace kr
 					return cut_self(math::min(begin() + _len, end()));
 				}
 
+				template <typename T>
+				T &readBackAs() throw(EofException)
+				{
+					static_assert(sizeof(T) % sizeof(InternalComponent) == 0, "Size of T must aligned by size of component");
+					Ref ref = readBack(sizeof(T));
+					return *(T*)ref.data();
+				}
 			};
 		}
 	}

@@ -31,14 +31,14 @@ namespace kr
 			static type wide_tmp(const T * str, size_t sz)
 			{
 				TmpArray<unicode_wchar_t> out;
-				out << UnicodeConverter<unicode_wchar_t, T>(RefArray<T>(str, sz));
+				out << UnicodeConverter<unicode_wchar_t, T>(View<T>(str, sz));
 				return (type&&)(type&)out;
 			}
 		};
 		template <>
 		struct wide_tmp_type<unicode_wchar_t>
 		{
-			using type = RefArray<wchar_t>;
+			using type = View<wchar_t>;
 			static type wide_tmp(const unicode_wchar_t * str, size_t sz)
 			{
 				return type((const wchar_t*)str, sz);

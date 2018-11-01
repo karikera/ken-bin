@@ -42,7 +42,7 @@ template <size_t sz>
 inline void kr::sql::MysqlType<kr::BText<sz>>::bindParam(MYSQL_BIND& bind, BText<sz> * str) noexcept
 {
 	bind.buffer = (void*)str->begin();
-	bind.buffer_length = intact<dword>(str->size());
+	bind.buffer_length = intact<mysql_size_t>(str->size());
 }
 template <size_t sz>
 inline void kr::sql::MysqlType<kr::BText<sz>>::initResult(MYSQL_BIND& bind) noexcept
@@ -53,9 +53,9 @@ template <size_t sz>
 inline void kr::sql::MysqlType<kr::BText<sz>>::bindResult(MYSQL_BIND& bind, BText<sz> * str) noexcept
 {
 	bind.buffer = str->begin();
-	bind.buffer_length = intact<dword>(str->capacity());
-	assert(str->size() <= 0xffffffff);
-	bind.length = (dword*)&((size_t*)str->begin())[-1];
+	bind.buffer_length = intact<mysql_size_t>(str->capacity());
+	_assert(str->size() <= (mysql_size_t)-1);
+	bind.length = (mysql_size_t*)&((size_t*)str->begin())[-1];
 }
 template <size_t sz>
 inline void kr::sql::MysqlType<kr::BText<sz>>::allocate(MYSQL_BIND& bind)
@@ -63,15 +63,15 @@ inline void kr::sql::MysqlType<kr::BText<sz>>::allocate(MYSQL_BIND& bind)
 	throw NotEnoughSpaceException();
 }
 template <typename C>
-inline void kr::sql::MysqlType<kr::RefArray<C>>::initParam(MYSQL_BIND& bind) noexcept
+inline void kr::sql::MysqlType<kr::View<C>>::initParam(MYSQL_BIND& bind) noexcept
 {
 	bind.buffer_type = MYSQL_TYPE_BLOB;
 }
 template <typename C>
-inline void kr::sql::MysqlType<kr::RefArray<C>>::bindParam(MYSQL_BIND& bind, RefArray<C> * str) noexcept
+inline void kr::sql::MysqlType<kr::View<C>>::bindParam(MYSQL_BIND& bind, View<C> * str) noexcept
 {
 	bind.buffer = (void*)str->begin();
-	bind.buffer_length = intact<dword>(str->size());
+	bind.buffer_length = intact<mysql_size_t>(str->size());
 }
 template <typename C>
 inline void kr::sql::MysqlType<kr::Array<C>>::initParam(MYSQL_BIND& bind) noexcept
@@ -82,12 +82,12 @@ template <typename C>
 inline void kr::sql::MysqlType<kr::Array<C>>::bindParam(MYSQL_BIND& bind, Array<C> * str) noexcept
 {
 	bind.buffer = (void*)str->begin();
-	bind.buffer_length = intact<dword>(str->size());
+	bind.buffer_length = intact<mysql_size_t>(str->size());
 }
 template <typename C>
 inline void kr::sql::MysqlType<kr::Array<C>>::initResult(MYSQL_BIND& bind) noexcept
 {
-	bind.buffer_type = MYSQL_TYPE_BLOB;
+	bind.buffer_type = MYSQL_TYPE_STRING;
 }
 template <typename C>
 inline void kr::sql::MysqlType<kr::Array<C>>::bindResult(MYSQL_BIND& bind, Array<C> * str) noexcept
@@ -95,25 +95,25 @@ inline void kr::sql::MysqlType<kr::Array<C>>::bindResult(MYSQL_BIND& bind, Array
 	if (*str == nullptr) str->reserve(128);
 	else str->clear();
 	bind.buffer = str->begin();
-	bind.buffer_length = intact<dword>(str->capacity());
-	bind.length = (dword*)&((size_t*)str->begin())[-1];
+	bind.buffer_length = intact<mysql_size_t>(str->capacity());
+	bind.length = (mysql_size_t*)&((size_t*)str->begin())[-1];
 	bind.extension = str;
 }
 template <typename C>
 inline void kr::sql::MysqlType<kr::Array<C>>::allocate(MYSQL_BIND& bind) noexcept
 {
-	dword len = *bind.length;
+	mysql_size_t len = *bind.length;
 	if (len <= bind.buffer_length) return;
 
-	AText * str = (AText*)bind.extension;
-	dword* sizeptr = (dword*)&((size_t*)str->begin())[-1];
+	Array<C> * str = (Array<C>*)bind.extension;
+	mysql_size_t* sizeptr = (mysql_size_t*)&((size_t*)str->begin())[-1];
 	*sizeptr = bind.buffer_length;
 
 	str->clear();
 	str->reserve(len);
 	bind.buffer = str->begin();
 	bind.buffer_length = len;
-	bind.length = (dword*)&((size_t*)str->begin())[-1];
+	bind.length = (mysql_size_t*)&((size_t*)str->begin())[-1];
 }
 template <typename C, size_t sz>
 inline void kr::sql::MysqlType<kr::BArray<C, sz>>::initParam(MYSQL_BIND& bind) noexcept
@@ -124,20 +124,20 @@ template <typename C, size_t sz>
 inline void kr::sql::MysqlType<kr::BArray<C, sz>>::bindParam(MYSQL_BIND& bind, BArray<C, sz> * str) noexcept
 {
 	bind.buffer = (void*)str->begin();
-	bind.buffer_length = intact<dword>(str->size());
+	bind.buffer_length = intact<unsigned long>(str->size());
 }
 template <typename C, size_t sz>
 inline void kr::sql::MysqlType<kr::BArray<C, sz>>::initResult(MYSQL_BIND& bind) noexcept
 {
-	bind.buffer_type = MYSQL_TYPE_BLOB;
+	bind.buffer_type = MYSQL_TYPE_STRING;
 }
 template <typename C, size_t sz>
 inline void kr::sql::MysqlType<kr::BArray<C, sz>>::bindResult(MYSQL_BIND& bind, BArray<C, sz> * str) noexcept
 {
 	bind.buffer = str->begin();
-	bind.buffer_length = intact<dword>(str->capacity());
-	assert(str->size() <= 0xffffffff);
-	bind.length = (dword*)&((size_t*)str->begin())[-1];
+	bind.buffer_length = intact<mysql_size_t>(str->capacity());
+	_assert(str->size() <= 0xffffffff);
+	bind.length = (unsigned long*)&((size_t*)str->begin())[-1];
 }
 template <typename C, size_t sz>
 inline void kr::sql::MysqlType<kr::BArray<C, sz>>::allocate(MYSQL_BIND& bind)
@@ -151,8 +151,7 @@ inline kr::sql::ParameterBind<params_t>::ParameterBind() noexcept
 	memset(m_params, 0, sizeof(m_params));
 
 	size_t i = 0;
-	params_t::type_loop([&](auto * t)
-	{
+	params_t::type_loop([&](auto * t){
 		kr::sql::MysqlType<std::remove_reference_t<decltype(*t)>>::initParam(m_params[i++]);
 	});
 }
@@ -163,7 +162,7 @@ inline kr::sql::ParameterBind<params_t>::ParameterBind(const paramPtrTypes &valu
 	*this = values;
 }
 template <typename params_t>
-inline kr::sql::ParameterBind<params_t>::ParameterBind(paramTypes * values) noexcept
+inline kr::sql::ParameterBind<params_t>::ParameterBind(const paramTypes * values) noexcept
 	:ParameterBind()
 {
 	*this = values;
@@ -178,11 +177,12 @@ inline kr::sql::ParameterBind<params_t>& kr::sql::ParameterBind<params_t>::opera
 	return *this;
 }
 template <typename params_t>
-inline kr::sql::ParameterBind<params_t>& kr::sql::ParameterBind<params_t>::operator =(paramTypes * values) noexcept
+inline kr::sql::ParameterBind<params_t>& kr::sql::ParameterBind<params_t>::operator =(const paramTypes * values) noexcept
 {
 	size_t i = 0;
-	values->value_loop([&](auto & value) {
-		kr::sql::MysqlType<std::remove_reference_t<decltype(value)>>::bindParam(m_params[i++], &value);
+	values->value_loop([&](const auto & value) {
+		using type = std::remove_const_t<std::remove_reference_t<decltype(value)>>;
+		kr::sql::MysqlType<type>::bindParam(m_params[i++], (type*)&value);
 	});
 	return *this;
 }
@@ -231,14 +231,14 @@ inline kr::sql::ResultBind<results_t>& kr::sql::ResultBind<results_t>::operator 
 }
 
 template <typename params_t, typename results_t>
-kr::sql::Statement<params_t, results_t>::Fetcher::Fetcher(Statement * st) // ThrowRetry, Exception
+kr::sql::Statement<params_t, results_t>::Fetcher::Fetcher(Statement * st) throw(ThrowRetry, SqlException)
 	:m_host(st)
 {
 	m_host->execute();
 	m_host->_storeResult();
 }
 template <typename params_t, typename results_t>
-kr::sql::Statement<params_t, results_t>::Fetcher::Fetcher(MySQL &db, Statement * st) // ThrowRetry, Exception
+kr::sql::Statement<params_t, results_t>::Fetcher::Fetcher(MySQL &db, Statement * st) throw(ThrowRetry, SqlException)
 	:m_host(st)
 {
 	m_host->execute(db);
@@ -250,22 +250,22 @@ kr::sql::Statement<params_t, results_t>::Fetcher::~Fetcher() noexcept
 	m_host->_freeResult();
 }
 template <typename params_t, typename results_t>
-bool kr::sql::Statement<params_t, results_t>::Fetcher::fetch() // ThrowRetry, Exception
+bool kr::sql::Statement<params_t, results_t>::Fetcher::fetch() throw(ThrowRetry, SqlException)
 {
 	return m_host->_fetch();
 }
 template <typename params_t, typename results_t>
-bool kr::sql::Statement<params_t, results_t>::Fetcher::fetch(MySQL& db)
+bool kr::sql::Statement<params_t, results_t>::Fetcher::fetch(MySQL& db) throw(SqlException)
 {
 	return m_host->_fetch(db);
 }
 template <typename params_t, typename results_t> 
-inline kr::sql::Statement<params_t,results_t>::Statement(MySQL& sql, Text text) // Exception
+inline kr::sql::Statement<params_t,results_t>::Statement(MySQL& sql, Text text) throw(SqlException)
 	:Statement<params_t, void>(sql, text)
 {
 }
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::_fetch() // ThrowRetry, Exception
+inline bool kr::sql::Statement<params_t, results_t>::_fetch() throw(ThrowRetry, SqlException)
 {
 	try
 	{
@@ -278,7 +278,7 @@ inline bool kr::sql::Statement<params_t, results_t>::_fetch() // ThrowRetry, Exc
 	}
 }
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::_fetch(MySQL& db) // Exception
+inline bool kr::sql::Statement<params_t, results_t>::_fetch(MySQL& db) throw(SqlException)
 {
 	try
 	{
@@ -291,12 +291,12 @@ inline bool kr::sql::Statement<params_t, results_t>::_fetch(MySQL& db) // Except
 	}
 }
 template <typename params_t, typename results_t> 
-inline void kr::sql::Statement<params_t,results_t>::fetchColumn(uint index) // ThrowRetry, Exception
+inline void kr::sql::Statement<params_t,results_t>::fetchColumn(uint index) throw(ThrowRetry, SqlException)
 {
 	PreparedStatementImpl::_fetchColumn(&m_resultSet.m_results[index], index);
 }
 template <typename params_t, typename results_t>
-inline void kr::sql::Statement<params_t, results_t>::allocateFetch()
+inline void kr::sql::Statement<params_t, results_t>::allocateFetch() throw(ThrowRetry, SqlException)
 {
 	uint i = 0;
 	results_t::type_loop([&](auto *pvalue)
@@ -307,26 +307,26 @@ inline void kr::sql::Statement<params_t, results_t>::allocateFetch()
 }
 
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::fetchOnce() // ThrowRetry, Exception
+inline bool kr::sql::Statement<params_t, results_t>::fetchOnce() throw(ThrowRetry, SqlException)
 {
 	return Fetcher(this).fetch();
 }
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res) // ThrowRetry, Exception
+inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException)
 {
 	bind(param, res);
 	return fetchOnce();
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA>
-inline void kr::sql::Statement<params_t, results_t>::fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) // ThrowRetry, Exception
+inline void kr::sql::Statement<params_t, results_t>::fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	bind(param, res);
 	fetch(lambda);
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA>
-inline void kr::sql::Statement<params_t, results_t>::fetch(const paramPtrTypes &param, LAMBDA lambda) // Exception
+inline void kr::sql::Statement<params_t, results_t>::fetch(const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	bindParams(param);
 	results_t res;
@@ -335,7 +335,7 @@ inline void kr::sql::Statement<params_t, results_t>::fetch(const paramPtrTypes &
 }
 template <typename params_t, typename results_t> 
 template <typename LAMBDA> 
-inline void kr::sql::Statement<params_t,results_t>::fetch(LAMBDA lambda) // Exception
+inline void kr::sql::Statement<params_t,results_t>::fetch(LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	Fetcher fetcher = this;
 	while(fetcher.fetch())
@@ -345,7 +345,7 @@ inline void kr::sql::Statement<params_t,results_t>::fetch(LAMBDA lambda) // Exce
 }
 template <typename params_t, typename results_t> 
 template <typename LAMBDA> 
-inline int kr::sql::Statement<params_t,results_t>::fetchCount(LAMBDA lambda) // Exception
+inline int kr::sql::Statement<params_t,results_t>::fetchCount(LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	Fetcher fetcher = this;
 	int count = 0;
@@ -377,26 +377,26 @@ inline void kr::sql::Statement<params_t, results_t>::bindResults(const resultPtr
 	PreparedStatementImpl::_bindResult(m_resultSet.m_results);
 }
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(MySQL & db) // Exception
+inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(MySQL & db) throw(ThrowRetry, SqlException)
 {
 	return Fetcher(this).fetch(db);
 }
 template <typename params_t, typename results_t>
-inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res) // Exception
+inline bool kr::sql::Statement<params_t, results_t>::fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException)
 {
 	bind(param, res);
 	return fetchOnce(db);
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA>
-inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) // Exception
+inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	bind(param, res);
 	fetch(db, lambda);
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA> 
-inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda) // Exception
+inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	bindParams(param);
 	results_t res;
@@ -405,7 +405,7 @@ inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, const par
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA>
-inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, LAMBDA lambda) // Exception
+inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	Fetcher fetcher = this;
 	while(fetcher.fetch(db))
@@ -415,7 +415,7 @@ inline void kr::sql::Statement<params_t, results_t>::fetch(MySQL & db, LAMBDA la
 }
 template <typename params_t, typename results_t>
 template <typename LAMBDA>
-inline int kr::sql::Statement<params_t, results_t>::fetchCount(MySQL & db, LAMBDA lambda) // Exception
+inline int kr::sql::Statement<params_t, results_t>::fetchCount(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException)
 {
 	Fetcher fetcher = this;
 	int count = 0;
@@ -433,7 +433,7 @@ inline void kr::sql::Statement<params_t, void>::bind(const paramPtrTypes &values
 	bindParams(values);
 }
 template <typename params_t>
-inline void kr::sql::Statement<params_t, void>::bindParams(paramTypes * values) noexcept
+inline void kr::sql::Statement<params_t, void>::bindParams(const paramTypes * values) noexcept
 {
 	m_paramSet = values;
 	PreparedStatementImpl::_bindParam(m_paramSet.m_params);
@@ -445,7 +445,8 @@ inline void kr::sql::Statement<params_t, void>::bindParams(const paramPtrTypes &
 	PreparedStatementImpl::_bindParam(m_paramSet.m_params);
 }
 template <typename params_t>
-inline kr::sql::Statement<params_t, void>::Statement(MySQL& sql, Text text): PreparedStatementImpl(sql,text) // Exception
+inline kr::sql::Statement<params_t, void>::Statement(MySQL& sql, Text text) throw(SqlException) 
+	: PreparedStatementImpl(sql,text)
 {
 }
 template <typename params_t>
@@ -460,3 +461,16 @@ void kr::sql::Statement<params_t, void>::execute(MySQL & db, const paramPtrTypes
 	bindParams(values);
 	execute(db);
 }
+template <typename params_t>
+void kr::sql::Statement<params_t, void>::execute(MySQL & db, const paramTypes *values) noexcept
+{
+	bindParams(values);
+	execute(db);
+}
+template <typename params_t>
+void kr::sql::Statement<params_t, void>::executeWith(MySQL & db, const paramTypes &values) noexcept
+{
+	bindParams(&values);
+	execute(db);
+}
+

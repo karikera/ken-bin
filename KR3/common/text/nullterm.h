@@ -6,10 +6,10 @@ namespace kr
 {
 
 	template <typename Buffer>
-	class ToSZ : public Bufferable<ToSZ<Buffer>, BufferInfo<typename Buffer::Component, false, true, true, Empty>>
+	class ToSZ : public Bufferable<ToSZ<Buffer>, BufferInfo<typename Buffer::Component, false, true, true>>
 	{
 		static_assert(IsBuffer<Buffer>::value, "Buffer is not buffer");
-		using Super = Bufferable<ToSZ<Buffer>, BufferInfo<typename Buffer::Component, false, true, true, Empty>>;
+		using Super = Bufferable<ToSZ<Buffer>, BufferInfo<typename Buffer::Component, false, true, true>>;
 	public:
 		using typename Super::Component;
 

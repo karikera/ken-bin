@@ -8,27 +8,6 @@
 
 namespace kr
 {
-	namespace _pri_
-	{
-		meta::bool_false isOStreamHelper(void*);
-		template <typename Derived, typename Component, class Info> meta::bool_true isOStreamHelper(OutStream<Derived, Component, Info>*);
-
-		meta::bool_false isIStreamHelper(void*);
-		template <typename Derived, typename Component, class Info> meta::bool_true isIStreamHelper(InStream<Derived, Component, Info>*);
-
-		meta::bool_false isContainerHelper(void*);
-		template <typename C, bool rdonly, class Parent> meta::bool_true isContainerHelper(Container<C, rdonly, Parent>*);
-
-		meta::bool_false isBufferHelper(void*);
-		template <typename C, class Info> meta::bool_true isBufferHelper(Bufferable<C, Info>*);
-	}
-
-	template <typename T> struct IsOStream : decltype(_pri_::isOStreamHelper((T*)0)) {};
-	template <typename T> struct IsIStream : decltype(_pri_::isIStreamHelper((T*)0)) {};
-	template <typename T> struct IsContainer : decltype(_pri_::isContainerHelper((T*)0)) {};
-	template <typename T> struct IsBuffer : decltype(_pri_::isBufferHelper((T*)0)) {};
-
-
 	template <typename T> struct internal_component
 	{
 		using type = T;
@@ -39,6 +18,8 @@ namespace kr
 	};
 	template <typename T>
 	using internal_component_t = typename internal_component<T>::type;
+
+#define KR_DEFINE_MMEM() using memm = memt<sizeof(InternalComponent)>
 
 
 	template <typename C, bool rdonly, class Parent> 
@@ -54,10 +35,9 @@ namespace kr
 		using ComponentRef = meta::if_t<rdonly, const C, C>;
 		using InternalComponent = internal_component_t<C>;
 		using InternalComponentRef = meta::if_t<rdonly, const InternalComponent, InternalComponent>;
-		using memm = memt<sizeof(internal_component_t<C>)>;
 
 		using Alc = Array<C>;
-		using Ref = RefArray<C>;
+		using Ref = View<C>;
 		using WRef = WRefArray<C>;
 		using Wri = ArrayWriter<C>;
 
@@ -83,16 +63,16 @@ namespace kr
 		using Parent::Parent;
 	};
 
+
 	template <bool _accessable, class Parent>
 	class StreamInfo :public Parent
 	{
 	public:
 		static constexpr bool accessable = _accessable;
-		using BaseStream = Undefined;
+		using StreamableBase = Undefined;
 
 		using Parent::Parent;
 	};
-
 }
 
 #define INHERIT_COMPONENT() \
@@ -104,7 +84,4 @@ namespace kr
 	using Alc = typename Super::Alc;\
 	using Ref = typename Super::Ref;\
 	using Wri = typename Super::Wri;\
-	using WRef = typename Super::WRef;\
-	using typename Super::memm;
-
-
+	using WRef = typename Super::WRef;

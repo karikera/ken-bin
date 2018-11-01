@@ -10,8 +10,7 @@ namespace kr
 
 	// 빈 클래스이다.
 	struct Empty {};
-
-
+	
 	// meta
 	namespace meta
 	{
@@ -78,6 +77,7 @@ namespace kr
 		using mat4 = matrix<float, 4, 4, false, matrix_data_type::none>;
 		using mat3 = matrix<float, 3, 3, false, matrix_data_type::none>;
 		using mat2 = matrix<float, 2, 2, false, matrix_data_type::none>;
+		using mat2p = matrix<float, 3, 2, false, matrix_data_type::none>;
 		using quaternion = quaternionT<false>;
 
 		using ivec4a = vector<int, 4, true, OrderRGBA>;
@@ -130,6 +130,7 @@ namespace kr
 	using math::bvec4;
 	using math::color;
 	using math::mat2;
+	using math::mat2p;
 	using math::mat3;
 	using math::mat4;
 	using math::irect;
@@ -158,8 +159,9 @@ namespace kr
 	namespace win
 	{
 		class Library;
+		using Module = Library;
+		using Instance = Library;
 		class Thread;
-		class CriticalSection;
 		class Window;
 		class Dialog;
 		class Static;
@@ -178,11 +180,10 @@ namespace kr
 	class Event;
 
 	// data
-	template <typename C> class Chain;
-	template <typename C> class LinkedList;
-	template <typename C> class NodeLink;
-	template <typename C> class Node;
-	template <class ITERABLE> class TIterable;
+	template <typename Node> class Chain;
+	template <typename Node> class LinkedList;
+	template <typename C, bool isCRTP = false> class Node;
+	template <class ITERABLE, class PARENT> class TIterable;
 
 	template <class DATA, size_t size = (size_t)-1> class ReadLock;
 	template <class DATA, size_t size = (size_t)-1, bool nullterm = false> class WriteLock;
@@ -216,6 +217,9 @@ namespace kr
 	template <class Derived, typename Component, class Info = StreamInfo<>>
 	class OutStream;
 
+	template <typename Derived, typename C, typename _Info>
+	using InOutStream = OutStream<Derived, C, StreamInfo<_Info::accessable, InStream<Derived, C, _Info>>>;
+
 	// io
 	namespace io
 	{
@@ -235,11 +239,8 @@ namespace kr
 		template <class Derived, class Base, bool autoClose = false, typename NewComponent = typename Base::Component>
 		class FilterIStream;
 
-
-		// 타입이 변경된 스트림이다.
-		// void 스트림에서 변경된다.
-		template <class Derived, typename C>
-		class RetypeStream;
+		template <class Base, typename C>
+		class StreamableStream;
 
 		// 읽기전에 버퍼에 한번에 읽어오게 한다.
 		// 읽어온 버퍼의 데이터를 참조할 수 있는 함수를 지원한다.
@@ -265,7 +266,7 @@ namespace kr
 		// 버퍼를 사용하지 않고, 직접 액세스한다.
 		// 버퍼를 사용하려면, FIStream 혹은 FOStream을 사용해야한다.
 		template <typename C>
-		using FileStream = RetypeStream<File, C>;
+		using FileStream = StreamableStream<File, C>;
 
 		// 파일 읽기 스트림
 		// 버퍼에 한번에 읽어서 가져오며,
@@ -345,7 +346,7 @@ namespace kr
 	template <typename C> using WRefArray = ary::_pri_::WrapImpl<ary::data::AccessableData<C, Empty>, C>;
 
 	// 참조하는 배열(읽기 전용), 근원이 사라지면 안된다.
-	template <typename C> using RefArray = ary::_pri_::WrapImpl<ary::data::ReadableData<C, Empty>, C>;
+	template <typename C> using View = ary::_pri_::WrapImpl<ary::data::ReadableData<C, Empty>, C>;
 
 	// 할당된 배열, 복사시 메모리가 할당되어진다.
 	template <typename C> using Array = ary::_pri_::WrapImpl<ary::data::AllocatedData<C, Empty>, C>;
@@ -364,7 +365,7 @@ namespace kr
 	template <typename T> using Array2D = Array<Array<T>>;
 
 	// 2D 참조 배열, 할당 배열의 참조이다, 안의 요소는 할당 배열이다.
-	template <typename T> using RefArray2D = RefArray<Array<T>>;
+	template <typename T> using RefArray2D = View<Array<T>>;
 
 	// 임시 널 종료 문자열 텍스트, 메모리가 스택형 임시 버퍼에 할당된다.
 	// 임시 메모리 끼리는 할당과 삭제 순서가 스택 순서여야한다.
@@ -381,19 +382,19 @@ namespace kr
 	using TBuffer = TmpArray<void>;
 
 	// 참조하는 버퍼(읽기 전용), 근원이 사라지면 안된다.
-	using Buffer = RefArray<void>;
+	using Buffer = View<void>;
 
 	// 할당된 버퍼, 복사시 메모리가 할당되어진다.
 	using ABuffer = Array<void>;
 
 	// 참조하는 텍스트(읽기 전용), 근원이 사라지면 안된다.
-	using Text = RefArray<char>;
+	using Text = View<char>;
 	
 	// 참조하는 UTF-16 텍스트(읽기 전용), 근원이 사라지면 안된다.
-	using Text16 = RefArray<char16>;
+	using Text16 = View<char16>;
 
 	// 참조하는 UTF-32 텍스트(읽기 전용), 근원이 사라지면 안된다.
-	using Text32 = RefArray<char32>;
+	using Text32 = View<char32>;
 
 	// 텍스트 라이터, char 배열등에 기록시킨다.
 	using Writer = ArrayWriter<char>;
@@ -469,4 +470,75 @@ namespace kr
 
 	class nullterm_t;
 	static nullterm_t &nullterm = nullref;
+
+	// is ~~
+	template <template <typename...> class BASE, typename TARGET>
+	struct is_base_of_t
+	{
+		struct conversion_tester
+		{
+			template <typename ... T>
+			conversion_tester(const BASE<T...> &);
+		};
+
+		static constexpr bool value = is_convertible<TARGET, conversion_tester>::value;
+	};
+
+	template <typename T> struct IsOStream : is_base_of_t<OutStream, T> {};
+	template <typename T> struct IsIStream : is_base_of_t<InStream, T> {};
+	template <typename T> struct IsContainer
+	{
+		struct conversion_tester
+		{
+			template <typename C, bool rdonly, typename Parent>
+			conversion_tester(const Container<C, rdonly, Parent> &);
+		};
+
+		static constexpr bool value = is_convertible<T, conversion_tester>::value;
+	};
+	template <typename T> struct IsBuffer : is_base_of_t<Bufferable, T> {};
+
+	// add ~~
+	namespace _pri_
+	{
+		template <typename C, bool rdonly, class Parent, bool exists>
+		struct AddContainerCond {
+			static_assert(is_same<C, typename Parent::Component>::value, "Container type unmatch");
+			static_assert(rdonly == Parent::readonly, "Container readonly unmatch");
+			using type = Parent;
+		};
+		template <typename C, bool rdonly, class Parent>
+		struct AddContainerCond<C, rdonly, Parent, false> {
+			using type = Container<C, rdonly, Parent>;
+		};
+		template <typename C, bool rdonly, class Parent>
+		struct AddContainerType :AddContainerCond<C, rdonly, Parent, IsContainer<Parent>::value>
+		{
+		};
+
+		template <typename Derived, typename C, bool accessable, bool szable, bool readonly, class Parent, bool exists>
+		struct AddBufferableCond {
+			static_assert(is_same<C, typename Parent::Component>::value, "Container type unmatch");
+			static_assert(szable == Parent::szable, "Container szable unmatch");
+			static_assert(readonly == Parent::readonly, "Container readonly unmatch");
+			using type = Parent;
+		};
+		template <typename Derived, typename C, bool accessable, bool szable, bool readonly, class Parent>
+		struct AddBufferableCond<Derived, C, accessable, szable, readonly, Parent, false> {
+			using type = Bufferable<Derived, BufferInfo<C, accessable, szable, readonly, Parent>>;
+		};
+		template <typename Derived, typename Info>
+		struct AddBufferableType;
+		template <typename Derived, typename C, bool accessable, bool szable, bool readonly, class Parent>
+		struct AddBufferableType<Derived, BufferInfo<C, accessable, szable, readonly, Parent> >
+			:AddBufferableCond<Derived, C, accessable, szable, readonly, Parent, IsBuffer<Parent>::value>
+		{
+		};
+	}
+
+	template <typename T, bool rdonly, class Parent>
+	using AddContainer = typename _pri_::AddContainerType<T, rdonly, Parent>::type;
+	template <typename C, typename Info>
+	using AddBufferable = typename _pri_::AddBufferableType<C, Info>::type;
+
 }

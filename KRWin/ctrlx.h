@@ -35,7 +35,9 @@ namespace kr
 			int getCursorSelect() noexcept;
 			int getItemCount() noexcept;
 			bool deleteAllItems() noexcept;
+			int setItem(int iItem, const char16 * strName, int iImage = 0) noexcept;
 			int insertItem(int iItem, const char16 * strName, int iImage = 0) noexcept;
+			bool deleteItem(int iItem) noexcept;
 			int adjustRect(bool bLarger, irect* pRect) noexcept;
 			win::Brush* getBackgroundBrush() noexcept;
 		};

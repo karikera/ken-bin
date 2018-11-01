@@ -1,6 +1,8 @@
 #pragma once
 
 #include "app.h"
+#include "image.h"
+#include <K2D/image.h>
 
 namespace kr
 {
@@ -39,6 +41,10 @@ namespace kr
 		void fillOval(float x, float y, float width, float height) noexcept;
 		void fillText(Text text, float x, float y) noexcept;
 		void fillText(Text16 text, float x, float y) noexcept;
+		void drawImage(WebImage * image, float x, float y) noexcept;
+		void drawImage(WebImage * image, float x, float y, float width, float height) noexcept;
+		void drawImage(WebImage * image, float srcX, float srcY, float srcWidth, float srcHeight, float destX, float destY, float destWidth, float destHeight) noexcept;
+		bool putImageData(const gl::ImageData& image, int x, int y) noexcept;
 
 		void beginPath() noexcept;
 		void closePath() noexcept;

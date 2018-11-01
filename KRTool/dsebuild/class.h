@@ -45,7 +45,7 @@ public:
 class ClassExtern:public Class
 {
 public:
-	ClassExtern(string name, Class * parent);
+	ClassExtern(AText name, Class * parent);
 	~ClassExtern() override;
 	Keep<Identity> find(Text id) override;
 	Keep<Value> getSizeOf(Function * szof) override;

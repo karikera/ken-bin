@@ -1,12 +1,22 @@
 #pragma once
 
 #include <type_traits>
+#include <atomic>
 
+using std::atomic;
 using std::is_base_of;
+using std::is_base_of_v;
 using std::is_same;
+using std::is_same_v;
+using std::add_lvalue_reference_t;
+using std::add_rvalue_reference_t;
+using std::add_pointer_t;
+using std::add_const_t;
 using std::remove_reference_t;
 using std::remove_pointer_t;
 using std::remove_const_t;
+using std::is_convertible;
+using std::is_convertible_v;
 template <typename T>
 using remove_constref_t = remove_const_t<remove_reference_t<T>>;
 template <typename T>

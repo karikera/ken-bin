@@ -21,7 +21,18 @@ namespace kr
 		{
 			return (T)min(v2, vs ...) < v ? (T)min(v2, vs ...) : v;
 		}
-		
+
+		template <typename T>
+		constexpr T max(T v) noexcept
+		{
+			return v;
+		}
+		template <typename T, typename T2, typename ... ARGS>
+		constexpr T max(T v, T2 v2, ARGS ... vs) noexcept
+		{
+			return (T)max(v2, vs ...) > v ? (T)max(v2, vs ...) : v;
+		}
+
 		/// sqrt
 		namespace _pri_
 		{

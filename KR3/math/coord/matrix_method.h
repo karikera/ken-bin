@@ -57,6 +57,11 @@ namespace kr
 			ATTR_INLINE bool getIntersect(
 				matrix<T, 2, cols, aligned, matrix_data_type::right_bottom> * _out,
 				const matrix<T, 2, cols, aligned, matrix_data_type::right_bottom> & rc) const noexcept;
+			template <typename LAMBDA, typename LAMBDA2>
+			bool deltaCompare(const irect & dest, const LAMBDA & oldcallback, const LAMBDA2 & newcallback) const noexcept;
+			template <typename LAMBDA, typename LAMBDA2>
+			bool deltaMove(const irect & dest, const LAMBDA & oldcallback, const LAMBDA2 & newcallback) noexcept;
+
 		};;
 
 		template <typename T, bool aligned>
@@ -69,6 +74,51 @@ namespace kr
 			using super::super;
 			using super::v;
 			ATTR_INLINE static const matrix<T, 3, 3, aligned> identity() noexcept;
+		};;
+
+		template <typename T, bool aligned>
+		class matrix_method<T, 3, 2, aligned>
+			:public matrix_constructor_auto<T, 3, 2, aligned, matrix_data_type::none>
+		{
+			using super = matrix_constructor_auto<T, 3, 2, aligned, matrix_data_type::none>;
+		public:
+			using method_t = matrix_method;
+			using super::super;
+			using super::v;
+			using super::_11;
+			using super::_12;
+			using super::_21;
+			using super::_22;
+			using super::_31;
+			using super::_32;
+
+			ATTR_INLINE const vector<T, 2, aligned> getX() const noexcept;
+			ATTR_INLINE const vector<T, 2, aligned> getY() const noexcept;
+			ATTR_INLINE const vector<T, 2, aligned> getPos() const noexcept;
+
+			ATTR_INLINE const matrix<T, 3, 2, aligned> inverse() const noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& scaling(T scale) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& preScale(const vector<T, 2, aligned> & scale) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& postScale(const vector<T, 2, aligned> & scale) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& preRotate(T rad) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& postRotate(T rad) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& preTranslate(const vector<T, 2, aligned> & pos) noexcept;
+			ATTR_INLINE matrix<T, 3, 2, aligned>& postTranslate(const vector<T, 2, aligned> & pos) noexcept;
+
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> translate(vector<T, 2> pos) noexcept;
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> identity() noexcept;
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> scale(const vector<T, 2, aligned> &scale) noexcept;
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> scale(T x) noexcept;
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> rotate(T rad) noexcept;
+
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> translate(T x, T y) noexcept
+			{
+				return translate(vector<T, 2>(x, y));
+			}
+			ATTR_INLINE static const matrix<T, 3, 2, aligned> scale(T x, T y) noexcept
+			{
+				return scale(vector<T, 2, aligned>(x, y));
+			}
 		};;
 
 		template <typename T, bool aligned>
@@ -130,7 +180,7 @@ namespace kr
 
 			ATTR_INLINE static const matrix<T, 4, 4, aligned> orthogonal(T width, T height) noexcept;
 			ATTR_INLINE static const matrix<T, 4, 4, aligned> orthogonal(T left, T top, T right, T bottom, T _near, T _far) noexcept;
-			ATTR_INLINE static const matrix<T, 4, 4, aligned> fov(T fovy, T aspect, T near, T far) noexcept;
+			ATTR_INLINE static const matrix<T, 4, 4, aligned> fov(T fovy, T aspect, T _near, T _far) noexcept;
 
 
 		};;
@@ -139,8 +189,6 @@ namespace kr
 		ATTR_INLINE const mat4a matrix_method<float, 4, 4, true>::inverse() const noexcept;
 		template <> 
 		ATTR_INLINE void matrix_method<float, 4, 4, true>::scaling(float scale) noexcept;
-		template <> 
-		ATTR_INLINE void matrix_method<float, 4, 4, true>::postScale(const vec4a & scale) noexcept;
 
 		template <typename T, size_t cols> 
 		ATTR_INLINE const regionwh<T, cols> intersect(const regionwh<T, cols>& a, const regionwh<T, cols>& b) noexcept;

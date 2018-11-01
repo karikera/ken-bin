@@ -1,6 +1,7 @@
 #pragma once
 
 #include <KR3/main.h>
+#include <KR3/math/coord.h>
 #include <vector>
 
 namespace kr
@@ -33,6 +34,26 @@ namespace kr
 	{
 	};
 	template <typename C>
+	struct Serialize<Array<C>>
+	{
+		template <typename S>
+		inline static void serialize(Array<C>& dest, S & s)
+		{
+			s.serializeSize(&dest);
+			for (C & c : dest)
+				s & c;
+		}
+	};
+	template <typename C>
+	struct Serialize<View<C>>
+	{
+		template <typename S>
+		inline static void serialize(View<C>& dest, S & s)
+		{
+			s.reference(dest);
+		}
+	};
+	template <typename C>
 	struct Serialize<std::vector<C>>
 	{
 		template <typename S>
@@ -41,6 +62,15 @@ namespace kr
 			s.serializeSize(&dest);
 			for (C & c: dest)
 				s & c;
+		}
+	};
+	template <typename C, size_t count, bool aligned, typename order>
+	struct Serialize<math::vector<C, count, aligned, order>>
+	{
+		template <typename S>
+		inline static void serialize(math::vector<C, count, aligned, order>& dest, S & s)
+		{
+			s.raw(dest);
 		}
 	};
 	template <typename C>
@@ -124,7 +154,8 @@ namespace kr
 
 	template <class OS> class Serializer
 	{
-		static_assert(is_same<typename OS::Component, void>::value, "Component must be void");
+		using Component = typename OS::Component;
+		static_assert(sizeof(typename OS::InternalComponent) == 1, "sizeof Component != 1");
 	private:
 		OS * const m_os;
 
@@ -136,47 +167,70 @@ namespace kr
 			:m_os(os)
 		{
 		}
+		OS * stream() const noexcept
+		{
+			return m_os;
+		}
 		template <typename T>
 		inline void raw(T & t)
 		{
-			m_os->write((void*)&t, sizeof(T));
+			m_os->write((Component*)&t, sizeof(T));
 		}
-		inline void leb128(size_t value)
+		inline void leb128(dword value)
 		{
-			byte result;
-			for (;;)
-			{
-				result = value & 0x7f;
-				value >>= 7;
-				if (value == 0)
-					break;
-				result |= 0x80;
-				m_os->write(&result, 1);
-			}
-			m_os->write(&result, 1);
+			m_os->writeLeb128(value);
 		}
-		inline void kr_leb128(size_t value)
+		inline void leb128(qword value)
+		{
+			m_os->writeLeb128(value);
+		}
+		inline void kr_leb128(dword value)
 		{
 			byte out;
 			while (value >= 0x80)
 			{
 				out = (byte)(value & 0x7f);
-				m_os->write(&out, 1);
+				m_os->write((Component*)&out, 1);
 				value >>= 7;
 			}
 			out = (byte)(value | 0x80);
-			m_os->write(&out, 1);
+			m_os->write((Component*)&out, 1);
+		}
+		inline void kr_leb128(qword value)
+		{
+			byte out;
+			while (value >= 0x80)
+			{
+				out = (byte)(value) & 0x7f;
+				m_os->write((Component*)&out, 1);
+				value >>= 7;
+			}
+			out = (byte)(value) | 0x80;
+			m_os->write((Component*)&out, 1);
 		}
 		template <typename C>
 		inline void reference(const C* ref, size_t sz)
 		{
-			m_os->write(ref, sz * sizeof(C));
+			copy(ref, sz);
 		}
 		template <typename C>
 		inline void copy(const C* p, size_t sz)
 		{
-			if (m_os->write(p, sz) != sz)
+			sz *= sizeof(C);
+			if (m_os->write((Component*)p, sz) != sz)
 				throw NotEnoughSpaceException();
+		}
+		template <typename C>
+		inline void reference(View<C> &ref)
+		{
+			size_t sz = ref.size();
+			kr_leb128(sz);
+			reference(ref, sz);
+		}
+		template <typename C>
+		inline void reference(View<C> &ref, size_t sz)
+		{
+			copy(ref.data(), sz);
 		}
 		template <typename T>
 		inline void serializeSize(T * buffer)
@@ -198,7 +252,8 @@ namespace kr
 	};
 	template <class IS> class Deserializer
 	{
-		static_assert(is_same<typename IS::Component, void>::value, "Component must be void");
+		using Component = typename IS::Component;
+		static_assert(sizeof(typename IS::InternalComponent) == 1, "sizeof Component != 1");
 	private:
 		IS * const m_is;
 
@@ -210,43 +265,30 @@ namespace kr
 			: m_is(is)
 		{
 		}
+		IS * stream() const noexcept
+		{
+			return m_is;
+		}
 		template <typename T>
 		inline void raw(T & t)
 		{
-			m_is->read((void*)&t, sizeof(T));
+			m_is->read((Component*)&t, sizeof(T));
 		}
-		inline void leb128(size_t &value) noexcept
+		inline void leb128(dword &value)
 		{
-			dword result = 0;
-			dword shift = 0;
-			while (true)
-			{
-				byte v;
-				m_is->read(&v, 1);
-				result |= (v & 0x7f) << shift;
-				if ((v & 0x80) == 0)
-					break;
-				shift += 7;
-			}
-			value = result;
+			value = m_is->readLeb128();
 		}
-		inline void kr_leb128(size_t & sz)
+		inline void leb128(qword &value)
 		{
-			size_t v = 0;
-			byte shift = 0;
-			for (;;)
-			{
-				byte d;
-				m_is->read(&d, 1);
-				if ((d & 0x80) != 0)
-				{
-					v |= (d & 0x7f) << shift;
-					break;
-				}
-				v |= d << shift;
-				shift += 7;
-			}
-			sz = v;
+			value = m_is->readLeb128_64();
+		}
+		inline void kr_leb128(dword & value)
+		{
+			value = m_is->readLeb128_kr();
+		}
+		inline void kr_leb128(qword & value)
+		{
+			value = m_is->readLeb128_kr64();
 		}
 		template <typename C>
 		inline void reference(const C* &ref, size_t sz)
@@ -257,8 +299,23 @@ namespace kr
 		template <typename C>
 		inline void copy(C* p, size_t sz)
 		{
-			if (m_is->read(p, sz) != sz)
+			sz *= sizeof(C);
+			if (m_is->read((Component*)p, sz) != sz)
 				throw EofException();
+		}
+		template <typename C>
+		inline void reference(View<C> &ref)
+		{
+			size_t sz;
+			kr_leb128(sz);
+			reference(ref, sz);
+		}
+		template <typename C>
+		inline void reference(View<C> &ref, size_t sz)
+		{
+			const C * beg;
+			reference(beg, sz);
+			ref = View<C>(beg, sz);
 		}
 		template <typename T>
 		inline void serializeSize(T * buffer)

@@ -114,7 +114,7 @@ namespace kr
 			DrawContext() = delete;
 			static DrawContext * get(win::Window* wnd) noexcept;
 			static DrawContext * create() noexcept;
-			static void operator delete(void * p) noexcept;
+			void operator delete(void * p) noexcept;
 			DrawContext * createCompatibleDC() noexcept;
 			Bitmap * createCompatibleBitmap(int nWidth,int nHeight) noexcept;
 			Bitmap * createDIBitmap(CONST BITMAPINFOHEADER *pbmih, DWORD flInit, CONST VOID *pjBits, CONST BitmapInfo *pbmi, UINT iUsage) noexcept;
@@ -133,7 +133,7 @@ namespace kr
 			bool lineTo(ivec2 pt) noexcept;
 			bool moveTo(int x, int y) noexcept;
 			bool lineTo(int x, int y) noexcept;
-			bool polygon(RefArray<ivec2> pts) noexcept;
+			bool polygon(View<ivec2> pts) noexcept;
 			bool gradientRectH(ivec2 from, ivec2 to, COLORREF color1, COLORREF color2) noexcept;
 			bool gradientRectV(ivec2 from, ivec2 to, COLORREF color1, COLORREF color2) noexcept;
 			bool bitBlt(HDC dc2,const irectwh &From,ivec2 To) noexcept;
@@ -155,9 +155,9 @@ namespace kr
 			int getSBL() noexcept; // Space between letter
 	
 			template <typename T> void textOut(const T * str, size_t len, ivec2 pt) noexcept;
-			template <typename T> void textOut(RefArray<T> str, ivec2 pt) noexcept;
-			template <typename T> void textWrite(RefArray<T> str, ivec2* pt) noexcept;
-			template <typename T> void textWrite(RefArray<T> str, ivec2* pt, irectwh* rc, bool nodraw = false) noexcept;
+			template <typename T> void textOut(View<T> str, ivec2 pt) noexcept;
+			template <typename T> void textWrite(View<T> str, ivec2* pt) noexcept;
+			template <typename T> void textWrite(View<T> str, ivec2* pt, irectwh* rc, bool nodraw = false) noexcept;
 			int drawText(Text text, irect* lprc, uint format) noexcept;
 			int drawText(Text16 text, irect* lprc, uint format) noexcept;
 			dword getGlyphOutlineA(
@@ -261,13 +261,13 @@ namespace kr
 		};
 
 		extern template void DrawContext::textOut<char>(const char * str, size_t len, ivec2 pt) noexcept;
-		extern template void DrawContext::textOut<char>(RefArray<char> str, ivec2 pt) noexcept;
-		extern template void DrawContext::textWrite<char>(RefArray<char> str, ivec2* pt) noexcept;
-		extern template void DrawContext::textWrite<char>(RefArray<char> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
+		extern template void DrawContext::textOut<char>(View<char> str, ivec2 pt) noexcept;
+		extern template void DrawContext::textWrite<char>(View<char> str, ivec2* pt) noexcept;
+		extern template void DrawContext::textWrite<char>(View<char> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
 		extern template void DrawContext::textOut<char16>(const char16 * str, size_t len, ivec2 pt) noexcept;
-		extern template void DrawContext::textOut<char16>(RefArray<char16> str, ivec2 pt) noexcept;
-		extern template void DrawContext::textWrite<char16>(RefArray<char16> str, ivec2* pt) noexcept;
-		extern template void DrawContext::textWrite<char16>(RefArray<char16> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
+		extern template void DrawContext::textOut<char16>(View<char16> str, ivec2 pt) noexcept;
+		extern template void DrawContext::textWrite<char16>(View<char16> str, ivec2* pt) noexcept;
+		extern template void DrawContext::textWrite<char16>(View<char16> str, ivec2* pt, irectwh* rc, bool nodraw) noexcept;
 
 		class ObjectSelector
 		{

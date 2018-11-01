@@ -16,7 +16,9 @@ namespace kr
 
 	template <typename LAMBDA> auto dump_wrap(LAMBDA lambda) -> decltype(lambda())
 	{
-#ifdef _MSC_VER
+#ifdef _DEBUG
+		return lambda();
+#elif defined(_MSC_VER)
 		__try
 		{
 			return lambda();

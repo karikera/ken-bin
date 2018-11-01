@@ -6,46 +6,30 @@
 #include <KR3/math/coord.h>
 #include "handle.h"
 
-typedef UINT_PTR            WPARAM;
-typedef LONG_PTR            LPARAM;
-typedef LONG_PTR            LRESULT;
-
 namespace kr
 {
 	constexpr int IDN_KCONTROL = 3;
 
-	class LResult
+	class WndProcedure:public Node<WndProcedure, true>
 	{
 	public:
-		LResult(LRESULT lRes);
-		explicit LResult(autovar<sizeof(LRESULT)> value);
-
-		operator LRESULT() const;
-
-	private:
-		LRESULT lResult;
-	};
-
-	class WndProcedure
-	{
-	public:
-		virtual void wndProc(win::Window* pWindow, uint Msg, WPARAM wParam, LPARAM lParam) =0;
+		virtual void wndProc(win::Window* wnd, uint Msg, WPARAM wParam, LPARAM lParam) =0;
 
 	};
 
-	class WndProcWrapper:public Node<WndProcedure>
+	class WndProcWrapper:public WndProcedure
 	{
 	public:
 		WndProcWrapper();
 		WndProcWrapper(WndProc pProc);
 
-		virtual void wndProc(win::Window* pWindow, uint Msg, WPARAM wParam, LPARAM lParam) override;
+		virtual void wndProc(win::Window* wnd, uint Msg, WPARAM wParam, LPARAM lParam) override;
 
 	private:
 		WndProc m_pNextProc;
 	};
 
-	class WindowProgram:private Node<WndProcedure>
+	class WindowProgram:private WndProcedure
 	{
 	public:
 		Chain<WndProcedure> procedures;
@@ -57,10 +41,14 @@ namespace kr
 		virtual ~WindowProgram() noexcept;
 		win::Window* detachWindow() noexcept;
 		win::Window* getWindow() noexcept;
-		void createPrimary(pcstr16 title, int style, const irectwh & rc) noexcept;
-		void createPrimary(pcstr16 title, int style, int width, int height) noexcept;
-		void createPrimary(pcstr16 title, int style) noexcept;
+		win::Window* createPrimary(pcstr16 title, int style, const irectwh & rc) noexcept;
+		win::Window* createPrimary(pcstr16 title, int style, int width, int height) noexcept;
+		win::Window* createPrimary(pcstr16 title, int style) noexcept;
 		void create(pcstr16 title, int style, const irectwh & rc) noexcept;
+		win::Window* createPrimaryEx(int exstyle, pcstr16 title, int style, const irectwh & rc) noexcept;
+		win::Window* createPrimaryEx(int exstyle, pcstr16 title, int style, int width, int height) noexcept;
+		win::Window* createPrimaryEx(int exstyle, pcstr16 title, int style) noexcept;
+		void createEx(int exstyle, pcstr16 title, int style, const irectwh & rc) noexcept;
 		void destroy() noexcept;
 
 		static ATOM registerClass(HICON icon, uint style = CS_HREDRAW | CS_VREDRAW) noexcept;
@@ -81,7 +69,7 @@ namespace kr
 		static LRESULT CALLBACK _wndProc(win::Window* pWindow, uint Msg, WPARAM wParam, LPARAM lParam) noexcept;
 	};
 
-	class ExTranslator :public Node<Translator>
+	class ExTranslator :public Translator
 	{
 		virtual bool translate(const MessageStruct* pMsg) override;
 	};
@@ -116,9 +104,9 @@ namespace kr
 
 	const wchar_t * makeIntResource(int res) noexcept;
 
-	irect getCursoredMonitorRect() noexcept;
+	irect getMonitorRectFromIndex(dword index) noexcept;
+	irect getMonitorRectFromCursor() noexcept;
 	irectwh calculateWindowPos(dword style, dword w, dword h);
 	irectwh calculateWindowPos(dword w, dword h);
 	void visiblePrimaryWindow(dword style, dword w, dword h);
-	ivec2 getCursorPos();
 }

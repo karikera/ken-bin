@@ -37,8 +37,9 @@ namespace kr
 			void writeImpl(const NewComponent* data, size_t nSize) = delete;
 			void resetStream(nullptr_t) noexcept;
 			void resetStream(Base * p) noexcept;
-			void resetStream(typename Base::BaseStream * p) noexcept;
+			void resetStream(typename Base::StreamableBase * p) noexcept;
 			Base* base() const noexcept;
+			void close() noexcept;
 
 		private:
 			Base* m_pt;
@@ -90,12 +91,18 @@ inline void kr::io::FilterOStream<Derived, Base, autoClose, NewComponent>::reset
 	m_pt = p;
 }
 template <class Derived, class Base, bool autoClose, typename NewComponent>
-inline void kr::io::FilterOStream<Derived, Base, autoClose, NewComponent>::resetStream(typename Base::BaseStream * p) noexcept
+inline void kr::io::FilterOStream<Derived, Base, autoClose, NewComponent>::resetStream(typename Base::StreamableBase * p) noexcept
 {
-	m_pt = p->template retype<Component>();
+	m_pt = p->template stream<Component>();
 }
 template <class Derived, class Base, bool autoClose, typename NewComponent>
 inline Base* kr::io::FilterOStream<Derived, Base, autoClose, NewComponent>::base() const noexcept
 {
 	return m_pt;
+}
+template <class Derived, class Base, bool autoClose, typename NewComponent>
+inline void kr::io::FilterOStream<Derived, Base, autoClose, NewComponent>::close() noexcept
+{
+	delete m_pt;
+	m_pt = nullptr;
 }

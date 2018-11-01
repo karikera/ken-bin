@@ -21,13 +21,17 @@ namespace kr
 				using Super::_clear;
 				using Super::_shiftRight;
 				using Super::Super;
+				using Super::data;
 				using Super::begin;
 				using Super::end;
 				using Super::size;
+				using Super::sizeBytes;
+				using Super::capacity;
 				using Super::empty;
 				using Super::reserve;
 				using Super::szable;
 				using Super::fill;
+				using Super::zero;
 				using Super::operator =;
 
 				void clear() noexcept
@@ -40,25 +44,32 @@ namespace kr
 					this->~BufferIOMethod();
 					new(this) BufferIOMethod(nullptr);
 				}
+				void pick(Component * pos) noexcept
+				{
+					_assert(begin() <= pos && pos < end());
+					size_t sz = size() - 1;
+					_resize(sz);
+
+					Component* last = begin() + sz;
+					if (pos != last) *pos = move(*last);
+
+					callDestructor(last);
+				}
 				void pick(size_t i) noexcept
 				{
 					_assert(i < size());
-					_assert(!empty());
 					size_t sz = size() - 1;
 					_resize(sz);
 
 					Component* data = begin();
-					Component* pos = data + i;
 					Component* last = data + sz;
+					if (i != sz) data[i] = move(*last);
 
-					if (pos == last) return;
-					*pos = move(*last);
 					callDestructor(last);
 				}
 				InternalComponent pickGet(size_t i) noexcept
 				{
 					_assert(i < size());
-					_assert(!empty());
 					size_t sz = size() - 1;
 					_resize(sz);
 
@@ -78,9 +89,15 @@ namespace kr
 				{
 					return pickGet(g_random.getDword() % size());
 				}
-				void fill(const InternalComponent &chr, size_t sz) // NotEnoughSpaceException
+				void fill(const InternalComponent &chr, size_t sz) throw(NotEnoughSpaceException)
 				{
-					if (std::is_class<InternalComponent>::value)
+					KR_DEFINE_MMEM();
+					if (std::is_trivially_default_constructible<InternalComponent>::value)
+					{
+						_resize(sz);
+						memm::set(begin(), chr, sz);
+					}
+					else
 					{
 						size_t osz = size();
 						_resize(sz);
@@ -94,22 +111,29 @@ namespace kr
 							mema::ctor_fill(begin() + osz, chr, sz - osz);
 						}
 					}
-					else
-					{
-						_resize(sz);
-						memm::set(begin(), chr, sz);
-					}
+				}
+				void zero(size_t sz) throw(NotEnoughSpaceException)
+				{
+					_resize(sz);
+					memset(data(), 0, sizeBytes());
 				}
 				template <typename T> void copy(const T& _copy)
 				{
 					bufferize_t<T, Component> buffer = _copy;
 					size_t sz = buffer.size();
 					resize(sz, sz + buffer.szable);
+					size_t cap = capacity();
 					buffer.copyTo(begin());
 				}
 				void copy(const Component* arr, size_t sz)
 				{
-					if (std::is_class<Component>::value)
+					KR_DEFINE_MMEM();
+					if (std::is_trivially_default_constructible<Component>::value)
+					{
+						_resize(sz);
+						memm::copy(begin(), arr, sz);
+					}
+					else
 					{
 						size_t osz = size();
 						if (sz < osz)
@@ -124,21 +148,16 @@ namespace kr
 							mema::ctor_copy(begin() + osz, arr + osz, sz - osz);
 						}
 					}
-					else
-					{
-						_resize(sz);
-						memm::copy(begin(), arr, sz);
-					}
 				}
 			
-				void pop() // EofException
+				void pop() throw(EofException)
 				{
 					size_t osize = size();
 					if(osize == 0)
 						throw EofException();
 					_resize(osize-1);
 				}
-				InternalComponent popGet() // EofException
+				InternalComponent popGet() throw(EofException)
 				{
 					size_t osize = size();
 					if (osize == 0)
@@ -164,34 +183,33 @@ namespace kr
 					_resize(_len);
 				}
 
-				template <typename ... ARGS> 
-				Component* emplace(ARGS && ... args) noexcept
+				InternalComponent* push(InternalComponent data) throw(NotEnoughSpaceException)
 				{
 					size_t osize = size();
-					_resize(osize+1);
+					_resize(osize + 1);
 					InternalComponent * comp = begin() + osize;
-					new(comp) InternalComponent(move(args) ...);
-					return (Component*)comp;
+					new(comp) InternalComponent(move(data));
+					return comp;
 				}
-				void insert(size_t i, const InternalComponent & value) // NotEnoughSpaceException
+				void insert(size_t i, InternalComponent value) throw(NotEnoughSpaceException)
 				{
 					_assert(i <= size());
 					_shiftRight(i);
-					new(begin() + i) InternalComponent(value);
+					new(begin() + i) InternalComponent(move(value));
 				}
-				void insert(size_t i, Ref arr) // NotEnoughSpaceException
+				void insert(size_t i, Ref arr) throw(NotEnoughSpaceException)
 				{
 					_assert(i <= size());
 					size_t cnt = arr.size();
 					mema::ctor_copy(prepareAt(i, cnt), arr.begin(), cnt);
 				}
-				Component* prepareAt(size_t i, size_t cnt) // NotEnoughSpaceException
+				Component* prepareAt(size_t i, size_t cnt) throw(NotEnoughSpaceException)
 				{
 					_assert(i <= size());
 					_shiftRight(i, cnt);
 					return begin() + i;
 				}
-				void remove_p(Component * axis)
+				void remove_p(Component * axis) noexcept
 				{
 					size_t sz = size();
 					_assert((size_t)(axis - begin()) < sz);
@@ -199,7 +217,7 @@ namespace kr
 					kr::mema::ctor_move_d(axis, axis + 1, begin() + sz - axis);
 					_setSize(sz);
 				}
-				void remove(size_t i)
+				void remove(size_t i) noexcept
 				{
 					size_t sz = size();
 					_assert(i < sz);
@@ -208,7 +226,7 @@ namespace kr
 					kr::mema::ctor_move_d(axis, axis + 1, sz - i);
 					_setSize(sz);
 				}
-				void remove(size_t i, size_t cnt)
+				void remove(size_t i, size_t cnt) noexcept
 				{
 					size_t sz = size();
 					_assert(i+cnt <= sz);
@@ -216,7 +234,7 @@ namespace kr
 					kr::mema::ctor_move_d(axis, axis + cnt, sz - i - cnt);
 					_setSize(sz - cnt);
 				}
-				InternalComponent removeGet(size_t i)
+				InternalComponent removeGet(size_t i) noexcept
 				{
 					size_t sz = size();
 					_assert(i < sz);
@@ -226,15 +244,22 @@ namespace kr
 					_setSize(sz - 1);
 					return move(out);
 				}
-				void resize(size_t nsize) // NotEnoughSpaceException
+				void resize(size_t nsize) throw(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					_resize(nsize);
 					if (nsize > sz)
 						mema::ctor((InternalComponent*)begin() + sz, nsize - sz);
 				}
+				void resizeUp(size_t nsize) throw(NotEnoughSpaceException)
+				{
+					size_t sz = size();
+					if (nsize <= sz) return;
+					_resize(nsize);
+					mema::ctor((InternalComponent*)begin() + sz, nsize - sz);
+				}
 				template <typename ... ARGS>
-				void initResize(size_t nsize, const ARGS & ... args) // NotEnoughSpaceException
+				void initResize(size_t nsize, const ARGS & ... args) throw(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					_resize(nsize);
@@ -251,19 +276,19 @@ namespace kr
 						while (beg != end);
 					}
 				}
-				void alloc(size_t nsize) // NotEnoughSpaceException
+				void alloc(size_t nsize) throw(NotEnoughSpaceException)
 				{
 					clear();
 					_resize(nsize);
 					mema::ctor(begin(), nsize);
 				}
-				void resize(size_t nsize, size_t ncapacity) // NotEnoughSpaceException
+				void resize(size_t nsize, size_t ncapacity) throw(NotEnoughSpaceException)
 				{
 					reserve(ncapacity);
 					resize(nsize);
 				}
 				template <typename LAMBDA>
-				void removeMatch(const LAMBDA &lambda)
+				bool removeMatchL(const LAMBDA &lambda) throw(...)
 				{
 					Component* i = begin();
 					Component* to = end();
@@ -271,51 +296,53 @@ namespace kr
 					for (;i != to; i++)
 					{
 						if (!lambda(*i)) continue;
-						return remove_p(i);
+						remove_p(i);
+						return true;
 					}
+					return false;
 				}
-				void removeMatch(const InternalComponent &value)
+				bool removeMatch(const InternalComponent &value) noexcept
 				{
-					removeMatch([&](const InternalComponent& v)->bool { return v == value; });
+					return removeMatchL([&](const InternalComponent& v)->bool { return v == value; });
 				}
-				template <typename LAMBDA> 
-				void removeMatchAll(const LAMBDA &lambda)
+				void removeMatchAll(const InternalComponent &value) noexcept
 				{
-					Component* i = begin();
+					removeMatchAllL([&](const InternalComponent& v)->bool{ return v == value; });
+				}
+				template <typename LAMBDA>
+				void removeMatchAllL(const LAMBDA &lambda) throw(...)
+				{
+					Component* ptr = begin();
 					Component* to = end();
 
 					for (;;)
 					{
-						if (i == to) return;
-						if (lambda(*i)) break;
-						i++;
+						if (ptr == to) return;
+						if (lambda(*ptr)) break;
+						ptr++;
 					}
 
-					Component* moveto = i;
+					Component* moveto = ptr;
 
-					callDestructor(i++);
+					callDestructor(ptr++);
 
-					while (i != to)
+					while (ptr != to)
 					{
-						if (lambda(*i))
+						if (lambda(*ptr))
 						{
-							callDestructor(i++);
+							callDestructor(ptr++);
 						}
 						else
 						{
-							new(moveto++) Component(move(*i));
-							callDestructor(i++);
+							new(moveto++) Component(move(*ptr));
+							callDestructor(ptr++);
 						}
 					}
 
 					_setSize(moveto - begin());
 				}
-				void removeAll(const InternalComponent &value)
-				{
-					removeMatchAll([&](const InternalComponent& v)->bool{ return v == value; });
-				}
 
-				template <typename S> void serialize(S &s)
+				template <typename S> void serialize(S &s) throw(...)
 				{
 					s.serializeSize(this);
 					for (Component & c : *this)
@@ -324,10 +351,11 @@ namespace kr
 					}
 				}
 
-				constexpr BufferIOMethod() noexcept = default;
+				constexpr BufferIOMethod() = default;
 				constexpr BufferIOMethod(const BufferIOMethod& _copy) = default;
 				constexpr BufferIOMethod(BufferIOMethod && _mv) = default;
-				BufferIOMethod(const Ref & data) noexcept // XXX: for intelisense bug
+
+				BufferIOMethod(const Ref & data) throw(NotEnoughSpaceException)
 				{
 					size_t sz = data.size();
 					_alloc(sz, sz + szable);
@@ -335,13 +363,14 @@ namespace kr
 					mema::ctor(beg, sz);
 					resize(data.copyTo(beg));
 				}
+
 				template <typename _Derived, class _Parent>
-				BufferIOMethod(const Printable<_Derived, Component, _Parent> & _data) noexcept
+				BufferIOMethod(const Printable<_Derived, Component, _Parent> & _data) throw(NotEnoughSpaceException)
 				{
 					_data.writeTo(this);
 				}
 				template <typename _Derived, bool szable, bool b, class _Parent>
-				BufferIOMethod(const Bufferable<_Derived, BufferInfo<Component, false, szable, b, _Parent>> & _data) noexcept
+				BufferIOMethod(const Bufferable<_Derived, BufferInfo<Component, false, szable, b, _Parent>> & _data) throw(NotEnoughSpaceException)
 				{
 					size_t sz = _data.size();
 					_alloc(sz, sz + szable);
@@ -350,7 +379,7 @@ namespace kr
 					resize(_data.copyTo(beg));
 				}
 				template <typename _Derived, bool szable, bool b, class _Parent>
-				BufferIOMethod(const Bufferable<_Derived, BufferInfo<AutoComponent, false, szable, b, _Parent>> & _data) noexcept
+				BufferIOMethod(const Bufferable<_Derived, BufferInfo<AutoComponent, false, szable, b, _Parent>> & _data) throw(NotEnoughSpaceException)
 				{
 					size_t sz = _data.template sizeAs<Component>();
 					_alloc(sz, sz + szable);
@@ -359,7 +388,7 @@ namespace kr
 					resize(_data.template copyTo<Component>(beg));
 				}
 				template <typename _Derived, bool a, bool b, class _Parent>
-				explicit BufferIOMethod(Bufferable<_Derived, BufferInfo<Component, true, a, b, _Parent>> && _mv) noexcept
+				explicit BufferIOMethod(Bufferable<_Derived, BufferInfo<Component, true, a, b, _Parent>> && _mv) throw(NotEnoughSpaceException)
 				{
 					_move(_mv.begin(), _mv.size());
 				}
@@ -371,7 +400,7 @@ namespace kr
 				}
 
 				template <typename ... ARGS>
-				static Self concat(const ARGS & ... args) noexcept
+				static Self concat(const ARGS & ... args) throw(NotEnoughSpaceException)
 				{
 					Self text;
 					text.prints(args ...);

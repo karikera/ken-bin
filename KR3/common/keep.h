@@ -6,6 +6,7 @@
 
 #include <assert.h>
 #include <string.h>
+#include <atomic>
 
 #ifdef WIN32
 typedef struct IUnknown IUnknown;
@@ -71,8 +72,7 @@ namespace kr
 	template <typename T>
 	struct IfInterfaceCall: _pri_::IfInterfaceCallImpl<IsInterface<T>::value>
 	{
-	};
-	
+	};	
 
 	struct Releaser
 	{
@@ -85,7 +85,6 @@ namespace kr
 		inline static void addRef(T * value) noexcept
 		{
 			IfInterfaceCall<T>::addRef(value);
-			static_assert(IsInterface<T>::value, "Is not interface");
 		}
 		template <typename T>
 		inline static void release(T * value) noexcept
@@ -99,7 +98,8 @@ namespace kr
 	create로 생성시키며,
 	remove로 소멸시킨다.
 	*/
-	template <class T> class Manual
+	template <class T>
+	class alignas(alignof(T)) Manual
 	{
 	public:
 		Manual() noexcept;
@@ -111,11 +111,156 @@ namespace kr
 		operator const T*() const noexcept;
 
 	private:
-		struct alignas(alignof(T))
-		{
-			char m_buffer[sizeof(T)];
-		};
+		uint8_t m_buffer[sizeof(T)];
 		ondebug(bool m_constructed);
+	};
+
+	/*
+	T를 수동으로 생성, 소멸시키는 클래스 래퍼
+	create로 생성시키며,
+	remove로 소멸시킨다.
+	*/
+	template <typename T>
+	class alignas(alignof(T)) Deferred
+	{
+	public:
+		template <typename ... ARGS>
+		void create(const ARGS & ... args) noexcept;
+		void remove() noexcept;
+		operator T*() noexcept;
+		T* operator ->() noexcept;
+
+	private:
+		uint8_t m_buffer[sizeof(T)];
+	};
+	template <typename T>
+	template <typename ... ARGS>
+	void Deferred<T>::create(const ARGS & ... args) noexcept
+	{
+		new(((T*)(void*)this)) T(args ...);
+	}
+	template <typename T>
+	void Deferred<T>::remove() noexcept
+	{
+		((T*)(void*)this)->~T();
+	}
+	template <typename T>
+	Deferred<T>::operator T*() noexcept
+	{
+		return (T*)(void*)this;
+	}
+	template <typename T>
+	T* Deferred<T>::operator ->() noexcept
+	{
+		return (T*)(void*)this;
+	}
+	
+	template <typename T>
+	class Pointer
+	{
+	protected:
+		T * m_ptr;
+
+	public:
+		Pointer() = default;
+		Pointer(T * ptr) noexcept
+			:m_ptr(ptr)
+		{
+		}
+		Pointer<T>& operator =(T* ptr) noexcept
+		{
+			m_ptr = ptr;
+			return *this;
+		}
+		T * operator ->() const noexcept
+		{
+			return m_ptr;
+		}
+		operator T*() const noexcept
+		{
+			return m_ptr;
+		}
+
+		Pointer<Pointer<T>> operator &() noexcept
+		{
+			return this;
+		}
+		Pointer<const Pointer<T>> operator &() const noexcept
+		{
+			return this;
+		}
+	};
+
+	template <typename T>
+	class Pointer<Pointer<T>>
+	{
+	protected:
+		T ** m_ptr;
+
+	public:
+		Pointer() = default;
+		Pointer(T ** ptr) noexcept
+			:m_ptr(ptr)
+		{
+		}
+		Pointer(Pointer<T> * ptr) noexcept
+			:m_ptr((T**)ptr)
+		{
+		}
+		Pointer<T>& operator =(T** ptr) noexcept
+		{
+			m_ptr = ptr;
+			return *this;
+		}
+		Pointer<T>& operator =(Pointer<T>* ptr) noexcept
+		{
+			m_ptr = (T**)ptr;
+			return *this;
+		}
+		operator T**() const noexcept
+		{
+			return m_ptr;
+		}
+		operator Pointer<T>*() const noexcept
+		{
+			return (Pointer<T>*)m_ptr;
+		}
+	};
+
+	template <typename T>
+	class Pointer<const Pointer<T>>
+	{
+	protected:
+		T * const * m_ptr;
+
+	public:
+		Pointer() = default;
+		Pointer(T * const * ptr) noexcept
+			:m_ptr(ptr)
+		{
+		}
+		Pointer(const Pointer<T> * ptr) noexcept
+			:m_ptr((T* const *)ptr)
+		{
+		}
+		Pointer<T>& operator =(T* const * ptr) noexcept
+		{
+			m_ptr = ptr;
+			return *this;
+		}
+		Pointer<T>& operator =(const Pointer<T>* ptr) noexcept
+		{
+			m_ptr = (T* const *)ptr;
+			return *this;
+		}
+		operator T* const *() const noexcept
+		{
+			return m_ptr;
+		}
+		operator const Pointer<T>*() const noexcept
+		{
+			return (const Pointer<T>*)m_ptr;
+		}
 	};
 
 	/*
@@ -145,6 +290,128 @@ namespace kr
 		T* m_ptr;
 	};
 
+	template <class T> class Keep;
+
+	template <class T>
+	class KeepPointer
+	{
+	public:
+		KeepPointer(Keep<T> * ptr) noexcept
+		{
+			m_ptr = ptr;
+		}
+		Keep<T>& operator *() const noexcept
+		{
+			return *m_ptr;
+		}
+		Keep<T>** operator &() noexcept
+		{
+			return &m_ptr;
+		}
+		Keep<T>* const * operator &() const noexcept
+		{
+			return &m_ptr;
+		}
+		Keep<T>* operator ->() const noexcept
+		{
+			return m_ptr;
+		}
+		KeepPointer& operator =(Keep<T> * ptr) noexcept
+		{
+			m_ptr = ptr;
+			return *this;
+		}
+		operator Keep<T>*() const noexcept
+		{
+			return m_ptr;
+		}
+		operator T**() const noexcept
+		{
+			return &m_ptr->m_ptr;
+		}
+		operator void **() const noexcept
+		{
+			return (void**)&m_ptr->m_ptr;
+		}
+		bool operator !=(const KeepPointer & ptr) const noexcept
+		{
+			return m_ptr != ptr.m_ptr;
+		}
+		bool operator ==(const KeepPointer & ptr) const noexcept
+		{
+			return m_ptr == ptr.m_ptr;
+		}
+		bool operator !=(nullptr_t ptr) const noexcept
+		{
+			return m_ptr != ptr;
+		}
+		bool operator ==(nullptr_t ptr) const noexcept
+		{
+			return m_ptr == ptr;
+		}
+
+	protected:
+		Keep<T> * m_ptr;
+	};
+
+	template <class T>
+	class KeepConstPointer
+	{
+	public:
+		KeepConstPointer(const Keep<T> * ptr) noexcept
+		{
+			m_ptr = ptr;
+		}
+		const Keep<T>& operator *() const noexcept
+		{
+			return *m_ptr;
+		}
+		const Keep<T>** operator &() noexcept
+		{
+			return &m_ptr;
+		}
+		const Keep<T>* const * operator &() const noexcept
+		{
+			return &m_ptr;
+		}
+		const Keep<T>* operator ->() const noexcept
+		{
+			return m_ptr;
+		}
+		KeepConstPointer& operator =(const Keep<T> * ptr) noexcept
+		{
+			m_ptr = ptr;
+			return *this;
+		}
+		operator const Keep<T>*() const noexcept
+		{
+			return m_ptr;
+		}
+		operator T*const*() const noexcept
+		{
+			return &m_ptr->m_ptr;
+		}
+		bool operator !=(const KeepConstPointer & ptr) const noexcept
+		{
+			return m_ptr != ptr.m_ptr;
+		}
+		bool operator ==(const KeepConstPointer & ptr) const noexcept
+		{
+			return m_ptr == ptr.m_ptr;
+		}
+		bool operator !=(nullptr_t ptr) const noexcept
+		{
+			return m_ptr != ptr;
+		}
+		bool operator ==(nullptr_t ptr) const noexcept
+		{
+			return m_ptr == ptr;
+		}
+
+	protected:
+		const Keep<T> * m_ptr;
+	};
+
 	/*
 	T를 자동 소멸시키는 클래스.
 	참조 횟수를 가진 클래스면 생성/소멸시, 추가/감소된다.
@@ -154,107 +421,9 @@ namespace kr
 	{
 		template <typename> friend class Keep;
 		template <typename> friend class Must;
+		template <typename> friend class KeepPointer;
+		template <typename> friend class KeepConstPointer;
 	public:
-		class Pointer
-		{
-		public:
-			Pointer(Keep<T> * ptr) noexcept
-			{
-				m_ptr = ptr;
-			}
-			Keep<T>& operator *() const noexcept
-			{
-				return *m_ptr;
-			}
-			Keep<T>** operator &() noexcept
-			{
-				return &m_ptr;
-			}
-			Keep<T>* const * operator &() const noexcept
-			{
-				return &m_ptr;
-			}
-			Keep<T>* operator ->() const noexcept
-			{
-				return m_ptr;
-			}
-			Pointer& operator =(Keep<T> * ptr) noexcept
-			{
-				m_ptr = ptr;
-				return *this;
-			}
-			operator Keep<T>*() const noexcept
-			{
-				return m_ptr;
-			}
-			operator T**() const noexcept
-			{
-				return &m_ptr->m_ptr;
-			}
-			operator void **() const noexcept
-			{
-				return (void**)&m_ptr->m_ptr;
-			}
-			bool operator !=(const Pointer & ptr) const noexcept
-			{
-				return m_ptr != ptr.m_ptr;
-			}
-			bool operator ==(const Pointer & ptr) const noexcept
-			{
-				return m_ptr == ptr.m_ptr;
-			}
-
-		protected:
-			Keep<T> * m_ptr;
-		};
-		class ConstPointer
-		{
-		public:
-			ConstPointer(const Keep<T> * ptr) noexcept
-			{
-				m_ptr = ptr;
-			}
-			const Keep<T>& operator *() const noexcept
-			{
-				return *m_ptr;
-			}
-			const Keep<T>** operator &() noexcept
-			{
-				return &m_ptr;
-			}
-			const Keep<T>* const * operator &() const noexcept
-			{
-				return &m_ptr;
-			}
-			const Keep<T>* operator ->() const noexcept
-			{
-				return m_ptr;
-			}
-			ConstPointer& operator =(const Keep<T> * ptr) noexcept
-			{
-				m_ptr = ptr;
-				return *this;
-			}
-			operator const Keep<T>*() const noexcept
-			{
-				return m_ptr;
-			}
-			operator T*const*() const noexcept
-			{
-				return &m_ptr->m_ptr;
-			}
-			bool operator !=(const ConstPointer & ptr) const noexcept
-			{
-				return m_ptr != ptr.m_ptr;
-			}
-			bool operator ==(const ConstPointer & ptr) const noexcept
-			{
-				return m_ptr == ptr.m_ptr;
-			}
-
-		protected:
-			const Keep<T> * m_ptr;
-		};
 		Keep() noexcept;
 		Keep(T* ptr) noexcept;
 		Keep(const Keep<T>& copy) noexcept;
@@ -263,11 +432,12 @@ namespace kr
 		template <typename T2> Keep(Keep<T2>&& move) noexcept;
 		~Keep() noexcept;
 		void move(T * v) noexcept;
+		void remove() noexcept;
 		operator T*&() noexcept;
 		operator T* const&() const noexcept;
 		T* operator ->() const noexcept;
-		const Pointer operator &() noexcept;
-		const ConstPointer operator &() const noexcept;
+		const KeepPointer<T> operator &() noexcept;
+		const KeepConstPointer<T> operator &() const noexcept;
 		T* detach() noexcept;
 		Keep<T>& operator =(const Keep<T> & copy) noexcept;
 		Keep<T>& operator =(Keep<T> && move) noexcept;
@@ -286,7 +456,7 @@ namespace kr
 	{
 	public:
 		void AddRef() noexcept = delete;
-		size_t Release() noexcept = delete;
+		int Release() noexcept = delete;
 	};
 
 	template <typename T, typename Parent = Empty>
@@ -295,11 +465,24 @@ namespace kr
 	public:
 		Referencable() noexcept;
 		void AddRef() noexcept;
-		size_t Release() noexcept;
-		size_t getReferenceCount() noexcept;
+		int Release() noexcept;
+		int getReferenceCount() noexcept;
 
 	private:
-		size_t m_ref;
+		int m_ref;
+	};
+
+	template <typename T, typename Parent = Empty>
+	class AtomicReferencable : public Interface<Parent>
+	{
+	public:
+		AtomicReferencable() noexcept;
+		void AddRef() noexcept;
+		int Release() noexcept;
+		int getReferenceCount() noexcept;
+
+	protected:
+		std::atomic<int> m_ref;
 	};
 
 	template <typename T> 
@@ -314,9 +497,6 @@ namespace kr
 	public:
 		VCounter() noexcept;
 		virtual ~VCounter() noexcept;
-
-	private:
-		size_t m_reference;
 	};
 
 	template <typename T> class StateKeeper
@@ -324,7 +504,7 @@ namespace kr
 	public:
 		template <typename ... ARGS> StateKeeper(ARGS && ... values)
 		{
-			m_prev = T(values ...).use();
+			m_prev = T(move(values) ...).use();
 		}
 		~StateKeeper()
 		{
@@ -522,6 +702,15 @@ namespace kr
 		m_ptr = v;
 	}
 	template<class T>
+	inline void Keep<T>::remove() noexcept
+	{
+		if (m_ptr != nullptr)
+		{
+			Releaser::release(m_ptr);
+			m_ptr = nullptr;
+		}
+	}
+	template<class T>
 	inline Keep<T>::operator T*&() noexcept
 	{
 		return m_ptr;
@@ -538,12 +727,12 @@ namespace kr
 		return m_ptr;
 	}
 	template<class T>
-	inline const typename Keep<T>::Pointer Keep<T>::operator &() noexcept
+	inline const typename KeepPointer<T> Keep<T>::operator &() noexcept
 	{
 		return this;
 	}
 	template<class T>
-	inline const typename Keep<T>::ConstPointer Keep<T>::operator &() const noexcept
+	inline const typename KeepConstPointer<T> Keep<T>::operator &() const noexcept
 	{
 		return this;
 	}
@@ -629,7 +818,7 @@ namespace kr
 	{
 		if (alignof(T) != 1)
 		{
-			deleteAligned(m_ptr);
+			_deleteAligned(m_ptr);
 		}
 		else
 		{
@@ -658,17 +847,42 @@ namespace kr
 		m_ref++;
 	}
 	template<typename T, typename Parent>
-	size_t Referencable<T, Parent>::Release() noexcept
+	int Referencable<T, Parent>::Release() noexcept
 	{
 		_assert(m_ref != 0);
 		m_ref--;
-		size_t ref = m_ref;
+		int ref = m_ref;
 		if (ref == 0) 
 			delete static_cast<T*>(this);
 		return ref;
 	}
 	template<typename T, typename Parent>
-	inline size_t Referencable<T, Parent>::getReferenceCount() noexcept
+	inline int Referencable<T, Parent>::getReferenceCount() noexcept
+	{
+		return m_ref;
+	}
+
+	template<typename T, typename Parent>
+	AtomicReferencable<T, Parent>::AtomicReferencable() noexcept
+		:m_ref(0)
+	{
+	}
+	template<typename T, typename Parent>
+	void AtomicReferencable<T, Parent>::AddRef() noexcept
+	{
+		m_ref++;
+	}
+	template<typename T, typename Parent>
+	int AtomicReferencable<T, Parent>::Release() noexcept
+	{
+		int old = m_ref--;
+		_assert(old != 0);
+		old--;
+		if (old == 0) delete static_cast<T*>(this);
+		return old;
+	}
+	template<typename T, typename Parent>
+	inline int AtomicReferencable<T, Parent>::getReferenceCount() noexcept
 	{
 		return m_ref;
 	}

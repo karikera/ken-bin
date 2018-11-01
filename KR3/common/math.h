@@ -63,6 +63,7 @@ namespace kr
 		template <>
 		_RETURN_ double mod<double>(double a, double b) noexcept;
 		_RETURN_ float radianmod(float a) noexcept;
+		_RETURN_ float uradianmod(float a) noexcept;
 		_RETURN_ uint32_t ilog(uint32_t val, uint32_t n) noexcept;
 		_RETURN_ uint32_t ilog2(uint32_t val) noexcept;
 		_RETURN_ uint32_t plog2(uintptr_t val) noexcept;

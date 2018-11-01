@@ -3,20 +3,54 @@
 #include "../../main.h"
 #include "../../meta/numbers.h"
 
+#ifndef __EMSCRIPTEN__
+#define USE_SIMD
+#endif
+
+#ifdef USE_SIMD
+#ifdef __EMSCRIPTEN__
+#define EMSIMD
+#include "mmx.h"
+#define _mm_shuffle_epi32(a, mask) \
+  ((__ivector4)__builtin_shufflevector((__ivector4)(a), (__ivector4)(a), \
+	(((mask) >> 0) & 0x3) + 0, \
+	(((mask) >> 2) & 0x3) + 0, \
+	(((mask) >> 4) & 0x3) + 4, \
+	(((mask) >> 6) & 0x3) + 4))
+
+#elif defined(_MSC_VER)
+#define MSSIMD
+#include "mmx.h"
+#else
+#define NOSIMD
+#define USE_SIMD
+#endif
+#endif
+
 namespace kr
 {
 	namespace math
 	{
-#ifdef __EMSCRIPTEN__
+#ifdef EMSIMD
 		using __vector4 = float __attribute__((ext_vector_type(4)));
 		using __ivector4 = int __attribute__((ext_vector_type(4)));
 
-#else 
+#elif defined(MSSIMD)
 #include <emmintrin.h>
 #include <smmintrin.h>
 		using __vector4 = __m128;
 		using __ivector4 = __m128i;
-
+#else
+		struct __vector4 {
+			float x, y, z, w;
+			inline float & operator [](size_t idx) { return ((float*)this)[idx]; };
+			inline const float & operator [](size_t idx) const { return ((float*)this)[idx]; };
+		};
+		struct __ivector4 {
+			int x, y, z, w;
+			inline int & operator [](size_t idx) { return ((int*)this)[idx]; };
+			inline const int & operator [](size_t idx) const { return ((int*)this)[idx]; };
+		};
 #endif
 
 		template <typename T, size_t size, bool aligned, typename order>
@@ -38,10 +72,11 @@ namespace kr
 		public:
 			union
 			{
-				T m_data[2];
+				struct { T m_data[2]; };
 				struct { T x, y; };
 				struct { T r, g; };
 				struct { T u, v; };
+				struct { T m_vector[2]; };
 			};
 		};
 		template <typename T, bool aligned>
@@ -50,10 +85,11 @@ namespace kr
 		public:
 			union
 			{
-				T m_data[3];
+				struct { T m_data[3]; };
 				struct { T x, y, z; };
 				struct { T r, g, b; };
 				struct { T u, v, w; };
+				struct { T m_vector[3]; };
 			};
 		};
 		template <typename T, bool aligned>
@@ -62,9 +98,10 @@ namespace kr
 		public:
 			union
 			{
-				T m_data[4];
+				struct { T m_data[4]; };
 				struct { T x, y, z, w; };
 				struct { T r, g, b, a; };
+				struct { T m_vector[4]; };
 			};
 		};
 		template <typename T, bool aligned>
@@ -73,9 +110,10 @@ namespace kr
 		public:
 			union
 			{
-				T m_data[4];
+				struct { T m_data[4]; };
 				struct { T z, y, x, w; };
 				struct { T b, g, r, a; };
+				struct { T m_vector[4]; };
 			};
 		};
 		template <bool aligned>
@@ -83,10 +121,11 @@ namespace kr
 		{
 			union
 			{
-				byte m_data[4];
+				struct { byte m_data[4]; };
 				struct { byte x, y, z, w; };
 				struct { byte r, g, b, a; };
 				dword value;
+				struct { byte m_vector[4]; };
 			};
 		};
 		template <bool aligned>
@@ -94,10 +133,11 @@ namespace kr
 		{
 			union
 			{
-				byte m_data[4];
+				struct { byte m_data[4]; };
 				struct { byte z, y, x, w; };
 				struct { byte b, g, r, a; };
 				dword value;
+				struct { byte m_vector[4]; };
 			};
 		};
 		template <> 
@@ -105,7 +145,7 @@ namespace kr
 		{
 			union
 			{
-				float m_data[4];
+				struct { float m_data[4]; };
 				struct { float x, y, z, w; };
 				struct { float r, g, b, a; };
 				__vector4 m_vector;
@@ -116,7 +156,7 @@ namespace kr
 		{
 			union
 			{
-				int m_data[4];
+				struct { int m_data[4]; };
 				struct { int x, y, z, w; };
 				struct { int r, g, b, a; };
 				__ivector4 m_vector;

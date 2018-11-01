@@ -15,7 +15,7 @@ namespace kr
 		class Data : public JsExternalData
 		{
 		public:
-			KR_EASYV8_DLLEXPORT V8Function CT_FASTCALL getV8Value() noexcept;
+			KR_EASYV8_DLLEXPORT V8Function getV8Value() noexcept;
 			virtual JsAny call(const JsArguments & args) = 0;
 		};
 
@@ -153,7 +153,7 @@ namespace kr
 		{
 			auto lambda = [func](const JsArguments & args)->JsAny
 			{
-				return JsMeta<LAMBDA>::call(func, args);
+				return JsMeta<LAMBDA>::Call::call(func, args);
 			};
 			m_func = _new LambdaWrap<decltype(lambda)>(move(lambda));
 			m_func->AddRef();

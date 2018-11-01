@@ -15,5 +15,5 @@ class kr::gl::Png
 {
 public:
 	static ImageData load(FILE * fp) noexcept;
-	static bool save(const ImageData & image, pcwstr filename) noexcept;
+	static bool save(const ImageData & image, pcstr16 filename) noexcept;
 };

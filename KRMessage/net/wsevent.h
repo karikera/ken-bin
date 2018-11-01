@@ -1,23 +1,32 @@
 #pragma once
 
 #include <KR3/main.h>
+#include <KRUtil/net/socket.h>
 #include <KRUtil/net/ipaddr.h>
 #include <KR3/wl/eventhandle.h>
+#include "../promise.h"
 
 namespace kr
 {
 	struct FNetworkEvent
 	{
-		dword read : 1;
-		dword write : 1;
-		dword OOB : 1;
-		dword accept : 1;
-		dword connect : 1;
-		dword close : 1;
-		dword QOS : 1;
-		dword groupQOS : 1;
-		dword routingInterfaceChange : 1;
-		dword addressListChange : 1;
+		union
+		{
+			struct
+			{
+				dword read : 1;
+				dword write : 1;
+				dword OOB : 1;
+				dword accept : 1;
+				dword connect : 1;
+				dword close : 1;
+				dword QOS : 1;
+				dword groupQOS : 1;
+				dword routingInterfaceChange : 1;
+				dword addressListChange : 1;
+			};
+			dword bits;
+		};
 
 		FNetworkEvent() noexcept;
 		static FNetworkEvent getDefaultClient() noexcept;
@@ -27,16 +36,27 @@ namespace kr
 
 	struct NetworkState: FNetworkEvent
 	{
-		int errRead;
-		int errWrite;
-		int errOOB;
-		int errAccept;
-		int errConnect;
-		int errClose;
-		int errQOS;
-		int errGroupQOS;
-		int errRoutingInterfaceChange;
-		int errAddressListChange;
+		union
+		{
+			struct
+			{
+				int errRead;
+				int errWrite;
+				int errOOB;
+				int errAccept;
+				int errConnect;
+				int errClose;
+				int errQOS;
+				int errGroupQOS;
+				int errRoutingInterfaceChange;
+				int errAddressListChange;
+			};
+
+			struct
+			{
+				int errors[10];
+			};
+		};
 
 		static constexpr int maxEventCount = 10;
 	};
@@ -47,7 +67,10 @@ namespace kr
 		static SocketEventHandle* create() noexcept;
 		void operator delete(ptr p) noexcept;
 		int select(Socket* sock, FNetworkEvent lNetworkEvents) noexcept;
+		int deselect(Socket * sock) noexcept;
 		NetworkState getState(Socket* sock) noexcept;
+		Promise<void> * waitState(Socket* sock, int fdbit) noexcept;
+		Promise<NetworkState> * waitStates(Socket* sock, int fdmask) noexcept;
 		void set() noexcept;
 		void reset() noexcept;
 	};
@@ -122,15 +145,26 @@ namespace kr
 		SocketEventHandle * m_event;
 	};
 
-	class EventedSocket:public io::Streamable<EventedSocket>
+
+	class EventedSocket
 	{
 	public:
 		EventedSocket() noexcept;
 		~EventedSocket() noexcept;
 
-		void connect(Ipv4Address addr, word port); // QuitException
-		void writeImpl(const void * data, size_t sz); // QuitException
-		size_t readImpl(void * data, size_t sz); // QuitException
+		void open(word port) throw(SocketException);
+		Socket * acceptWithMsgLoop() throw(SocketException);
+		void connectWithMsgLoop(Ipv4Address addr, word port) throw(SocketException);
+		void deselectEvent() noexcept;
+		Promise<void>* connectWithPromise(Ipv4Address addr, word port) noexcept;
+		Promise<size_t>* readWithPromise(void * data, size_t size) noexcept;
+		Promise<void>* writeWithPromise(ABuffer buffer) noexcept;
+		void writeWithMsgLoop(const void * data, size_t sz) throw(SocketException, EofException, SocketWriteFailException);
+		size_t readWithMsgLoop(void * data, size_t sz) throw(SocketException, EofException);
+		NetworkState getState() noexcept;
+		Socket * socket() noexcept;
+		SocketEventHandle * event() noexcept;
+		void close() noexcept;
 
 	private:
 		Socket * m_socket;

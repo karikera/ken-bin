@@ -95,10 +95,10 @@ namespace kr
 		};
 	}
 }
-#define static_assert_with_type(cmp, ...) static_assert(::kr::_pri_::StaticAssertForType<cmp>::value, #cmp);
+#define static_assert_with_type(cmp, ...) static_assert(::kr::_pri_::StaticAssertForType<cmp, __VA_ARGS__>::value, #cmp);
 
 #define unpackR(...)  { ::kr::_pri_::_unpack(((__VA_ARGS__), 0) ...); }
-#define unpack(...)  { int ___dummy___[] = {0, ((__VA_ARGS__), 0)...}; }
+#define unpack(...)  { using expander = int[]; (void)expander {0, ((__VA_ARGS__), 0)...}; }
 
 #define CHARSET_CONSTLIZE(charset, code) \
 switch (charset) { \

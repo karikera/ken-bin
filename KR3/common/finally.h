@@ -33,12 +33,27 @@ namespace kr
 				lambda();
 			}
 		};
+
+		struct MakeFinallyHelper
+		{
+			MakeFinallyHelper() = delete;
+			~MakeFinallyHelper() = delete;
+			MakeFinallyHelper(const MakeFinallyHelper&) = delete;
+			MakeFinallyHelper& operator =(const MakeFinallyHelper&) = delete;
+
+			template <typename LAMBDA>
+			FinallyClass<LAMBDA> operator +(LAMBDA&& lambda) const noexcept
+			{
+				return lambda;
+			}
+		};
+
+		static const MakeFinallyHelper & makeFinallyHelper = nullref;
 	}
 }
 
 #define staticCode	\
 	static kr::_pri_::StaticCode UNIQUE(STATIC_LAMBDA) = []
-#define finally(lambda)		\
-	auto UNIQUE(FINALLY_LAMBDA) = lambda; \
-	kr::_pri_::FinallyClass<decltype(UNIQUE(FINALLY_LAMBDA))>\
-	UNIQUE(FINALLY_CLASS)(UNIQUE(FINALLY_LAMBDA));
+#define finally		\
+	auto UNIQUE(FINALLY) = kr::_pri_::makeFinallyHelper + [&]
+

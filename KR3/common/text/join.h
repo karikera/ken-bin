@@ -5,12 +5,12 @@
 namespace kr
 {
 	template <typename Buffer2D>
-	class Join : public Bufferable<Join<Buffer2D>, BufferInfo<typename Buffer2D::Component::Component, false, false, true, Empty>>
+	class Join : public Bufferable<Join<Buffer2D>, BufferInfo<typename Buffer2D::Component::Component, false, false, true>>
 	{
 	public:
 		using InnerArray = typename Buffer2D::Component;
 		using Component = typename InnerArray::Component;
-		using Text = RefArray<Component>;
+		using Text = View<Component>;
 
 		Join(const Buffer2D &arr, Text glue) noexcept
 			:m_array(arr), m_glue(glue)
@@ -65,13 +65,13 @@ namespace kr
 	};
 
 	template <typename Buffer3D>
-	class Join2D : public Bufferable<Join2D<Buffer3D>, BufferInfo<typename Buffer3D::Component::Component::Component, false, false, true, Empty>>
+	class Join2D : public Bufferable<Join2D<Buffer3D>, BufferInfo<typename Buffer3D::Component::Component::Component, false, false, true>>
 	{
 	public:
 		using Buffer2D = typename Buffer3D::Component;
 		using InnerArray = typename Buffer2D::Component;
 		using Component = typename InnerArray::Component;
-		using Text = RefArray<Component>;
+		using Text = View<Component>;
 
 		Join2D(const Buffer3D &arr, Text glueout, Text gluein) noexcept
 			:m_array(arr), m_glueout(glueout), m_gluein(gluein)
