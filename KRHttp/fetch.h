@@ -5,19 +5,6 @@
 #include <KRMessage/pump.h>
 #include "common/httpstatus.h"
 
-#ifdef _DEBUG
-#pragma comment(lib, "zlibstaticd.lib")
-#pragma comment(lib, "libcurld.lib")
-#pragma comment(lib, "libssh2d.lib")
-#else
-#pragma comment(lib, "zlibstatic.lib")
-#pragma comment(lib, "libcurl.lib")
-#pragma comment(lib, "libssh2.lib")
-#endif
-
-#pragma comment(lib, "Wldap32.lib")
-#pragma comment(lib, "Normaliz.lib")
-
 
 struct curl_slist;
 struct curl_httppost;

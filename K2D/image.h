@@ -5,12 +5,6 @@
 #include "common.h"
 #include "reformatter.h"
 
-#ifdef _DEBUG
-#pragma comment(lib,"zlibstaticd.lib")
-#else
-#pragma comment(lib,"zlibstatic.lib")
-#endif
-
 class kr::gl::ImageData
 {
 public:
