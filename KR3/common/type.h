@@ -4,6 +4,7 @@
 
 #include <stdint.h>
 #include <type_traits>
+#include <locale>
 #include <ostream>
 
 using std::max_align_t;

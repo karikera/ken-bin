@@ -63,8 +63,8 @@ namespace kr
 		HttpStatus open(Text url, const HttpConnectionRequest * request, AHttpHeader * response); // SocketException
 		void close() noexcept;
 		Text get() noexcept;
-		bool next() throw(SocketException);
-		void download(pcstr16 filename) throw(Error);
+		bool next() throws(SocketException);
+		void download(pcstr16 filename) throws(Error);
 
 		size_t readImpl(char * dest, size_t size);
 

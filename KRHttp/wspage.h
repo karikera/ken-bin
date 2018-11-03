@@ -13,7 +13,7 @@ namespace kr
 	{
 	public:
 		WebSocketClient(Socket * socket) noexcept;
-		void onRead() throw (...) override final;
+		void onRead() throws(...) override final;
 		virtual void onData(WSStream & data) = 0;
 
 	private:

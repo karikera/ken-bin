@@ -78,8 +78,8 @@ namespace kr
 
 // varadic counter
 
-#define _INDEXOF16(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,a29,a30,a31,a32, ...) a32
-#define COUNTOF(...) UNPACK(_INDEXOF16(__VA_ARGS__ ,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0))
+#define _KR_PRI_INDEXOF32(a0,a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,a29,a30,a31,a32, ...) a32
+#define COUNTOF(...) UNPACK(_KR_PRI_INDEXOF32(__VA_ARGS__ ,32,31,30,29,28,27,26,25,24,23,22,21,20,19,18,17,16,15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0))
 /// for
 
 #define FOR1(fn,x)		fn(x)
@@ -111,11 +111,25 @@ namespace kr
 #define RFORI7(fn,x,...)	UNPACK(RFORI6(fn,__VA_ARGS__)), fn(x,6)
 #define RFORI8(fn,x,...)	UNPACK(RFORI7(fn,__VA_ARGS__)), fn(x,7)
 #define RFORI(fn,...)	UNPACK(CONCAT(RFORI,COUNTOF(__VA_ARGS__))(fn,__VA_ARGS__))
-#define _PRI_FORI(fn,...)	UNPACK((fn, CONCAT(RFOR,COUNTOF(__VA_ARGS__))(UNPACK, __VA_ARGS__)))
-#define FORI(fn,...)	CONCAT(RFORI,COUNTOF(__VA_ARGS__))_PRI_FORI(fn, __VA_ARGS__)
+#define _KR_PRI_FORI(fn,...)	UNPACK((fn, CONCAT(RFOR,COUNTOF(__VA_ARGS__))(UNPACK, __VA_ARGS__)))
+#define FORI(fn,...)	CONCAT(RFORI,COUNTOF(__VA_ARGS__))_KR_PRI_FORI(fn, __VA_ARGS__)
 
-#define _PRI_FOR_TYPES(x,i)		x v##i
-#define _PRI_FOR_VALUES(x,i)	v##i
+#define _KR_PRI_FOR_TYPES(x,i)		x v##i
+#define _KR_PRI_FOR_VALUES(x,i)	v##i
 
-#define FOR_TYPES(...)		UNPACK(FORI(_PRI_FOR_TYPES,__VA_ARGS__))
-#define FOR_VALUES(...)		UNPACK(FORI(_PRI_FOR_VALUES,__VA_ARGS__))
+#define FOR_TYPES(...)		UNPACK(FORI(_KR_PRI_FOR_TYPES,__VA_ARGS__))
+#define FOR_VALUES(...)		UNPACK(FORI(_KR_PRI_FOR_VALUES,__VA_ARGS__))
+
+#define _kr_pri_throw_call_0 noexcept(false)
+#define _kr_pri_throw_call_1 noexcept
+
+#define _kr_pri_has_comma(...) UNPACK(_KR_PRI_INDEXOF32(__VA_ARGS__,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0))
+#define _kr_pri_test_empty_check() ,
+#define _kr_pri_test_empty_without_comma(...) _kr_pri_has_comma(_kr_pri_test_empty_check __VA_ARGS__ ())
+#define _kr_pri_check_empty_flags_var_01 ,
+#define _kr_pri_check_empty_flags_2(_1,_2) _kr_pri_has_comma(_kr_pri_check_empty_flags_var_##_1##_2)
+#define _kr_pri_check_empty_flags(_1,_2) _kr_pri_check_empty_flags_2(_1, _2)
+#define _kr_pri_test_empty(...) _kr_pri_check_empty_flags(_kr_pri_has_comma(__VA_ARGS__), _kr_pri_test_empty_without_comma(__VA_ARGS__))
+
+#define throws(...) CONCAT(_kr_pri_throw_call_, _kr_pri_test_empty(__VA_ARGS__))
+

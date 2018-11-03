@@ -21,8 +21,8 @@ namespace kr
 			UnexpectedCharacterException(char actually, Text repected) noexcept;
 		};
 
-		static void test(char actually, Text respected) throw(UnexpectedCharacterException);
-		static void test(char actually, char respected) throw(UnexpectedCharacterException);
+		static void test(char actually, Text respected) throws(UnexpectedCharacterException);
+		static void test(char actually, char respected) throws(UnexpectedCharacterException);
 		static const char DEFAULT_WORD_SPLITTER[22];
 
 		LangParser() noexcept;

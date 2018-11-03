@@ -108,10 +108,10 @@ namespace kr
 
 	COM_CLASS_METHODS(ID2D1RenderTarget)
 	{
-		void create(IDXGISurface * surface) throw(ErrorCode);
-		Com<ID3D11Texture2D> createD3D11Texture(uint width, uint height) throw (ErrorCode);
-		void createFromD3D11Texture(ID3D11Texture2D * texture) throw (ErrorCode);
-		void createFromSurface(IDXGISurface * surface) throw (ErrorCode);
+		void create(IDXGISurface * surface) throws(ErrorCode);
+		Com<ID3D11Texture2D> createD3D11Texture(uint width, uint height) throws(ErrorCode);
+		void createFromD3D11Texture(ID3D11Texture2D * texture) throws(ErrorCode);
+		void createFromSurface(IDXGISurface * surface) throws(ErrorCode);
 		
 		void beginDraw() noexcept;
 		void endDraw() noexcept;
@@ -133,7 +133,7 @@ namespace kr
 		d2d::SolidBrush createSolidBrush(const vec4 & color) noexcept;
 		d2d::BitmapBrush createBitmapBrush(ID2D1Bitmap * bitmap) noexcept;
 		d2d::LinearGradientBrush createLinearGradient(const vec2 &start, const vec2 &end, View<d2d::GradientSet> colors) noexcept;
-		d2d::Layer createLayer() throw(ErrorCode);
+		d2d::Layer createLayer() throws(ErrorCode);
 
 		void pushRectClip(const frect & rect) noexcept;
 		void popRectClip() noexcept;
@@ -152,32 +152,32 @@ namespace kr
 
 		void drawImage(ID2D1Bitmap * image) noexcept;
 		void drawImage(ID2D1Bitmap * image, const frect & rect) noexcept;
-		d2d::Bitmap createSharedBitmap(IDXGISurface * surface) throw (ErrorCode);
+		d2d::Bitmap createSharedBitmap(IDXGISurface * surface) throws(ErrorCode);
 		d2d::Bitmap loadImage(pcstr16 filename) noexcept;
 		d2d::Bitmap loadImage(IWICBitmapSource* source) noexcept;
 	};
 
 	COM_CLASS_METHODS(ID2D1DCRenderTarget)
 	{
-		void create(win::DrawContext * dc, const irect & subrect) throw(ErrorCode);
+		void create(win::DrawContext * dc, const irect & subrect) throws(ErrorCode);
 	};
 
 	COM_CLASS_METHODS(ID2D1HwndRenderTarget)
 	{
-		void create(win::Window * win) throw(ErrorCode);
+		void create(win::Window * win) throws(ErrorCode);
 	};
 
 #ifdef USE_D2D2
 	COM_CLASS_METHODS(ID2D1DeviceContext)
 	{
-		void create() throw(ErrorCode);
-		d2d::Bitmap createBitmapFromSurface(IDXGISurface * surface) throw(ErrorCode);
-		d2d::EffectColorMatrix createEffectColorMatrix() throw(ErrorCode);
+		void create() throws(ErrorCode);
+		d2d::Bitmap createBitmapFromSurface(IDXGISurface * surface) throws(ErrorCode);
+		d2d::EffectColorMatrix createEffectColorMatrix() throws(ErrorCode);
 	};
 
 	COM_CLASS_METHODS(IDCompositionDevice)
 	{
-		void create() throw(ErrorCode);
+		void create() throws(ErrorCode);
 		d2d::CompositionTarget createTarget(win::Window * wnd, bool topmost = false);
 		void setContent(IDCompositionTarget * compTarget, IDXGISwapChain1 * swapChain);
 	};

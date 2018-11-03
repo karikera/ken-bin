@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef WIN32
+#error is not windows system
+#endif
+
 #include <KR3/main.h>
 
 struct IDirectSoundBuffer;
@@ -100,7 +104,7 @@ namespace kr
 			~Sound() noexcept;
 
 			void remove() noexcept;
-			Locked createLock(word channel, dword size) throw(ErrorCode);
+			Locked createLock(word channel, dword size) throws(ErrorCode);
 			bool createMonotone(dword dwSize, float volume, float frequency) noexcept;
 			dword loadFromWaveFile(pcstr16 str) noexcept;
 			dword loadFromOggStream(io::VIStream<void> stream) noexcept;
@@ -115,28 +119,28 @@ namespace kr
 			bool dupPlay() noexcept;
 
 		protected:
-			void _create(const WAVEFORMATEX * format, dword size) throw(ErrorCode);
-			void _create(const WAVEFORMATEX * format, dword size, dword flags) throw(ErrorCode);
-			dword _loadOgg(int res, OggVorbis_File * vf) throw(ErrorCode, InvalidSourceException);
+			void _create(const WAVEFORMATEX * format, dword size) throws(ErrorCode);
+			void _create(const WAVEFORMATEX * format, dword size, dword flags) throws(ErrorCode);
+			dword _loadOgg(int res, OggVorbis_File * vf) throws(ErrorCode, InvalidSourceException);
 		};
 
 		class PrimarySound :public Sound
 		{
 		public:
-			void create() throw(ErrorCode);
+			void create() throws(ErrorCode);
 		};
 
 		class SoundStreamer : public Sound
 		{
 		public:
 			SoundStreamer() noexcept;
-			void create(word channel) noexcept;
+			void create(word channel, dword bufferSize) noexcept;
 			Locked lock();
 			Locked lock(dword size);
 			Locked lockMoreThan(dword size);
 
 		private:
-			dword m_secByte;
+			dword m_bufferSize;
 			dword m_lastWrite;
 		};
 

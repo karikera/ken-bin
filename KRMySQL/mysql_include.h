@@ -8,8 +8,8 @@
 #include <time.h>
 
 #include <KR3/wl/prepare.h>
-#pragma warning(disable:4996)
 #pragma warning(push)
+#pragma warning(disable:4996)
 #undef _WIN32_WINNT
 #include <my_global.h>
 #include <mysql.h>

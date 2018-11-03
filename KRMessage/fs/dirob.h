@@ -13,7 +13,7 @@ namespace kr
 	public:
 		DirectoryObserver() noexcept;
 		~DirectoryObserver() noexcept;
-		void open(const char16 * dir) throw(Error);
+		void open(const char16 * dir) throws(Error);
 		void close() noexcept;
 		virtual void onCreate(Text16 name) noexcept = 0;
 		virtual void onDelete(Text16 name) noexcept = 0;

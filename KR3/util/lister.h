@@ -15,7 +15,7 @@ namespace kr
 		}
 
 		template <typename ITERABLE>
-		Lister& operator =(ITERABLE & iterable) throw(EofException)
+		Lister& operator =(ITERABLE & iterable) throws(EofException)
 		{
 			auto iter = iterable.begin();
 			auto end = iterable.end();

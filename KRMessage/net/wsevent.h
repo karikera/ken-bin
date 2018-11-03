@@ -152,15 +152,15 @@ namespace kr
 		EventedSocket() noexcept;
 		~EventedSocket() noexcept;
 
-		void open(word port) throw(SocketException);
-		Socket * acceptWithMsgLoop() throw(SocketException);
-		void connectWithMsgLoop(Ipv4Address addr, word port) throw(SocketException);
+		void open(word port) throws(SocketException);
+		Socket * acceptWithMsgLoop() throws(SocketException);
+		void connectWithMsgLoop(Ipv4Address addr, word port) throws(SocketException);
 		void deselectEvent() noexcept;
 		Promise<void>* connectWithPromise(Ipv4Address addr, word port) noexcept;
 		Promise<size_t>* readWithPromise(void * data, size_t size) noexcept;
 		Promise<void>* writeWithPromise(ABuffer buffer) noexcept;
-		void writeWithMsgLoop(const void * data, size_t sz) throw(SocketException, EofException, SocketWriteFailException);
-		size_t readWithMsgLoop(void * data, size_t sz) throw(SocketException, EofException);
+		void writeWithMsgLoop(const void * data, size_t sz) throws(SocketException, EofException, SocketWriteFailException);
+		size_t readWithMsgLoop(void * data, size_t sz) throws(SocketException, EofException);
 		NetworkState getState() noexcept;
 		Socket * socket() noexcept;
 		SocketEventHandle * event() noexcept;

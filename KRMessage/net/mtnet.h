@@ -25,8 +25,8 @@ namespace kr
 		void clear() noexcept;
 		void reset(Socket * socket) noexcept;
 		Socket * getSocket() noexcept;
-		void connect(Ipv4Address v4addr, int port) throw(SocketException);
-		void connect(pcstr16 host, int port) throw(SocketException);
+		void connect(Ipv4Address v4addr, int port) throws(SocketException);
+		void connect(pcstr16 host, int port) throws(SocketException);
 		void requestReceive() noexcept;
 		void flush() noexcept;
 		void write(Buffer data) noexcept;
@@ -74,9 +74,9 @@ namespace kr
 	class MTServer
 	{
 	public:
-		MTServer() throw (FunctionError);
+		MTServer() throws(FunctionError);
 		~MTServer() noexcept;
-		void open(int port) throw(SocketException);
+		void open(int port) throws(SocketException);
 
 		virtual MTClient* onAccept(Socket * socket) noexcept = 0;
 		virtual void onError(Text message, int errcode) noexcept = 0;

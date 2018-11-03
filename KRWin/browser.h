@@ -12,7 +12,7 @@ namespace kr
 		virtual ~EmbeddedBrowser() =0;
 		virtual void navigate(Text16 _url) =0;
 		virtual void setRect(const irect& _rc) =0;
-		static EmbeddedBrowser* newInstance(win::Window * pWindow) throw(ErrorCode);
+		static EmbeddedBrowser* newInstance(win::Window * pWindow) throws(ErrorCode);
 	};
 
 

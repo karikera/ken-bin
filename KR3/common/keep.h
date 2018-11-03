@@ -727,12 +727,12 @@ namespace kr
 		return m_ptr;
 	}
 	template<class T>
-	inline const typename KeepPointer<T> Keep<T>::operator &() noexcept
+	inline const KeepPointer<T> Keep<T>::operator &() noexcept
 	{
 		return this;
 	}
 	template<class T>
-	inline const typename KeepConstPointer<T> Keep<T>::operator &() const noexcept
+	inline const KeepConstPointer<T> Keep<T>::operator &() const noexcept
 	{
 		return this;
 	}

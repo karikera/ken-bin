@@ -13,14 +13,14 @@ namespace kr
 
 		bool isNextWhiteSpace();
 		void skipWhiteSpace();
-		void mustWhiteSpace() throw(InvalidSourceException);
+		void mustWhiteSpace() throws(InvalidSourceException);
 		int getLine() noexcept;
 		template <typename _Derived, typename _Info>
-		size_t readToSpace(OutStream<_Derived, char, _Info> * os) throw(NotEnoughSpaceException);
+		size_t readToSpace(OutStream<_Derived, char, _Info> * os) throws(NotEnoughSpaceException);
 		TSZ readToSpace();
 
 		template <typename _Derived, typename _Info>
-		void readWithUnslash(OutStream<_Derived, char, _Info> * dest, char needle) throw(EofException, NotEnoughSpaceException)
+		void readWithUnslash(OutStream<_Derived, char, _Info> * dest, char needle) throws(EofException, NotEnoughSpaceException)
 		{
 			for (;;)
 			{
@@ -52,7 +52,7 @@ namespace kr
 	};
 
 	template <typename _Derived, typename _Info>
-	size_t Parser::readToSpace(OutStream<_Derived, char, _Info> * os) throw(NotEnoughSpaceException)
+	size_t Parser::readToSpace(OutStream<_Derived, char, _Info> * os) throws(NotEnoughSpaceException)
 	{
 		return m_is.readto_y(os, Text::WHITE_SPACE);
 	}

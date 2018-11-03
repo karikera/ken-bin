@@ -164,15 +164,15 @@ namespace kr
 		template <typename T>
 		_RETURN_(T) toint(cptr _src, size_t _len, uint _radix) noexcept;
 		template <typename T>
-		_RETURN_(T) toint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException);
+		_RETURN_(T) toint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException);
 		template <typename T>
 		_RETURN_(T) tosint(cptr _src, size_t _len, uint _radix) noexcept;
 		template <typename T>
-		_RETURN_(T) tosint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException);
+		_RETURN_(T) tosint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException);
 		template <typename T>
 		_RETURN_(T) touint(cptr _src, size_t _len, uint _radix) noexcept;
 		template <typename T>
-		_RETURN_(T) touint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException);
+		_RETURN_(T) touint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException);
 		template <typename T>
 		_VOID_ fromint(ptr _dst, size_t _cipher, T number, uint _radix) noexcept;
 		template <typename T>

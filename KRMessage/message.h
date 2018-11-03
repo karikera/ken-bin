@@ -39,7 +39,7 @@ namespace kr
 	class Translator:public Node<Translator, true>
 	{
 	public:
-		virtual bool translate(const MessageStruct* pMsg) throw(QuitException) = 0;
+		virtual bool translate(const MessageStruct* pMsg) throws(QuitException) = 0;
 
 	};
 	
@@ -75,7 +75,7 @@ namespace kr
 		bool tryGet() noexcept;
 		bool peek() noexcept;
 
-		void dispatch() throw(QuitException);
+		void dispatch() throws(QuitException);
 
 		int messageLoop() noexcept;
 		uint getLastMessage() noexcept;

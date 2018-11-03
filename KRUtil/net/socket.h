@@ -38,10 +38,10 @@ namespace kr
 		static void operator delete(ptr socket) noexcept;
 		void shutdown() noexcept;
 
-		void connect(Ipv4Address add,word port) throw(SocketException);
-		void connect(pcstr url, word port) throw(SocketException);
-		void connect(pcstr16 url, word port) throw(SocketException);
-		void connectAsync(Ipv4Address add, word port) throw(SocketException);
+		void connect(Ipv4Address add,word port) throws(SocketException);
+		void connect(pcstr url, word port) throws(SocketException);
+		void connect(pcstr16 url, word port) throws(SocketException);
+		void connectAsync(Ipv4Address add, word port) throws(SocketException);
 		void setOption(int name, const void * data, int size) noexcept;
 		template <typename T>
 		void setOption(int name, T data) noexcept
@@ -50,16 +50,16 @@ namespace kr
 		}
 		void setLinger(bool enabled, short sec) noexcept;
 		void setTimeout(long sec,long usec) noexcept;
-		void open(word port, Ipv4Address v4addr = nullptr) throw(SocketException);
+		void open(word port, Ipv4Address v4addr = nullptr) throws(SocketException);
 		Ipv4Address getIpAddress() noexcept;
-		Socket* accept() throw(SocketException);
-		void writeImpl(cptr binary, size_t len) throw(SocketException);
-		size_t readImpl(ptr binary, size_t len) throw(SocketException, EofException);
-		size_t readFully(ptr binary, size_t len) throw(SocketException, EofException);
+		Socket* accept() throws(SocketException);
+		void writeImpl(cptr binary, size_t len) throws(SocketException);
+		size_t readImpl(ptr binary, size_t len) throws(SocketException, EofException);
+		size_t readFully(ptr binary, size_t len) throws(SocketException, EofException);
 
 		template <typename CHR>
-		static Ipv4Address findIp(const CHR * url) throw(SocketException);
-		static Ipv4Address getCurrentIpAddress() throw(SocketException);
+		static Ipv4Address findIp(const CHR * url) throws(SocketException);
+		static Ipv4Address getCurrentIpAddress() throws(SocketException);
 	};
 
 	namespace io

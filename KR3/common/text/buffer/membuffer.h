@@ -988,6 +988,7 @@ namespace kr
 			using Super::cut;
 			using Super::subarr;
 			using Super::subarray;
+			using Super::contains_ptr;
 
 			WRef cut(const ComponentRef* end) noexcept
 			{

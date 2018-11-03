@@ -119,7 +119,7 @@ namespace kr
 				}
 
 				// InStream
-				const C* readImpl(size_t *_len) throw(EofException)
+				const C* readImpl(size_t *_len) throws(EofException)
 				{
 					const InternalComponent* out = (InternalComponent*)m_begin;
 					if (out == m_end)
@@ -227,7 +227,7 @@ namespace kr
 				}
 
 				// InStream
-				C* readImpl(size_t *_len) throw(EofException)
+				C* readImpl(size_t *_len) throws(EofException)
 				{
 					const C* out = m_begin;
 					if (out + *_len > m_end) throw EofException();
@@ -269,7 +269,7 @@ namespace kr
 				{
 					m_limit = str;
 				}
-				C* _extend(size_t inc) throw(NotEnoughSpaceException)
+				C* _extend(size_t inc) throws(NotEnoughSpaceException)
 				{
 					C* out = m_end;
 					C* nptr = out + inc;
@@ -277,7 +277,7 @@ namespace kr
 					m_end = nptr;
 					return out;
 				}
-				C* _padding(size_t inc) throw(NotEnoughSpaceException)
+				C* _padding(size_t inc) throws(NotEnoughSpaceException)
 				{
 					if (m_end + inc > m_limit) throw NotEnoughSpaceException();
 					return m_end;

@@ -14,18 +14,18 @@ namespace kr
 		ComMethod() = default;
 
 		// 텍스처 생성
-		ComMethod(D3D11_TEXTURE2D_DESC * desc, D3D11_SUBRESOURCE_DATA * data = nullptr) throw (ErrorCode);
+		ComMethod(D3D11_TEXTURE2D_DESC * desc, D3D11_SUBRESOURCE_DATA * data = nullptr) throws(ErrorCode);
 
 		// 텍스처 생성
-		ComMethod(uint bind, d3d11::Usage usage, DXGI_FORMAT format, int width, int height, int multiSampling, uint misc = 0, D3D11_SUBRESOURCE_DATA * data = nullptr) throw (ErrorCode);
+		ComMethod(uint bind, d3d11::Usage usage, DXGI_FORMAT format, int width, int height, int multiSampling, uint misc = 0, D3D11_SUBRESOURCE_DATA * data = nullptr) throws(ErrorCode);
 
 		~ComMethod() noexcept;
 
 		// 텍스처에서 셰이더 리소스 뷰를 생성한다
 		d3d11::ShaderResourceView createShaderResourceView();
 
-		void create(D3D11_TEXTURE2D_DESC * desc, D3D11_SUBRESOURCE_DATA * data) throw (ErrorCode);
-		void create(uint bind, d3d11::Usage usage, DXGI_FORMAT format, int width, int height, int multiSampling, uint misc, D3D11_SUBRESOURCE_DATA * data) throw (ErrorCode);
+		void create(D3D11_TEXTURE2D_DESC * desc, D3D11_SUBRESOURCE_DATA * data) throws(ErrorCode);
+		void create(uint bind, d3d11::Usage usage, DXGI_FORMAT format, int width, int height, int multiSampling, uint misc, D3D11_SUBRESOURCE_DATA * data) throws(ErrorCode);
 
 	};
 

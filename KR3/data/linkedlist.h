@@ -211,7 +211,7 @@ namespace kr
 	template <typename C, bool isCRTP> class Node :
 		public _pri_::NodeImpl<C, isCRTP, std::is_class<C>::value>
 	{
-		template <typename Base, typename C>
+		template <typename Base, typename C2>
 		friend class _pri_::ChainMethod;
 		using Super = _pri_::NodeImpl<C, isCRTP, std::is_class<C>::value>;
 
@@ -235,7 +235,7 @@ namespace kr
 		}
 		size_t _cut() noexcept
 		{
-			return Super::_cut<Node>();
+			return Super::template _cut<Node>();
 		}
 
 	};;
@@ -470,6 +470,8 @@ namespace kr
 			};
 
 		public:
+			using Super::empty;
+
 			class Iterator :public TIterator<Iterator, Node>
 			{
 			public:
@@ -701,7 +703,7 @@ namespace kr
 				m_axis.m_previous->m_next = nullptr;
 				m_axis.m_previous = axis->m_previous;
 				if (!empty()) m_axis.m_previous->m_next = &m_axis;
-				return m_axis.m_previous->m_next->_cut<Node>();
+				return m_axis.m_previous->m_next->template _cut<Node>();
 			}
 			size_t cutR(Node* axis) noexcept
 			{
@@ -721,7 +723,7 @@ namespace kr
 				return len;
 			}
 			template <typename LAMBDA>
-			bool removeMatch(LAMBDA & lambda) throw (...)
+			bool removeMatch(LAMBDA & lambda) throws(...)
 			{
 				Iterator iter_end = end();
 				Iterator iter = begin();
@@ -738,7 +740,7 @@ namespace kr
 				return false;
 			}
 			template <typename LAMBDA>
-			size_t removeMatchAll(const LAMBDA & lambda) throw (...)
+			size_t removeMatchAll(const LAMBDA & lambda) throws(...)
 			{
 				size_t count = 0;
 				Iterator iter_end = end();
@@ -756,7 +758,7 @@ namespace kr
 				return count;
 			}
 			template <typename LAMBDA> 
-			void forEachForRemove(const LAMBDA & lambda) throw (...)
+			void forEachForRemove(const LAMBDA & lambda) throws(...)
 			{
 				Iterator iter_end = end();
 				Iterator iter = begin();
@@ -837,6 +839,7 @@ namespace kr
 			using Super::operator ==;
 			using Super::operator !=;
 			using Super::empty;
+			using Super::size;
 			using Super::begin;
 			using Super::end;
 			using Super::rbegin;
@@ -851,7 +854,7 @@ namespace kr
 				return Super::sortAttach(_node);
 			}
 			template <typename LAMBDA> 
-			bool removeMatch(const LAMBDA & lambda) throw(...)
+			bool removeMatch(const LAMBDA & lambda) throws(...)
 			{
 				if (Super::removeMatch(lambda))
 				{
@@ -861,7 +864,7 @@ namespace kr
 				return false;
 			}
 			template <typename LAMBDA> 
-			size_t removeMatchAll(const LAMBDA & lambda) throw(...)
+			size_t removeMatchAll(const LAMBDA & lambda) throws(...)
 			{
 				size_t count = Super::removeMatchAll(lambda);
 				m_size -= count;
@@ -884,7 +887,7 @@ namespace kr
 			}
 
 			template <typename S>
-			void serialize(S & s) throw (...)
+			void serialize(S & s) throws(...)
 			{
 				size_t sz;
 

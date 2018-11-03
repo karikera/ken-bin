@@ -36,7 +36,7 @@ namespace kr
 
 			template <typename Derived, typename Info>
 			VIStream(Streamable<Derived, Info> * stream) noexcept
-				: VIStream(stream->stream<C>())
+				: VIStream(stream->template stream<C>())
 			{
 			}
 
@@ -74,7 +74,7 @@ namespace kr
 
 			template <typename Derived, typename Info>
 			VOStream(Streamable<Derived, Info> * stream) noexcept
-				: VOStream(stream->stream<C>())
+				: VOStream(stream->template stream<C>())
 			{
 			}
 

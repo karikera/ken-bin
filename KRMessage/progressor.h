@@ -47,8 +47,8 @@ namespace kr
 		int64_t getLength() noexcept;
 		void setProgress(int64_t progress) noexcept;
 		void setProgress(int64_t progress, int64_t length) noexcept;
-		void checkPoint() throw(QuitException);
-		void checkPoint(long long nProgress) throw(QuitException);
+		void checkPoint() throws(QuitException);
+		void checkPoint(long long nProgress) throws(QuitException);
 		virtual int progressor() noexcept = 0;
 		virtual void onProgress() noexcept override = 0;
 		

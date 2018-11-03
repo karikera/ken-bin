@@ -41,7 +41,7 @@ namespace kr
 		virtual void onError(Text name, int code) noexcept = 0;
 		virtual void onConnect() noexcept = 0;
 		virtual void onConnectFail(int code) noexcept;
-		virtual void onRead() throw(...) = 0;
+		virtual void onRead() throws(...) = 0;
 		virtual void onClose() noexcept = 0;
 
 		template <typename T>

@@ -177,13 +177,13 @@ kr::map::SortedArray<Parent, Cmp>::~SortedArray() noexcept
 {
 }
 template <typename Parent, typename Cmp> 
-void kr::map::SortedArray<Parent, Cmp>::insert(const Component &data) throw(NotEnoughSpaceException)
+void kr::map::SortedArray<Parent, Cmp>::insert(const Component &data) throws(NotEnoughSpaceException)
 {
 	Component * beg = Parent::begin();
 	findAct(Cmp::getKey(data), [&](Component* p) { Parent::insert(p - beg, data); });
 }
 template <typename Parent, typename Cmp> 
-void kr::map::SortedArray<Parent, Cmp>::rankingInsert(const Component & data, size_t limit) throw(NotEnoughSpaceException)
+void kr::map::SortedArray<Parent, Cmp>::rankingInsert(const Component & data, size_t limit) throws(NotEnoughSpaceException)
 {
 	if (size() < limit)
 	{

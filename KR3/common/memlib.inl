@@ -1039,7 +1039,7 @@ inline T kr::memt<BASE>::toint(cptr _src, size_t _len, uint _radix) noexcept
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::toint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
+inline T kr::memt<BASE>::toint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException)
 {
 	return _pri_::AutoFunc<BASE, std::is_signed<T>::value>::template toint_limit<T>(_src, _len, _radix);
 }
@@ -1077,7 +1077,7 @@ __start:
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::touint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
+inline T kr::memt<BASE>::touint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException)
 {
 	static_assert(std::is_unsigned<T>::value, "Must be unsigned number");
 	type* src = (type*)_src;
@@ -1125,7 +1125,7 @@ inline T kr::memt<BASE>::tosint(cptr _src, size_t _len, uint _radix) noexcept
 }
 template<size_t BASE>
 template <typename T>
-inline T kr::memt<BASE>::tosint_limit(cptr _src, size_t _len, uint _radix) throw(OutOfRangeException)
+inline T kr::memt<BASE>::tosint_limit(cptr _src, size_t _len, uint _radix) throws(OutOfRangeException)
 {
 	static_assert(std::is_signed<T>::value, "Must be signed number");
 	using UT = std::make_unsigned_t<T>;

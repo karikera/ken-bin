@@ -52,7 +52,7 @@ namespace kr
 		inline ZlibError(int value) noexcept :value(value) {}
 	};
 
-	ATTR_NORETURN void quit(int exitCode) throw(QuitException);
+	ATTR_NORETURN void quit(int exitCode) throws(QuitException);
 	ATTR_NORETURN void error(const char * strMessage, ...) noexcept;
 	void warning(const char * strMessage, ...) noexcept;
 	template <typename T> bool intactTest(uintptr_t v) noexcept

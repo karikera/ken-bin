@@ -45,7 +45,7 @@ namespace kr
 				{
 					return _mem_msize_bytes(p) / sizeof(InternalComponent);
 				}
-				static bool _mem_expand(InternalComponent * p, size_t sz) throw(NotEnoughSpaceException)
+				static bool _mem_expand(InternalComponent * p, size_t sz) throws(NotEnoughSpaceException)
 				{
 					StackAllocator * allocator = StackAllocator::getInstance();
 					if (allocator->isLastBlock((byte*)p - offset))
@@ -73,7 +73,7 @@ namespace kr
 				}
 
 				template <typename LAMBDA>
-				static InternalComponent* _obj_move(InternalComponent * from, size_t ncap, const LAMBDA & ctor_move_d) throw(NotEnoughSpaceException)
+				static InternalComponent* _obj_move(InternalComponent * from, size_t ncap, const LAMBDA & ctor_move_d) throws(NotEnoughSpaceException)
 				{
 					StackAllocator * allocator = StackAllocator::getInstance();
 					byte* allocpoint = (byte*)from - offset;

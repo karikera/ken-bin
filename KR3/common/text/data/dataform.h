@@ -35,26 +35,26 @@ namespace kr
 				using Parent::_realloc;
 				using Parent::_alloc;
 
-				ComponentRef* _extend(size_t inc) throw(NotEnoughSpaceException)
+				ComponentRef* _extend(size_t inc) throws(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					_resize(sz + inc);
 					return (InternalComponent*)begin() + sz;
 				}
-				void _resize(size_t nsize) throw(NotEnoughSpaceException)
+				void _resize(size_t nsize) throws(NotEnoughSpaceException)
 				{
 					_realloc(nsize, nsize);
 				}
-				void _init(const Component * beg, size_t sz) throw(NotEnoughSpaceException)
+				void _init(const Component * beg, size_t sz) throws(NotEnoughSpaceException)
 				{
 					_alloc(sz, sz);
 					mema::ctor_copy((InternalComponent*)begin(), (InternalComponent*)beg, sz);
 				}
-				void _init(const Component * beg, const Component * end) throw(NotEnoughSpaceException)
+				void _init(const Component * beg, const Component * end) throws(NotEnoughSpaceException)
 				{
 					_init(beg, (InternalComponent*)end - (InternalComponent*)beg);
 				}
-				void _move(Component * beg, size_t sz) throw(NotEnoughSpaceException)
+				void _move(Component * beg, size_t sz) throws(NotEnoughSpaceException)
 				{
 					_alloc(sz, sz);
 					mema::ctor_move((InternalComponent*)begin(), (InternalComponent*)beg, sz);
@@ -142,13 +142,13 @@ namespace kr
 				{
 					m_size += inc;
 				}
-				void _alloc(size_t nsize, size_t ncap) throw(NotEnoughSpaceException)
+				void _alloc(size_t nsize, size_t ncap) throws(NotEnoughSpaceException)
 				{
 					_assert(nsize <= ncap);
 					if (ncap > CAP) throw NotEnoughSpaceException();
 					_setSize(nsize);
 				}
-				void _realloc(size_t nsize, size_t ncap) throw(NotEnoughSpaceException)
+				void _realloc(size_t nsize, size_t ncap) throws(NotEnoughSpaceException)
 				{
 					_assert(nsize <= ncap);
 					if (ncap > CAP) throw NotEnoughSpaceException();
@@ -161,7 +161,7 @@ namespace kr
 				{
 					_setSize(0);
 				}
-				void _shiftRight(size_t idx) throw(NotEnoughSpaceException)
+				void _shiftRight(size_t idx) throws(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					if (sz >= CAP) throw NotEnoughSpaceException();
@@ -169,7 +169,7 @@ namespace kr
 					kr::mema::ctor_move_rd(axis + 1, axis, sz - idx);
 					_setSize(sz + 1);
 				}
-				void _shiftRight(size_t idx, size_t count) throw(NotEnoughSpaceException)
+				void _shiftRight(size_t idx, size_t count) throws(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					size_t nsz = sz + count;
@@ -227,7 +227,7 @@ namespace kr
 				{
 					return false;
 				}
-				void reserve(size_t ncap) throw(NotEnoughSpaceException)
+				void reserve(size_t ncap) throws(NotEnoughSpaceException)
 				{
 					if (capacity() < ncap) throw NotEnoughSpaceException();
 				}
@@ -274,7 +274,7 @@ namespace kr
 					m_begin = Allocator::_mem_alloc(cap);
 					_setSize(size);
 				}
-				void _realloc(size_t nsize, size_t ncap) throw(NotEnoughSpaceException)
+				void _realloc(size_t nsize, size_t ncap) throws(NotEnoughSpaceException)
 				{
 					_assert(nsize <= ncap);
 					if (m_begin == null)
@@ -308,7 +308,7 @@ namespace kr
 					if (m_begin == null) return;
 					_setSize(0);
 				}
-				void _shiftRight(size_t idx) throw(NotEnoughSpaceException)
+				void _shiftRight(size_t idx) throws(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					InternalComponent* beg = m_begin;
@@ -335,7 +335,7 @@ namespace kr
 					}
 					_setSize(sz + 1);
 				}
-				void _shiftRight(size_t idx, size_t count) throw(NotEnoughSpaceException)
+				void _shiftRight(size_t idx, size_t count) throws(NotEnoughSpaceException)
 				{
 					size_t sz = size();
 					size_t nsz = sz + count;
@@ -428,7 +428,7 @@ namespace kr
 				{
 					return m_begin == null;
 				}
-				void reserve(size_t ncap) throw(NotEnoughSpaceException)
+				void reserve(size_t ncap) throws(NotEnoughSpaceException)
 				{
 					size_t cap = capacity();
 					if (cap >= ncap) return;

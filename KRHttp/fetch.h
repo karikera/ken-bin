@@ -21,8 +21,8 @@ namespace kr
 		void setPostFields(AText data) noexcept;
 		Promise<AText>* fetchAsText() noexcept;
 		Promise<void>* fetchAsFile(AText16 filename) noexcept;
-		AText fetchAsTextSync() throw(CurlError, HttpException);
-		void fetchAsFileSync(pcstr16 filename) throw(CurlError, HttpException, Error);
+		AText fetchAsTextSync() throws(CurlError, HttpException);
+		void fetchAsFileSync(pcstr16 filename) throws(CurlError, HttpException, Error);
 		HttpStatus getStatusCode() noexcept;
 
 	private:

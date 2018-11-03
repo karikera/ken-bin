@@ -104,30 +104,30 @@ namespace kr
 
 		// events를 대기한다.
 		// return: 셋된 이벤트의 인덱스
-		dword wait(View<EventHandle *> events) throw(QuitException);
+		dword wait(View<EventHandle *> events) throws(QuitException);
 
 		// events를 time동안 대기한다.
 		// return: 셋된 이벤트의 인덱스
-		dword wait(View<EventHandle *> events, duration time) throw(QuitException);
+		dword wait(View<EventHandle *> events, duration time) throws(QuitException);
 
 		// events를 timeto까지 대기한다.
 		// return: 셋된 이벤트의 인덱스
-		dword waitTo(View<EventHandle *> events, timepoint timeto) throw(QuitException);
+		dword waitTo(View<EventHandle *> events, timepoint timeto) throws(QuitException);
 
-		void processOnce() throw(QuitException);
-		dword processOnce(View<EventHandle *> events) throw(QuitException);
-		void processOnce(View<EventProcedure> proc) throw(QuitException);
-		void processOnceWithoutMessage() throw(QuitException);
-		void processOnceWithoutMessage(View<EventProcedure> proc) throw(QuitException);
-		void wait(EventHandle * event) throw(QuitException);
-		void wait(EventHandle * event, duration time) throw(QuitException);
-		void waitTo(EventHandle * event, timepoint time) throw(QuitException);
+		void processOnce() throws(QuitException);
+		dword processOnce(View<EventHandle *> events) throws(QuitException);
+		void processOnce(View<EventProcedure> proc) throws(QuitException);
+		void processOnceWithoutMessage() throws(QuitException);
+		void processOnceWithoutMessage(View<EventProcedure> proc) throws(QuitException);
+		void wait(EventHandle * event) throws(QuitException);
+		void wait(EventHandle * event, duration time) throws(QuitException);
+		void waitTo(EventHandle * event, timepoint time) throws(QuitException);
 
 		Promise<void> * promise(duration time) noexcept;
 		Promise<void> * promiseTo(timepoint at) noexcept;
 
-		void sleep(duration dura) throw(QuitException);
-		void sleepTo(timepoint time) throw(QuitException);
+		void sleep(duration dura) throws(QuitException);
+		void sleepTo(timepoint time) throws(QuitException);
 
 		int messageLoop() noexcept;
 		int messageLoopWith(View<EventProcedure> proc) noexcept;
@@ -140,10 +140,10 @@ namespace kr
 		EventPump() noexcept;
 		~EventPump() noexcept;
 
-		dword _tryProcess(EventHandle * const * events, dword count) throw(QuitException);
+		dword _tryProcess(EventHandle * const * events, dword count) throws(QuitException);
 		TmpArray<EventHandle *> _makeEventArray(View<EventHandle *> events) noexcept;
 		TmpArray<EventHandle *> _makeEventArray(View<EventProcedure> proc) noexcept;
-		void _processMessage() throw(QuitException);
+		void _processMessage() throws(QuitException);
 		dword _processTimer(dword maxSleep);
 		void _fireAfterProcess() noexcept;
 

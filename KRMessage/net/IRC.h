@@ -227,7 +227,7 @@ namespace kr
 		namespace _pri_
 		{
 			template <typename T>
-			T rawToIrc(T value) throw(NotEnoughSpaceException)
+			T rawToIrc(T value) throws(NotEnoughSpaceException)
 			{
 				if (T(-1) < 0)
 				{
@@ -252,27 +252,27 @@ namespace kr
 				}
 			}
 			template <typename T>
-			T ircToRaw(T value) throw(NotEnoughSpaceException)
+			T ircToRaw(T value) throws(NotEnoughSpaceException)
 			{
 				if (T(-1)<0 && (dword)value > IRCVALUE_MAX(T))
 					return value - IRCVALUE_LIMIT(T);
 				return value;
 			}
 			template <>
-			inline float rawToIrc<float>(float value) throw(NotEnoughSpaceException)
+			inline float rawToIrc<float>(float value) throws(NotEnoughSpaceException)
 			{
 				if (value < 0)
 					throw NotEnoughSpaceException();
 				return value;
 			}
 			template <>
-			inline float ircToRaw<float>(float value) throw(NotEnoughSpaceException)
+			inline float ircToRaw<float>(float value) throws(NotEnoughSpaceException)
 			{
 				return value;
 			}
 		}
 		template <typename T>
-		T rawToIrc(T value) throw(NotEnoughSpaceException)
+		T rawToIrc(T value) throws(NotEnoughSpaceException)
 		{
 			using uint_t = uint_sz_t<sizeof(T)>;
 
@@ -299,7 +299,7 @@ namespace kr
 			return (T&)result;
 		}
 		template <typename T>
-		T ircToRaw(T value) throw(NotEnoughSpaceException)
+		T ircToRaw(T value) throws(NotEnoughSpaceException)
 		{
 			using uint_t = uint_sz_t<sizeof(T)>;
 

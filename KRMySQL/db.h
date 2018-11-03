@@ -29,19 +29,19 @@ namespace kr
 			void ready() noexcept;
 			void commit() noexcept;
 			void rollback() noexcept;
-			void reconnect() throw(SqlException);
+			void reconnect() throws(SqlException);
 			bool setCharset(Text charset) noexcept;
-			void query(Text query) throw(ThrowRetry, SqlException);
-			void query(MySQL & db, Text qr) throw(SqlException);
-			void storeResult() throw(ThrowRetry, SqlException);
-			void storeResult(MySQL & db) throw(SqlException);
+			void query(Text query) throws(ThrowRetry, SqlException);
+			void query(MySQL & db, Text qr) throws(SqlException);
+			void storeResult() throws(ThrowRetry, SqlException);
+			void storeResult(MySQL & db) throws(SqlException);
 			qword affectedRows() noexcept;
 			qword getInsertId() noexcept;
 			
 			template <typename LAMBDA>
-			inline bool connection(LAMBDA &lambda) throw(SqlException);
+			inline bool connection(LAMBDA &lambda) throws(SqlException);
 			template <typename LAMBDA>
-			inline bool transection(LAMBDA &lambda) throw(SqlException);
+			inline bool transection(LAMBDA &lambda) throws(SqlException);
 
 		private:
 			MYSQL * m_conn;
@@ -52,16 +52,16 @@ namespace kr
 			const char * const m_charset;
 
 			template <typename LAMBDA>
-			inline bool _transectionSEH(LAMBDA &lambda) throw(SqlException);
-			void _connect() throw(SqlException);
-			void _clearResult() throw(ThrowRetry, SqlException);
+			inline bool _transectionSEH(LAMBDA &lambda) throws(SqlException);
+			void _connect() throws(SqlException);
+			void _clearResult() throws(ThrowRetry, SqlException);
 		};
 
 	}
 }
 		
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::connection(LAMBDA &lambda) throw(SqlException)
+inline bool kr::sql::MySQL::connection(LAMBDA &lambda) throws(SqlException)
 {
 	for (;;)
 	{
@@ -80,7 +80,7 @@ inline bool kr::sql::MySQL::connection(LAMBDA &lambda) throw(SqlException)
 	}
 }
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::transection(LAMBDA &lambda) throw(SqlException)
+inline bool kr::sql::MySQL::transection(LAMBDA &lambda) throws(SqlException)
 {
 	for (;;)
 	{
@@ -103,7 +103,7 @@ inline bool kr::sql::MySQL::transection(LAMBDA &lambda) throw(SqlException)
 	}
 }
 template <typename LAMBDA>
-inline bool kr::sql::MySQL::_transectionSEH(LAMBDA &lambda) throw(SqlException)
+inline bool kr::sql::MySQL::_transectionSEH(LAMBDA &lambda) throws(SqlException)
 {
 	__try
 	{

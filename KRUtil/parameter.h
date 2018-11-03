@@ -13,31 +13,31 @@ namespace kr
 		PrefixMap() noexcept;
 
 		template <typename C, size_t sz>
-		void addText(const C(&text)[sz]) throw(InvalidSourceException, DuplicateException);
+		void addText(const C(&text)[sz]) throws(InvalidSourceException, DuplicateException);
 
 		template <typename C>
-		void addText(View<C> text) throw(InvalidSourceException, DuplicateException);
+		void addText(View<C> text) throws(InvalidSourceException, DuplicateException);
 
 		template <typename C, size_t sz>
-		View<C> find(const C(&text)[sz]) throw(NotFoundException);
+		View<C> find(const C(&text)[sz]) throws(NotFoundException);
 
 		template <typename C>
-		View<C> find(View<C> text) throw(NotFoundException);
+		View<C> find(View<C> text) throws(NotFoundException);
 
 		template <typename C>
-		static size_t toIndex(C chr) throw(NotFoundException);
+		static size_t toIndex(C chr) throws(NotFoundException);
 
 	private:
 		Array<size_t> m_array;
 	};
 
 	template <typename C, size_t sz>
-	void PrefixMap::addText(const C(&text)[sz]) throw(InvalidSourceException, DuplicateException)
+	void PrefixMap::addText(const C(&text)[sz]) throws(InvalidSourceException, DuplicateException)
 	{
 		return addText((View<C>)text);
 	}
 	template <typename C>
-	void PrefixMap::addText(View<C> text) throw(InvalidSourceException, DuplicateException)
+	void PrefixMap::addText(View<C> text) throws(InvalidSourceException, DuplicateException)
 	{
 		if (text.empty())
 			throw InvalidSourceException();
@@ -72,12 +72,12 @@ namespace kr
 		}
 	}
 	template <typename C, size_t sz>
-	View<C> PrefixMap::find(const C(&text)[sz]) throw(NotFoundException)
+	View<C> PrefixMap::find(const C(&text)[sz]) throws(NotFoundException)
 	{
 		return find(View<C>(text));
 	}
 	template <typename C>
-	View<C> PrefixMap::find(View<C> text) throw(NotFoundException)
+	View<C> PrefixMap::find(View<C> text) throws(NotFoundException)
 	{
 		size_t * array = m_array.data();
 		for (;;)
@@ -95,7 +95,7 @@ namespace kr
 		}
 	}
 	template <typename C>
-	size_t PrefixMap::toIndex(C chr) throw(NotFoundException)
+	size_t PrefixMap::toIndex(C chr) throws(NotFoundException)
 	{
 		if (chr > (C)'Z')
 		{
@@ -119,9 +119,9 @@ namespace kr
 		using Text = View<C>;
 		ParameterTokenizerT(const C * params) noexcept;
 
-		template <typename LAMBDA> void left(LAMBDA lambda) throw(NotFoundException);
-		Array<C> nextString() throw(NotFoundException);
-		int nextInt() throw(NotFoundException);
+		template <typename LAMBDA> void left(LAMBDA lambda) throws(NotFoundException);
+		Array<C> nextString() throws(NotFoundException);
+		int nextInt() throws(NotFoundException);
 		bool hasNext() noexcept;
 
 	private:
@@ -136,7 +136,7 @@ namespace kr
 	};
 	template <typename C> 
 	template <typename LAMBDA>
-	void ParameterTokenizerT<C>::left(LAMBDA lambda) throw(NotFoundException)
+	void ParameterTokenizerT<C>::left(LAMBDA lambda) throws(NotFoundException)
 	{
 		if(m_params == nullptr) throw NotFoundException();
 		const wchar_t * i = m_params;
@@ -178,7 +178,7 @@ namespace kr
 
 		void start(int argn, Component ** args) noexcept;
 
-		Value next() throw(EofException, InvalidSourceException);
+		Value next() throws(EofException, InvalidSourceException);
 
 		template <typename LAMBDA>
 		bool foreach(const LAMBDA & lambda) noexcept
@@ -204,10 +204,11 @@ namespace kr
 		void printPosition() noexcept;
 
 	private:
-		View<Component> _getValue(Text name) throw(EofException, InvalidSourceException);
-		View<Component> _get() throw(EofException);
-		void _checkName(Text name) throw(InvalidSourceException);
-		View<Component> _checkShortCut(Component shortCut) throw(InvalidSourceException);
+		View<Component> _getValue(Text name) throws(EofException, InvalidSourceException);
+		View<Component> _getValue(const ParamInfo &info) throws(EofException, InvalidSourceException);
+		View<Component> _get() throws(EofException);
+		void _checkName(Text name) throws(InvalidSourceException);
+		View<Component> _checkShortCut(Component shortCut) throws(InvalidSourceException);
 
 		PrefixMap m_prefix;
 		Map<Text, ParamInfo> m_map;

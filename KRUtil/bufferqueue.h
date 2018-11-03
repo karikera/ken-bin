@@ -124,15 +124,15 @@ namespace kr
 	{
 	public:
 		BufferQueuePointer(const BufferQueue & buf) noexcept;
-		byte read() throw(EofException);
-		void read(void * dest, size_t size) throw(EofException);
-		template <typename T> T read() throw(EofException)
+		byte read() throws(EofException);
+		void read(void * dest, size_t size) throws(EofException);
+		template <typename T> T read() throws(EofException)
 		{
 			T v;
 			read(&v, sizeof(v));
 			return v;
 		}
-		void skip(size_t size) throw(EofException);
+		void skip(size_t size) throws(EofException);
 		size_t getReadSize() noexcept;
 		void clearSize() noexcept;
 

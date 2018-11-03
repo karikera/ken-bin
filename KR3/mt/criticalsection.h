@@ -3,6 +3,10 @@
 #include <KR3/main.h>
 #include <KR3/data/idmap.h>
 
+#ifndef WIN32
+#include <semaphore.h>
+#endif
+
 namespace kr
 {
 	class CriticalSection;
@@ -24,30 +28,8 @@ namespace kr
 		~CsLocks() noexcept;
 
 	private:
-		BSortedArray<CriticalSection*, count, GetPointerAsKey> * m_cs;
+		BSortedArray<CriticalSection*, count, GetPointerAsKey> m_cs;
 	};
-
-	template <size_t count>
-	CsLocks<count>::CsLocks(View<CriticalSection*> css) noexcept
-	{
-		_assert(css.size() == count);
-		for (CriticalSection * cs : css)
-		{
-			m_cs.insert(cs);
-		}
-		for (CriticalSection * cs : m_cs)
-		{
-			cs->enter();
-		}
-	}
-	template <size_t count>
-	CsLocks<count>::~CsLocks() noexcept
-	{
-		for (CriticalSection * cs : m_cs.reverse())
-		{
-			cs->leave();
-		}
-	}
 
 	template <>
 	class CsLocks<2>
@@ -95,11 +77,11 @@ namespace kr
 	class EventHandle;
 #endif
 	
-	class Mutex
+	class Cond
 	{
 	public:
-		Mutex() noexcept;
-		~Mutex() noexcept;
+		Cond() noexcept;
+		~Cond() noexcept;
 
 		void set() noexcept;
 		void reset() noexcept;
@@ -108,6 +90,9 @@ namespace kr
 	private:
 #ifdef WIN32
 		EventHandle * m_handle;
+#else
+		pthread_cond_t m_cond;
+		pthread_mutex_t m_mutex;
 #endif
 	};
 
@@ -122,19 +107,45 @@ namespace kr
 
 	private:
 		std::atomic<int> m_reading;
-		Mutex m_mutex;
+		Cond m_cond;
 
 	};
 
 	class Semaphore
 	{
 	private:
+#ifdef WIN32
 		void * m_semaphore;
+#else
+		sem_t m_semaphore;
+#endif
 
 	public:
-		Semaphore(int init, int max) noexcept;
+		Semaphore(int init) noexcept;
 		void release(int count) noexcept;
 		void wait() noexcept;
 	};
+
+	template <size_t count>
+	CsLocks<count>::CsLocks(View<CriticalSection*> css) noexcept
+	{
+		_assert(css.size() == count);
+		for (CriticalSection * cs : css)
+		{
+			m_cs.insert(cs);
+		}
+		for (CriticalSection * cs : m_cs)
+		{
+			cs->enter();
+		}
+	}
+	template <size_t count>
+	CsLocks<count>::~CsLocks() noexcept
+	{
+		for (CriticalSection * cs : m_cs.reverse())
+		{
+			cs->leave();
+		}
+	}
 
 }

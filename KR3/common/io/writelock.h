@@ -24,10 +24,10 @@ namespace kr
 			{
 				return m_buffer;
 			}
-			size_t lock(S * stream) throw(NotEnoughSpaceException)
+			size_t lock(S * stream) throws(NotEnoughSpaceException)
 			{
 			}
-			void unlock(S* stream) throw(NotEnoughSpaceException)
+			void unlock(S* stream) throws(NotEnoughSpaceException)
 			{
 				stream->write(m_buffer, sz);
 			}
@@ -50,11 +50,11 @@ namespace kr
 			{
 				return m_buffer.begin();
 			}
-			size_t lock(S * stream) throw(NotEnoughSpaceException)
+			size_t lock(S * stream) throws(NotEnoughSpaceException)
 			{
 				return m_buffer.size();
 			}
-			void unlock(S * stream) throw(NotEnoughSpaceException)
+			void unlock(S * stream) throws(NotEnoughSpaceException)
 			{
 				stream->write(m_buffer.begin(), m_buffer.size());
 			}
@@ -74,13 +74,13 @@ namespace kr
 			{
 				return m_ptr;
 			}
-			size_t lock(S * stream) throw(NotEnoughSpaceException)
+			size_t lock(S * stream) throws(NotEnoughSpaceException)
 			{
 				stream->padding(sz+(nullterm ? 1 : 0));
 				m_ptr = stream->prepare(sz);
 				return sz;
 			}
-			void unlock(S * stream) throw(NotEnoughSpaceException)
+			void unlock(S * stream) throws(NotEnoughSpaceException)
 			{
 			}
 		};;
@@ -100,13 +100,13 @@ namespace kr
 			{
 				return m_ptr;
 			}
-			size_t lock(S * stream) throw(NotEnoughSpaceException)
+			size_t lock(S * stream) throws(NotEnoughSpaceException)
 			{
 				stream->padding(m_size + (nullterm ? 1 : 0));
 				m_ptr = stream->prepare(m_size);
 				return m_size;
 			}
-			void unlock(S * stream) throw(NotEnoughSpaceException)
+			void unlock(S * stream) throws(NotEnoughSpaceException)
 			{
 			}
 		};;

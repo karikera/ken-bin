@@ -21,10 +21,10 @@ namespace kr
 			~Init() noexcept;
 		};
 		ComMethod() noexcept;
-		ComMethod(pcstr16 filename) throw(ErrorCode);
-		void create(pcstr16 filename) throw(ErrorCode);
-		Com<IWICBitmapSource> getFrame(uint index) throw(ErrorCode);
-		uint getFrameCount() throw(ErrorCode);
+		ComMethod(pcstr16 filename) throws(ErrorCode);
+		void create(pcstr16 filename) throws(ErrorCode);
+		Com<IWICBitmapSource> getFrame(uint index) throws(ErrorCode);
+		uint getFrameCount() throws(ErrorCode);
 	};
 
 }

@@ -25,7 +25,7 @@ namespace kr
 				return m_buffer;
 			}
 			template <typename IS>
-			size_t lock(IS * stream) throw(EofException)
+			size_t lock(IS * stream) throws(EofException)
 			{
 				static_assert(IsIStream<IS>::value, "IS is not istream");
 				return stream->read(m_buffer, sz);
@@ -56,7 +56,7 @@ namespace kr
 				return (T*)m_buffer;
 			}
 			template <typename IS> 
-			size_t lock(IS * stream) throw(EofException)
+			size_t lock(IS * stream) throws(EofException)
 			{
 				static_assert(IsIStream<IS>::value, "IS is not istream");
 				return stream->read((T*)m_buffer, m_buffer.size());
@@ -83,7 +83,7 @@ namespace kr
 				return m_ptr;
 			}
 			template <typename IS>
-			size_t lock(IS * stream) throw(EofException)
+			size_t lock(IS * stream) throws(EofException)
 			{
 				static_assert(IsIStream<IS>::value, "IS is not istream");
 				size_t size = sz;
@@ -113,7 +113,7 @@ namespace kr
 				return m_ptr;
 			}
 			template <typename IS>
-			size_t lock(IS * stream) throw(EofException)
+			size_t lock(IS * stream) throws(EofException)
 			{
 				static_assert(IsIStream<IS>::value, "IS is not istream");
 				size_t size = m_size;

@@ -103,25 +103,25 @@ namespace kr
 				using Super::setEnd;
 				using Super::empty;
 
-				void skipBack() throw(EofException)
+				void skipBack() throws(EofException)
 				{
 					if (empty())
 						throw EofException();
 					setEnd(end() - 1);
 				}
-				void skipBack(size_t count) throw(EofException)
+				void skipBack(size_t count) throws(EofException)
 				{
 					if (size() < count) throw EofException();
 					setEnd(end()-count);
 				}
-				InternalComponent readBack() throw(EofException)
+				InternalComponent readBack() throws(EofException)
 				{
 					if (empty()) throw EofException();
 					const InternalComponent * comp = (InternalComponent *)end() - 1;
 					setEnd(comp);
 					return *comp;
 				}
-				Ref readBack(size_t count) throw(EofException)
+				Ref readBack(size_t count) throws(EofException)
 				{
 					if (size() < count) throw EofException();
 					const InternalComponent * endptr = (InternalComponent *)end();
@@ -144,7 +144,7 @@ namespace kr
 				}
 
 				template <typename T>
-				T &readBackAs() throw(EofException)
+				T &readBackAs() throws(EofException)
 				{
 					static_assert(sizeof(T) % sizeof(InternalComponent) == 0, "Size of T must aligned by size of component");
 					Ref ref = readBack(sizeof(T));

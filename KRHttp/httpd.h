@@ -52,8 +52,8 @@ namespace kr
 	{
 	public:
 		MemoryPage() noexcept;
-		MemoryPage(pcstr16 path) throw(Error, TooBigException);
-		MemoryPage(Text header, pcstr16 path) throw(Error);
+		MemoryPage(pcstr16 path) throws(Error, TooBigException);
+		MemoryPage(Text header, pcstr16 path) throws(Error);
 		MemoryPage(const MemoryPage& _copy) noexcept;
 		MemoryPage(MemoryPage&& _move) noexcept;
 		~MemoryPage() noexcept;
@@ -80,7 +80,7 @@ namespace kr
 	public:
 		HttpClient(HttpServer * server, Socket * socket) noexcept;
 		~HttpClient() noexcept;
-		void onRead() throw(...) override;
+		void onRead() throws(...) override;
 		void onSendDone() noexcept override;
 		void onError(Text funcname, int code) noexcept override;
 

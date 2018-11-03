@@ -26,13 +26,13 @@ namespace kr
 		CSVParser& operator = (io::VIStream<char> stream);
 		kr::io::VIStream<char>* operator &() const;
 
-		void skip() throw(EofException, NoLineException, NextLineException);
+		void skip() throws(EofException, NoLineException, NextLineException);
 		template <class Derived, typename C, typename _Info>
-		void next(OutStream<Derived, C, _Info>* dest) throw(EofException, NoLineException, NextLineException);
-		TmpArray<char> next() throw(EofException, NoLineException);
-		Array<char> nextAlloc() throw(EofException, NoLineException);
+		void next(OutStream<Derived, C, _Info>* dest) throws(EofException, NoLineException, NextLineException);
+		TmpArray<char> next() throws(EofException, NoLineException);
+		Array<char> nextAlloc() throws(EofException, NoLineException);
 		size_t nextLength() noexcept;
-		void mustLine() throw(EofException, NoLineException);
+		void mustLine() throws(EofException, NoLineException);
 		bool nextLine() noexcept;
 		int getLine() noexcept;
 
@@ -54,9 +54,9 @@ namespace kr
 		io::VOStream<char>* operator &() noexcept;
 
 		template <typename Converter, typename C2>
-		void write(View<C2> str) throw(NotEnoughSpaceException);
-		void write(View<char> str) throw(NotEnoughSpaceException);
-		void nextLine() throw(NotEnoughSpaceException);
+		void write(View<C2> str) throws(NotEnoughSpaceException);
+		void write(View<char> str) throws(NotEnoughSpaceException);
+		void nextLine() throws(NotEnoughSpaceException);
 
 	private:
 		io::VOStream<char> m_stream;
@@ -66,7 +66,7 @@ namespace kr
 }
 
 template <typename Derived, typename C, typename _Info>
-void kr::CSVParser::next(OutStream<Derived, C, _Info>* dest) throw(EofException, NoLineException, NextLineException)
+void kr::CSVParser::next(OutStream<Derived, C, _Info>* dest) throws(EofException, NoLineException, NextLineException)
 {
 	switch (m_nLast)
 	{
@@ -125,7 +125,7 @@ void kr::CSVParser::next(OutStream<Derived, C, _Info>* dest) throw(EofException,
 }
 
 template <typename Converter, typename C2>
-void kr::CSVWriter::write(View<C2> str) throw(NotEnoughSpaceException)
+void kr::CSVWriter::write(View<C2> str) throws(NotEnoughSpaceException)
 {
 	static const auto filter = meta::literal_as<C2>("\"\'\n\r,");
 	static const auto from = meta::literal_as<C2>("\"");

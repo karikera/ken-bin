@@ -103,32 +103,32 @@ namespace kr
 				return (memm::numberonly(begin(), _len));
 			}
 
-			uint64_t to_uint64_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			uint64_t to_uint64_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uint64_t>(data(), _len, _radix);
 			}
-			int64_t to_int64_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			int64_t to_int64_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<int64_t>(data(), _len, _radix);
 			}
-			uint32_t to_uint_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			uint32_t to_uint_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uint32_t>(data(), _len, _radix);
 			}
-			int32_t to_int_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			int32_t to_int_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<int32_t>(data(), _len, _radix);
 			}
-			uintptr_t to_uintp_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			uintptr_t to_uintp_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<uintptr_t>(data(), _len, _radix);
 			}
-			intptr_t to_intp_limit_x(uint _radix, size_t _len) const throw(OutOfRangeException)
+			intptr_t to_intp_limit_x(uint _radix, size_t _len) const throws(OutOfRangeException)
 			{
 				KR_DEFINE_MMEM();
 				return memm::template toint_limit<intptr_t>(data(), _len, _radix);

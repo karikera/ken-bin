@@ -1,6 +1,8 @@
 #pragma once
 #include "vector_method.h"
+#ifdef WIN32
 #include "mmx.h"
+#endif
 
 namespace kr
 {

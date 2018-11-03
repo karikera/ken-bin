@@ -41,15 +41,15 @@ namespace kr
 			UINT index;
 
 			dxgi::Output& operator *() noexcept;
-			Iterator & operator ++() throw (ErrorCode);
-			Iterator & operator --() throw (ErrorCode);
+			Iterator & operator ++() throws(ErrorCode);
+			Iterator & operator --() throws(ErrorCode);
 			bool operator ==(const Iterator & iter) noexcept;
 			bool operator !=(const Iterator & iter) noexcept;
 		};
 
 		Iterator begin() const noexcept;
 		Iterator end() const noexcept;
-		dxgi::Output operator [](UINT idx) const throw (ErrorCode);
+		dxgi::Output operator [](UINT idx) const throws(ErrorCode);
 	};
 
 	namespace dxgi
@@ -62,14 +62,14 @@ namespace kr
 				UINT index;
 
 				Adapter& operator *() noexcept;
-				Iterator & operator ++() throw (ErrorCode);
-				Iterator & operator --() throw (ErrorCode);
+				Iterator & operator ++() throws(ErrorCode);
+				Iterator & operator --() throws(ErrorCode);
 				bool operator ==(const Iterator & iter) noexcept;
 				bool operator !=(const Iterator & iter) noexcept;
 			};
 			Iterator begin() const noexcept;
 			Iterator end() const noexcept;
-			Adapter operator [](UINT idx) const throw (ErrorCode);
+			Adapter operator [](UINT idx) const throws(ErrorCode);
 		};
 
 		extern const Adapters & adapters;

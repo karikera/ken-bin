@@ -18,12 +18,12 @@ namespace kr
 			using TSZ = TempSzText<Component>;
 			using AText = Array<Component>;
 
-			void _refill() throw(EofException)
+			void _refill() throws(EofException)
 			{
 				m_filled = m_read = m_buffer;
 				m_filled += base()->read(m_buffer, BUFFER_SIZE);
 			}
-			void _remainFill() throw(EofException)
+			void _remainFill() throws(EofException)
 			{
 				size_t remaining = m_filled - m_read;
 				if (remaining == 0)
@@ -80,7 +80,7 @@ namespace kr
 				m_filled = m_read = m_buffer;
 			}
 
-			Component peek() throw(EofException)
+			Component peek() throws(EofException)
 			{
 				for (;;)
 				{
@@ -92,7 +92,7 @@ namespace kr
 					_refill();
 				}
 			}
-			Ref peek(size_t count) throw(EofException, TooBigException)
+			Ref peek(size_t count) throws(EofException, TooBigException)
 			{
 				if (count > BUFFER_SIZE) throw TooBigException();
 				for (;;)
@@ -131,11 +131,11 @@ namespace kr
 					return false;
 				}
 			}
-			void must(const Component & comp) throw(InvalidSourceException)
+			void must(const Component & comp) throws(InvalidSourceException)
 			{
 				if (!nextIs(comp)) throw InvalidSourceException();
 			}
-			void must(Ref comps) throw(InvalidSourceException)
+			void must(Ref comps) throws(InvalidSourceException)
 			{
 				TmpArray<Component> tmp((size_t)0, comps.size());
 				try
@@ -149,7 +149,7 @@ namespace kr
 				}
 			}
 
-			void skip(size_t sz = 1) throw(EofException)
+			void skip(size_t sz = 1) throws(EofException)
 			{
 				Component * line;
 				for (;;)
@@ -171,7 +171,7 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readLine(OutStream<_Derived, Component, _Info> * dest) throw(EofException, NotEnoughSpaceException)
+			size_t readLine(OutStream<_Derived, Component, _Info> * dest) throws(EofException, NotEnoughSpaceException)
 			{
 				size_t readed = 0;
 				Component * line;
@@ -219,13 +219,13 @@ namespace kr
 				m_read += len + 1;
 				return readed + len;
 			}
-			TSZ readLine() throw(EofException)
+			TSZ readLine() throws(EofException)
 			{
 				TSZ tsz;
 				readLine(&tsz);
 				return tsz;
 			}
-			size_t skipLine() throw(EofException)
+			size_t skipLine() throws(EofException)
 			{
 				size_t readed = 0;
 				Component * line;
@@ -270,7 +270,7 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info, typename LAMBDA>
-			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda) throw(NotEnoughSpaceException, EofException)
+			size_t readto_F(OutStream<_Derived, Component, _Info> * dest, const LAMBDA &lambda) throws(NotEnoughSpaceException, EofException)
 			{
 				size_t totalReaded = 0;
 				Component * line;
@@ -294,14 +294,14 @@ namespace kr
 				return totalReaded + len;
 			}
 			template <typename LAMBDA>
-			TSZ readto_F(const LAMBDA &lambda) throw(EofException)
+			TSZ readto_F(const LAMBDA &lambda) throws(EofException)
 			{
 				TSZ tsz;
 				readto_F(&tsz, lambda);
 				return tsz;
 			}
 			template <typename LAMBDA>
-			size_t skipto_F(const LAMBDA &lambda) throw(EofException)
+			size_t skipto_F(const LAMBDA &lambda) throws(EofException)
 			{
 				size_t readlen = 0;
 				Component * line;
@@ -325,18 +325,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &needle) throw(EofException)
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, const Component &needle) throws(EofException)
 			{
 				return readto_F(dest, [&](Ref text) {
 					return text.find(needle).begin();
 				});
 			}
-			TSZ readto(const Component &chr) throw(EofException)
+			TSZ readto(const Component &chr) throws(EofException)
 			{
 				TSZ tsz;
 				return readto(&tsz, chr);
 			}
-			size_t skipto(const Component &needle) throw(EofException)
+			size_t skipto(const Component &needle) throws(EofException)
 			{
 				return skipto_F([&](Ref text) {
 					return text.find(needle).begin();
@@ -344,7 +344,7 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto(OutStream<_Derived, Component, _Info> * dest, Ref needle) throw(EofException, TooBigException)
+			size_t readto(OutStream<_Derived, Component, _Info> * dest, Ref needle) throws(EofException, TooBigException)
 			{
 				size_t totalReaded = 0;
 				size_t needlesize = needle.size();
@@ -382,13 +382,13 @@ namespace kr
 					return totalReaded;
 				}
 			}
-			AText readto(Ref needle) throw(EofException, TooBigException)
+			AText readto(Ref needle) throws(EofException, TooBigException)
 			{
 				AText text;
 				readto(&text, needle);
 				return text;
 			}
-			size_t skipto(Ref needle) throw(EofException, TooBigException)
+			size_t skipto(Ref needle) throws(EofException, TooBigException)
 			{
 				size_t totalReaded = 0;
 				size_t needlesize = needle.size();
@@ -423,19 +423,19 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readwith(OutStream<_Derived, Component, _Info> * dest, const Component &chr) throw(EofException, NotEnoughSpaceException)
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, const Component &chr) throws(EofException, NotEnoughSpaceException)
 			{
 				size_t sz = readto(dest, chr);
 				skip(1);
 				return sz;
 			}
-			TSZ readwith(const Component &chr) throw(EofException)
+			TSZ readwith(const Component &chr) throws(EofException)
 			{
 				TSZ tsz;
 				readwith(&tsz, chr);
 				return tsz;
 			}
-			size_t skipwith(const Component &chr) throw(EofException)
+			size_t skipwith(const Component &chr) throws(EofException)
 			{
 				size_t sz = skipto(chr);
 				skip(1);
@@ -443,18 +443,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readwith(OutStream<_Derived, Component, _Info> * dest, Ref needle) throw(EofException, NotEnoughSpaceException, TooBigException)
+			size_t readwith(OutStream<_Derived, Component, _Info> * dest, Ref needle) throws(EofException, NotEnoughSpaceException, TooBigException)
 			{
 				size_t sz = readto(dest, needle);
 				skip(needle.size());
 				return sz;
 			}
-			TSZ readwith(Ref needle) throw(EofException, TooBigException)
+			TSZ readwith(Ref needle) throws(EofException, TooBigException)
 			{
 				TSZ tsz;
 				return readwith(&tsz, needle);
 			}
-			size_t skipwith(Ref needle) throw(EofException, TooBigException)
+			size_t skipwith(Ref needle) throws(EofException, TooBigException)
 			{
 				size_t sz = skipto(needle);
 				skip(needle.size());
@@ -462,19 +462,19 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_y(OutStream<_Derived, Component, _Info> * dest, Ref chr) throw(NotEnoughSpaceException, EofException, TooBigException)
+			size_t readto_y(OutStream<_Derived, Component, _Info> * dest, Ref chr) throws(NotEnoughSpaceException, EofException, TooBigException)
 			{
 				return readto_F(dest, [chr](Ref text) {
 					return text.find_y(chr).begin();
 				});
 			}
-			TSZ readto_y(Ref chr) throw(EofException, TooBigException)
+			TSZ readto_y(Ref chr) throws(EofException, TooBigException)
 			{
 				TSZ tsz;
 				readto_y(&tsz, chr);
 				return tsz;
 			}
-			size_t skipto_y(Ref chr) throw(EofException, TooBigException)
+			size_t skipto_y(Ref chr) throws(EofException, TooBigException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_y(chr).begin();
@@ -482,18 +482,18 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, const Component & chr) throw(NotEnoughSpaceException, EofException)
+			size_t readto_n(OutStream<_Derived, Component, _Info> * dest, const Component & chr) throws(NotEnoughSpaceException, EofException)
 			{
 				return readto_F(dest, [&](Ref text) {
 					return text.find_n(chr).begin();
 				});
 			}
-			TSZ readto_n(const Component &chr) throw(EofException)
+			TSZ readto_n(const Component &chr) throws(EofException)
 			{
 				TSZ tsz;
 				return readto_n(&tsz, chr);
 			}
-			size_t skipto_n(Component chr) throw(EofException)
+			size_t skipto_n(Component chr) throws(EofException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_n(chr).begin();
@@ -501,19 +501,19 @@ namespace kr
 			}
 
 			template <typename _Derived, typename _Info>
-			size_t readto_ny(OutStream<_Derived, Component, _Info> * dest, Ref chr) throw(NotEnoughSpaceException, EofException, TooBigException)
+			size_t readto_ny(OutStream<_Derived, Component, _Info> * dest, Ref chr) throws(NotEnoughSpaceException, EofException, TooBigException)
 			{
 				return readto_F(dest, [chr](Ref text) {
 					return text.find_ny(chr).begin();
 				});
 			}
-			TSZ readto_ny(Ref chr) throw(EofException, TooBigException)
+			TSZ readto_ny(Ref chr) throws(EofException, TooBigException)
 			{
 				TSZ tsz;
 				readto_ny(&tsz, chr);
 				return tsz;
 			}
-			size_t skipto_ny(Ref chr) throw(EofException, TooBigException)
+			size_t skipto_ny(Ref chr) throws(EofException, TooBigException)
 			{
 				return skipto_F([chr](Ref text) {
 					return text.find_ny(chr).begin();
@@ -524,7 +524,7 @@ namespace kr
 			{
 				return View<Component>(m_read, m_filled);
 			}
-			size_t readImpl(Component * dest, size_t need) throw(EofException)
+			size_t readImpl(Component * dest, size_t need) throws(EofException)
 			{
 				{
 					Component* to = m_read + need;

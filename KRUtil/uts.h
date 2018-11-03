@@ -43,23 +43,25 @@ namespace kr
 
 	};
 
+	using stime_t = std::make_signed_t<time_t>;
+
 	class UnixTimeStamp
 	{
 	public:
 		UnixTimeStamp() = default;
 		UnixTimeStamp(time_t uts) noexcept;
 		UnixTimeStamp(filetime_t filetime) noexcept;
-		UnixTimeStamp(Text strGMT) throw(InvalidSourceException, OutOfRangeException);
-		UnixTimeStamp(Text16 strGMT) throw(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp(Text strGMT) throws(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp(Text16 strGMT) throws(InvalidSourceException, OutOfRangeException);
 		time_t getUTS() noexcept;
 		filetime_t getFileTime() noexcept;
 		UnixTimeStamp & operator =(time_t uts) noexcept;
-		UnixTimeStamp & operator =(Text strGMT) throw(InvalidSourceException, OutOfRangeException);
-		UnixTimeStamp & operator =(Text16 strGMT) throw(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp & operator =(Text strGMT) throws(InvalidSourceException, OutOfRangeException);
+		UnixTimeStamp & operator =(Text16 strGMT) throws(InvalidSourceException, OutOfRangeException);
 
-		UnixTimeStamp & operator += (int64_t dura) noexcept;
-		const UnixTimeStamp operator + (int64_t dura) const noexcept;
-		int64_t operator - (const UnixTimeStamp &other) const noexcept;
+		UnixTimeStamp & operator += (stime_t dura) noexcept;
+		const UnixTimeStamp operator + (stime_t dura) const noexcept;
+		stime_t operator - (const UnixTimeStamp &other) const noexcept;
 
 		bool operator <= (UnixTimeStamp uts) const noexcept;
 		bool operator >= (UnixTimeStamp uts) const noexcept;

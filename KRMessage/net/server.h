@@ -14,7 +14,7 @@ namespace kr
 
 		void setSocket(Socket * socket) noexcept;
 		Socket * getSocket() noexcept;
-		void open(word port) throw(SocketException);
+		void open(word port) throws(SocketException);
 
 	private:
 		Socket * m_socket;

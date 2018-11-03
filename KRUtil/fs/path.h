@@ -23,9 +23,9 @@ namespace kr
 		constexpr static size_t MAX_LEN = 512;
 
 		Path() noexcept;
-		Text16 get(Text16 filename) throw(NotEnoughSpaceException);
-		pcstr16 getsz(Text16 filename) throw(NotEnoughSpaceException);
-		char16 * enter(Text16 name) throw(NotEnoughSpaceException);
+		Text16 get(Text16 filename) throws(NotEnoughSpaceException);
+		pcstr16 getsz(Text16 filename) throws(NotEnoughSpaceException);
+		char16 * enter(Text16 name) throws(NotEnoughSpaceException);
 		void leave(char16 * path) noexcept;
 		pcstr16 getCurrentDirectorySz() noexcept;
 

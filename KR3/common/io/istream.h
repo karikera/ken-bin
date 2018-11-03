@@ -16,26 +16,26 @@ namespace kr
 			using Super::Super;
 			using TSZ = TempSzText<C>;
 
-			inline size_t read(Component * dest, size_t sz) throw(...)
+			inline size_t read(Component * dest, size_t sz) throws(...)
 			{
 				return static_cast<Derived*>(this)->readImpl(dest, sz);
 			}
-			inline InternalComponent read() throw(...)
+			inline InternalComponent read() throws(...)
 			{
 				InternalComponent out;
 				read((Component*)&out, 1);
 				return out;
 			}
-			inline size_t skipImpl(size_t size) throw(...)
+			inline size_t skipImpl(size_t size) throws(...)
 			{
 				TmpArray<InternalComponent> tempbuffer(size);
 				return static_cast<Derived*>(this)->readImpl(tempbuffer.data(), size);
 			}
-			inline size_t skip(size_t sz) throw(...)
+			inline size_t skip(size_t sz) throws(...)
 			{
 				return static_cast<Derived*>(this)->skipImpl(sz);
 			}
-			inline size_t skipAll() throw(...)
+			inline size_t skipAll() throws(...)
 			{
 				size_t skipped = 0;
 				try
@@ -52,7 +52,7 @@ namespace kr
 			}
 
 			template <class _Derived, class _Parent>
-			inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) throw(...)
+			inline void readAll(OutStream<_Derived, Component, StreamInfo<true, _Parent>> * os) throws(...)
 			{
 				try
 				{
@@ -65,26 +65,26 @@ namespace kr
 				{
 				}
 			}
-			inline Alc readAll() throw(...)
+			inline Alc readAll() throws(...)
 			{
 				Alc out;
 				readAll(&out);
 				return out;
 			}
-			inline TmpArray<C> readAllTemp() throw(...)
+			inline TmpArray<C> readAllTemp() throws(...)
 			{
 				TmpArray<C> out;
 				readAll(&out);
 				return out;
 			}
-			inline TSZ read(size_t size) throw(...)
+			inline TSZ read(size_t size) throws(...)
 			{
 				TSZ tsz;
 				static_cast<Derived*>(this)->read(&tsz, size);
 				return tsz;
 			}
 
-			template <typename T> T readas() throw(...)
+			template <typename T> T readas() throws(...)
 			{
 				T value;
 				size_t dwLen = read(&value, sizeof(T));
@@ -117,11 +117,11 @@ namespace kr
 			}
 
 		public:
-			inline ComponentRef * read(size_t * psize) throw(EofException)
+			inline ComponentRef * read(size_t * psize) throws(EofException)
 			{
 				return derived()->readImpl(psize);
 			}
-			inline size_t skip(size_t sz) throw(EofException)
+			inline size_t skip(size_t sz) throws(EofException)
 			{
 				read(&sz);
 				return sz;
@@ -132,7 +132,7 @@ namespace kr
 				derived()->setBegin(end());
 				return sz;
 			}
-			inline size_t read(Component * dest, size_t sz) throw(EofException)
+			inline size_t read(Component * dest, size_t sz) throws(EofException)
 			{
 				const Component * src = read(&sz);
 				mema::subs_copy((InternalComponent*)dest, (InternalComponent*)src, sz);
@@ -146,7 +146,7 @@ namespace kr
 				derived()->addBegin(1);
 				return *p;
 			}
-			inline InternalComponent read() throw(EofException)
+			inline InternalComponent read() throws(EofException)
 			{
 				if (size() == 0)
 					throw EofException();
@@ -154,7 +154,7 @@ namespace kr
 				derived()->addBegin(1);
 				return *p;
 			}
-			inline Ref read(size_t _len) throw(EofException)
+			inline Ref read(size_t _len) throws(EofException)
 			{
 				if (size() == 0) throw EofException();
 				_len = math::min(_len, size());
@@ -163,7 +163,7 @@ namespace kr
 				return out;
 			}
 			template <typename T>
-			inline T readas() throw(EofException)
+			inline T readas() throws(EofException)
 			{
 				static_assert(sizeof(T) % sizeof(InternalComponent) == 0, "Size of T must aligned by size of component");
 				Ref ref = read(sizeof(T) / sizeof(InternalComponent));
@@ -346,8 +346,9 @@ namespace kr
 				return _v.copy(readwith(_cut));
 			}
 
-			inline int read_enumchar(Ref list) throw(EofException)
+			inline int read_enumchar(Ref list) throws(EofException)
 			{
+				KR_DEFINE_MMEM();
 				if (size() == 0)
 					throw EofException();
 				size_t i = memm::pos(list.begin(), *begin(), list.size());
@@ -385,7 +386,7 @@ namespace kr
 				if (dwSignature != signature) return false;
 				return true;
 			}
-			dword findChunk(dword signature) throw(EofException)
+			dword findChunk(dword signature) throws(EofException)
 			{
 				dword dwSize;
 				while (!testSignature(signature))
@@ -396,13 +397,13 @@ namespace kr
 				dwSize = this->template readas<dword>();
 				return dwSize;
 			}
-			void readStructure(ptr value, uintptr_t size) throw(EofException)
+			void readStructure(ptr value, uintptr_t size) throws(EofException)
 			{
 				_assert(this != nullptr);
 				*(dword*)value = this->template readas<dword>();
 				readStructure((dword*)value + 1, size - sizeof(dword), *(dword*)value - sizeof(dword));
 			}
-			void readStructure(ptr value, uintptr_t size, uintptr_t srcsize) throw(EofException)
+			void readStructure(ptr value, uintptr_t size, uintptr_t srcsize) throws(EofException)
 			{
 				byte* pRead = (byte*)value;
 				if (srcsize < size)
@@ -438,7 +439,7 @@ namespace kr
 			return sz;
 		}
 
-		inline dword readLeb128() throw (...)
+		inline dword readLeb128() throws(...)
 		{
 			dword result = 0;
 			dword shift = 0;
@@ -454,7 +455,7 @@ namespace kr
 			return result;
 		}
 
-		inline qword readLeb128_64() throw (...)
+		inline qword readLeb128_64() throws(...)
 		{
 			qword result = 0;
 			dword shift = 0;
@@ -470,7 +471,7 @@ namespace kr
 			return result;
 		}
 
-		inline dword readLeb128_kr() throw (...)
+		inline dword readLeb128_kr() throws(...)
 		{
 			dword v = 0;
 			byte shift = 0;
@@ -489,7 +490,7 @@ namespace kr
 			return v;
 		}
 
-		inline qword readLeb128_kr64() throw (...)
+		inline qword readLeb128_kr64() throws(...)
 		{
 			qword v = 0;
 			byte shift = 0;

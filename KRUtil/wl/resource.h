@@ -45,7 +45,7 @@ namespace kr
 	public:
 		ResourceFile(HINSTANCE hModule, int id, int type) noexcept;
 		~ResourceFile() noexcept;
-		bool toFile(pcstr16 str, bool temp=false) throw(Error);
+		bool toFile(pcstr16 str, bool temp=false) throws(Error);
 		int execute(Text16 param) noexcept;
 
 	protected:

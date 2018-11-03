@@ -104,21 +104,21 @@ namespace kr
 		public:
 			qword getInsertId() noexcept;
 			qword affactedRows() noexcept;
-			void execute() throw(ThrowRetry, SqlException);
-			void execute(MySQL & db) throw(SqlException);
+			void execute() throws(ThrowRetry, SqlException);
+			void execute(MySQL & db) throws(SqlException);
 
 		protected:
-			PreparedStatementImpl(MySQL& sql, Text query) throw(SqlException);
+			PreparedStatementImpl(MySQL& sql, Text query) throws(SqlException);
 			~PreparedStatementImpl() noexcept;
 			
-			void _bindParam(MYSQL_BIND * bind) throw(SqlException);
-			void _bindResult(MYSQL_BIND * bind) throw(SqlException);
-			void _storeResult() throw(ThrowRetry, SqlException);
-			void _storeResult(MySQL & db) throw(SqlException);
+			void _bindParam(MYSQL_BIND * bind) throws(SqlException);
+			void _bindResult(MYSQL_BIND * bind) throws(SqlException);
+			void _storeResult() throws(ThrowRetry, SqlException);
+			void _storeResult(MySQL & db) throws(SqlException);
 			void _freeResult() noexcept;
-			bool _fetch() throw(ThrowRetry, ThrowAllocate, SqlException);
-			bool _fetch(MySQL & db) throw(ThrowAllocate, SqlException);
-			void _fetchColumn(MYSQL_BIND * bind, uint index) throw(ThrowRetry, SqlException);
+			bool _fetch() throws(ThrowRetry, ThrowAllocate, SqlException);
+			bool _fetch(MySQL & db) throws(ThrowAllocate, SqlException);
+			void _fetchColumn(MYSQL_BIND * bind, uint index) throws(ThrowRetry, SqlException);
 
 		private:
 			MYSQL_STMT * m_stmt;
@@ -187,8 +187,8 @@ namespace kr
 
 			using PreparedStatementImpl::execute;
 
-			bool _fetch() throw(ThrowRetry, SqlException);
-			bool _fetch(MySQL& db) throw(SqlException);
+			bool _fetch() throws(ThrowRetry, SqlException);
+			bool _fetch(MySQL& db) throws(SqlException);
 			
 		public:
 			class Fetcher
@@ -197,11 +197,11 @@ namespace kr
 				Statement * const m_host;
 			
 			public:
-				Fetcher(Statement * st) throw(ThrowRetry, SqlException);
-				Fetcher(MySQL & db, Statement * st) throw(ThrowRetry, SqlException);
+				Fetcher(Statement * st) throws(ThrowRetry, SqlException);
+				Fetcher(MySQL & db, Statement * st) throws(ThrowRetry, SqlException);
 				~Fetcher() noexcept;
-				bool fetch() throw(ThrowRetry, SqlException);
-				bool fetch(MySQL& db) throw(SqlException);
+				bool fetch() throws(ThrowRetry, SqlException);
+				bool fetch(MySQL& db) throws(SqlException);
 			};
 			
 			using resultTypes = results_t;
@@ -213,23 +213,23 @@ namespace kr
 			void bind(const paramPtrTypes &param, const resultPtrTypes &res) noexcept;
 			void bindResults(resultTypes * values) noexcept;
 			void bindResults(const resultPtrTypes &values) noexcept;
-			Statement(MySQL& sql, Text text) throw(SqlException);
-			void fetchColumn(uint index) throw(ThrowRetry, SqlException);
-			void allocateFetch() throw(ThrowRetry, SqlException);
+			Statement(MySQL& sql, Text text) throws(SqlException);
+			void fetchColumn(uint index) throws(ThrowRetry, SqlException);
+			void allocateFetch() throws(ThrowRetry, SqlException);
 
-			bool fetchOnce() throw(ThrowRetry, SqlException);
-			bool fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> int fetchCount(LAMBDA lambda) throw(ThrowRetry, SqlException);
+			bool fetchOnce() throws(ThrowRetry, SqlException);
+			bool fetchOnce(const paramPtrTypes &param, const resultPtrTypes &res) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(const paramPtrTypes &param, LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> int fetchCount(LAMBDA lambda) throws(ThrowRetry, SqlException);
 
-			bool fetchOnce(MySQL & db) throw(ThrowRetry, SqlException);
-			bool fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> void fetch(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException);
-			template <typename LAMBDA> int fetchCount(MySQL & db, LAMBDA lambda) throw(ThrowRetry, SqlException);
+			bool fetchOnce(MySQL & db) throws(ThrowRetry, SqlException);
+			bool fetchOnce(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, const resultPtrTypes &res, LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, const paramPtrTypes &param, LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> void fetch(MySQL & db, LAMBDA lambda) throws(ThrowRetry, SqlException);
+			template <typename LAMBDA> int fetchCount(MySQL & db, LAMBDA lambda) throws(ThrowRetry, SqlException);
 		};;
 
 		template <typename params_t> class Statement<params_t, void>:public PreparedStatementImpl
@@ -244,7 +244,7 @@ namespace kr
 			void bind(const paramPtrTypes &values) noexcept;
 			void bindParams(const paramTypes * values) noexcept;
 			void bindParams(const paramPtrTypes &values) noexcept;
-			Statement(MySQL& sql, Text text) throw(SqlException);
+			Statement(MySQL& sql, Text text) throws(SqlException);
 			void execute(const paramPtrTypes &values) noexcept;
 			void execute(MySQL & db, const paramPtrTypes &values) noexcept;
 			void execute(MySQL & db, const paramTypes *values) noexcept;

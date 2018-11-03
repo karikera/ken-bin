@@ -1,8 +1,6 @@
 #pragma once
 
 #define __KR3_INCLUDED
-#pragma warning(disable:4180)
-#pragma warning(disable:4290)
 
 #ifdef WIN32
 

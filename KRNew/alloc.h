@@ -4,10 +4,6 @@
 #include <KR3/common/autovar/autoptr.h>
 #include <KR3/common/compiler.h>
 
-#ifndef NDEBUG
-#define KR_MEMORY_OBSERVER
-#endif
-
 namespace kr
 {
 	namespace _pri_
@@ -17,7 +13,7 @@ namespace kr
 	}
 }
 
-#ifdef KR_MEMORY_OBSERVER
+#ifndef NDEBUG
 #define _new new(__FILE__, __LINE__)
 
 inline void * getAllocatedPointer(void * value) noexcept
@@ -220,8 +216,15 @@ namespace kr
 	}
 }
 
+
 #ifdef KR_MEMORY_OBSERVER
 #define kr_alloc(sz, ...)			((::kr::autoptr)reline_new(::kr::alloc<__VA_ARGS__>::allocate(sz)))
+
+#ifndef _MSC_VER
+void * operator new(size_t sz);
+void operator delete(void * p);
+#endif
+
 #else
 #define kr_alloc(sz, ...)			((::kr::autoptr)::kr::alloc<__VA_ARGS__>::allocate(sz))
 #endif

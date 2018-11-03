@@ -52,7 +52,7 @@ namespace kr
 	COM_CLASS_METHODS(ID3D11DeviceContext)
 	{
 		void copy(ID3D11Texture2D * to, ID3D11Texture2D * from) noexcept;
-		dxgi::SwapChain create(win::Window * wnd, int width, int height, int multiSampling = 1) throw(ErrorCode);
+		dxgi::SwapChain create(win::Window * wnd, int width, int height, int multiSampling = 1) throws(ErrorCode);
 		void clear(ID3D11RenderTargetView * rtv, const vec4& color = {0,0,0,0}) noexcept;
 		void clear(ID3D11DepthStencilView * dsv) noexcept;
 		void setViewport(float width, float height) noexcept;

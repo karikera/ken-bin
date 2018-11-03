@@ -3,6 +3,10 @@
 #include "vector.h"
 #include "matrix.h"
 
+#ifdef WIN32
+#include "mmx.h"
+#endif
+
 static const kr::vec4a g_XMHalfPi = { kr::math::pi / 2, kr::math::pi / 2, kr::math::pi / 2, kr::math::pi / 2 };
 static const kr::vec4a g_XMTwoPi = { kr::math::pi * 2, kr::math::pi * 2, kr::math::pi * 2, kr::math::pi * 2 };
 static const kr::vec4a g_XMPi = { kr::math::pi, kr::math::pi, kr::math::pi, kr::math::pi };
@@ -1024,8 +1028,6 @@ ATTR_INLINE const kr::math::vector<T, 4, aligned, order> cross(const kr::math::v
 {
 	return{ (T)(a.y*b.z - b.y*a.z), (T)(a.z*b.x - b.z*a.x),  (T)(a.x*b.y - b.x*a.y), (T)(a.w*b.w) };
 }
-
-#include "mmx.h"
 
 namespace kr
 {

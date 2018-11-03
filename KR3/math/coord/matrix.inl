@@ -2,6 +2,10 @@
 
 #include "matrix.h"
 
+#ifdef WIN32
+#include "mmx.h"
+#endif
+
 namespace kr
 {
 	namespace math
@@ -172,8 +176,6 @@ namespace kr
 		}
 	}
 }
-
-#include "mmx.h"
 
 namespace kr
 {
