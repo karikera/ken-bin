@@ -750,6 +750,7 @@ namespace kr
 					m_ref = _this->end();
 					m_next = _this->find_r(m_chr).begin();
 					if (m_next == nullptr) m_next = m_begin;
+					else m_next += m_chr.size();
 					m_done = m_begin - m_chr.size();
 				}
 				bool isEnd() const noexcept
@@ -763,6 +764,7 @@ namespace kr
 					if (m_ref == m_done) return *this;
 					m_next = Ref(m_begin, m_ref).find_r(m_chr).begin();
 					if (m_next == nullptr) m_next = m_begin;
+					else m_next += m_chr.size();
 					return *this;
 				}
 				ReverseTextSplitIterator operator ++(int) noexcept

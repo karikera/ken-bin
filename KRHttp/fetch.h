@@ -2,7 +2,6 @@
 
 #include <KR3/mt/thread.h>
 #include <KRMessage/promise.h>
-#include <KRMessage/pump.h>
 #include "common/httpstatus.h"
 
 
@@ -30,6 +29,10 @@ namespace kr
 		curl_slist * m_headers;
 		AText m_postdata;
 	};
-	Promise<AText>* fetchAsText(const char * url) noexcept;
-	Promise<void>* fetchAsFile(const char * url, AText16 filename) noexcept;
+	Promise<AText>* fetchAsText(Text16 url) noexcept;
+	Promise<AText>* fetchAsText(Text url) noexcept;
+	Promise<AText>* fetchAsTextSz(const char * url) noexcept;
+	Promise<void>* fetchAsFile(Text16 url, AText16 filename) noexcept;
+	Promise<void>* fetchAsFile(Text url, AText16 filename) noexcept;
+	Promise<void>* fetchAsFileSz(const char * url, AText16 filename) noexcept;
 }

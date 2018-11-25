@@ -5,7 +5,7 @@
 #ifdef WIN32
 
 #ifndef WINVER
-#define WINVER 0x0501
+#define WINVER 0x0502
 #endif
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT WINVER

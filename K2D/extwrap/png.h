@@ -5,15 +5,16 @@
 
 namespace kr
 {
-	namespace gl
+	namespace image
 	{
 		class Png;
 	}
 }
 
-class kr::gl::Png
+class kr::image::Png
 {
 public:
 	static ImageData load(FILE * fp) noexcept;
+	static ImageData load(io::VIStream<void> buffer) noexcept;
 	static bool save(const ImageData & image, pcstr16 filename) noexcept;
 };

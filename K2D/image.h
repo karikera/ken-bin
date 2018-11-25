@@ -5,7 +5,7 @@
 #include "common.h"
 #include "reformatter.h"
 
-class kr::gl::ImageData
+class kr::image::ImageData
 {
 public:
 	ImageData() noexcept = default;
@@ -14,17 +14,17 @@ public:
 	ImageData & operator = (nullptr_t) noexcept;
 
 	void * allocate(PixelFormat pf, int w, int h) noexcept;
-	void * allocate(PixelFormat pf, int w, int h, int pitch) noexcept;
+	void * allocate(PixelFormat pf, int w, int h, int pitchBytes) noexcept;
 	void allocate(ImageData * _img, int _x, int _y, int _w, int _h) noexcept;
 	void allocate(ImageData * _src, PixelFormat _pf) noexcept;
 	void copyBits(const void * data) noexcept;
 	void copyBitsReverseX(const void * data) noexcept;
 	void copyBitsReverseY(const void * data) noexcept;
 	void copyBitsReverseXY(const void * data) noexcept;
-	void copyBits(const void * data, int _srcPitch) noexcept;
-	void copyBitsReverseX(const void * data, int _srcPitch) noexcept;
-	void copyBitsReverseY(const void * data, int _srcPitch) noexcept;
-	void copyBitsReverseXY(const void * data, int _srcPitch) noexcept;
+	void copyBits(const void * data, int _srcPitchBytes) noexcept;
+	void copyBitsReverseX(const void * data, int _srcPitchBytes) noexcept;
+	void copyBitsReverseY(const void * data, int _srcPitchBytes) noexcept;
+	void copyBitsReverseXY(const void * data, int _srcPitchBytes) noexcept;
 	ImageData subimage(int _x, int _y, int _w, int _h) const noexcept;
 	void copy(const ImageData * _img, int _dstX, int _dstY, int _srcX, int _srcY, int _srcW, int _srcH) noexcept;
 
@@ -57,10 +57,10 @@ public:
 	int getPixelSize() const noexcept;
 	size_t getByteSize() const noexcept;
 
-	bool loadFromTgaFile(FILE * file, Palette * palette) noexcept;
-	bool loadFromBmpFile(FILE * file, Palette * palette) noexcept;
-	bool loadFromPngFile(FILE * file) noexcept;
-	bool loadFromJpgFile(FILE * file) noexcept;
+	bool loadFromTga(io::VIStream<void> buffer, Palette * palette) noexcept;
+	bool loadFromBmp(io::VIStream<void> buffer, Palette * palette) noexcept;
+	bool loadFromPng(io::VIStream<void> buffer) noexcept;
+	bool loadFromJpg(io::VIStream<void> buffer) noexcept;
 	bool loadFromTgaFile(pcstr16 filename, Palette * palette) noexcept;
 	bool loadFromBmpFile(pcstr16 filename, Palette * palette) noexcept;
 	bool loadFromPngFile(pcstr16 filename) noexcept;

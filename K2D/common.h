@@ -2,7 +2,7 @@
 
 namespace kr
 {
-	namespace gl
+	namespace image
 	{
 		enum class PixelFormat;
 		class Palette;

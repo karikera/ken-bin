@@ -21,7 +21,7 @@ namespace kr
 
 		ptr		getBits() const noexcept;
 		dword	getLineBytes() const noexcept;
-		const gl::Palette* getPalette() const noexcept;
+		const image::Palette* getPalette() const noexcept;
 	};
 
 }

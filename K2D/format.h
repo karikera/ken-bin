@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-enum class kr::gl::PixelFormat
+enum class kr::image::PixelFormat
 {
 	Invalid = -1,
 	Index,		// 0xII [0xII]

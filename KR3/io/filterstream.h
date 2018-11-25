@@ -9,8 +9,8 @@ namespace kr
 		template <class Derived, class Base, bool autoClose, typename NewComponent>
 		class FilterIStream : public InStream<Derived, NewComponent, StreamInfo<>>
 		{
-		public:
 			CLASS_HEADER(FilterIStream, InStream<Derived, NewComponent, StreamInfo<>>);
+		public:
 			static_assert(IsIStream<Base>::value, "Base is not InStream");
 			INHERIT_COMPONENT();
 

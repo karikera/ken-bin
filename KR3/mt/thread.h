@@ -13,76 +13,182 @@ namespace kr
 {
 	template <typename LAMBDA> class LambdaThread;
 
-	template <typename T> class Threadable
+	class ThreadObject
 	{
 	private:
 #ifdef WIN32
-		ThreadHandle* m_handle;
-		ThreadId m_id;
+		ThreadHandle * m_handle;
 #else
 		pthread_t m_handle;
 #endif
 
 	public:
-		inline Threadable() noexcept
+#ifdef WIN32
+		using RawThreadReturn = unsigned long;
+		using RawThreadProc = RawThreadReturn(CT_STDCALL *)(void*);
+#else
+		using RawThreadReturn = void*;
+		using RawThreadProc = RawThreadReturn(*)(void*);
+#endif
+		using RawThreadReturnInt = int_sz_t<sizeof(RawThreadReturn)>;
+
+		static ThreadObject getCurrent() noexcept;
+		static ThreadObject createRaw(RawThreadProc fn, void * param
+#ifdef WIN32
+			,unsigned long * id = nullptr
+#endif
+		) noexcept;
+
+		template <typename T, int(*fn)(T*)>
+		static ThreadObject create(T * param) noexcept
+		{
+			return createRaw([](void * param){ return (RawThreadReturn)(RawThreadReturnInt)*fn((T*)param); }, param);
+		}
+		template <typename This, int (This::*fn)()>
+		static ThreadObject create(This * param) noexcept
+		{
+			return createRaw([](void * param){ return (RawThreadReturn)(RawThreadReturnInt)(((This*)param)->*fn)(); }, param);
+		}
+		template <typename This, int (This::*fn)() const>
+		static ThreadObject create(This * param) noexcept
+		{
+			return createRaw([](void*param){ return (RawThreadReturn)(RawThreadReturnInt)((This*)param)->*fn(); }, param);
+		}
+
+		template <typename LAMBDA>
+		static ThreadObject createLambda(LAMBDA lambda)
+		{
+			using NLAMBDA = meta::ChReturn<int, LAMBDA>;
+			NLAMBDA * plambda = _new NLAMBDA(move(lambda));
+			return createRaw([](void * p){ 
+				int ret = (int)(*(NLAMBDA*)p)();
+				delete (NLAMBDA*)p;
+				return (RawThreadReturn)(RawThreadReturnInt)ret;
+			}, plambda);
+		}
+
+		ThreadObject() noexcept = default;
+		ThreadObject(const ThreadObject &) noexcept = default;
+		ThreadObject(nullptr_t) noexcept
 		{
 #ifdef WIN32
-			m_id = nullptr;
 			m_handle = nullptr;
 #else
 			m_handle = 0;
 #endif
+		}
+		bool operator ==(const ThreadObject & other) const noexcept
+		{
+			return m_handle == other.m_handle;
+		}
+		bool operator !=(const ThreadObject & other) const noexcept
+		{
+			return m_handle != other.m_handle;
+		}
+		bool operator ==(nullptr_t) const noexcept
+		{
+#ifdef WIN32
+			return m_handle == nullptr;
+#else
+			return m_handle == 0;
+#endif
+		}
+		bool operator !=(nullptr_t) const noexcept
+		{
+#ifdef WIN32
+			return m_handle != nullptr;
+#else
+			return m_handle != 0;
+#endif
+		}
+		friend bool operator ==(nullptr_t, const ThreadObject & _this) noexcept
+		{
+#ifdef WIN32
+			return _this.m_handle == nullptr;
+#else
+			return _this.m_handle == 0;
+#endif
+		}
+		friend bool operator !=(nullptr_t, const ThreadObject & _this) noexcept
+		{
+#ifdef WIN32
+			return _this.m_handle != nullptr;
+#else
+			return _this.m_handle != 0;
+#endif
+		}
+
+		int join() noexcept
+		{
+#ifdef WIN32
+			return (int)m_handle->join();
+#else
+			void * state;
+			pthread_join(m_handle, &state);
+			return (int)(intptr_t)state;
+#endif
+		}
+		void terminate() noexcept
+		{
+#ifdef WIN32
+			m_handle->terminate();
+#else
+			pthread_cancel(m_handle);
+#endif
+		}
+		void setName(pcstr name) noexcept
+		{
+#ifdef WIN32
+			m_handle->getId().setName(name);
+#elif __GLIBC__ >= 2 && __GLIBC_MINOR__ >= 12
+			pthread_setname_np(m_handle, name);
+#endif
+		}
+	};
+
+	template <typename T> class Threadable
+	{
+	private:
+		ThreadObject m_obj;
+
+	public:
+		inline Threadable() noexcept
+		{
+			m_obj = nullptr;
 		}
 		inline ~Threadable() noexcept
 		{
 		}
 		inline void start() noexcept
 		{
-#ifdef WIN32
-			m_handle = ThreadHandle::create<T, &T::thread>(static_cast<T*>(this), &m_id);
-#else
-			int pthread_create_res = pthread_create(&m_handle, nullptr, [](void * _this)->void* {
-				return (void*)(intptr_t)(int)((T*)(_this))->thread();
-			}, this);
-			_assert(pthread_create_res != 0);
-#endif
+			m_obj.create<T, &T::thread>(static_cast<T*>(this));
 		}
 		inline void terminate() noexcept
 		{
-			if (m_handle != nullptr)
+			if (m_obj != nullptr)
 			{
-#ifdef WIN32
-				m_handle->terminate();
-#else
-				pthread_cancel(m_handle);
-#endif
-				m_handle = nullptr;
+				m_obj.terminate();
+				m_obj = nullptr;
 			}
 		}
 
-#ifdef WIN32
-		inline ThreadHandle * getThread() const noexcept
+		inline bool isCurrentThread() const noexcept
 		{
-			return m_handle;
+			return ThreadObject::getCurrent() == m_obj;
 		}
-		inline ThreadId getThreadId() const noexcept
+		inline ThreadObject getThreadObject() const noexcept
 		{
-			return m_id;
+			return m_obj;
 		}
-#endif
 
 		inline void join() noexcept
 		{
-#ifdef WIN32
-			m_handle->join();
-#else
-			pthread_join(m_handle);
-#endif
-			m_handle = nullptr;
+			m_obj.join();
+			m_obj = nullptr;
 		}
 		inline bool exists() noexcept
 		{
-			return m_handle != nullptr;
+			return m_obj != nullptr;
 		}
 	};
 

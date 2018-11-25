@@ -1,6 +1,7 @@
 #pragma once
 
 #include "pool.h"
+#include "poster.h"
 
 namespace kr
 {
@@ -12,7 +13,7 @@ namespace kr
 		class PromiseImpl : public Promise<void>
 		{
 		private:
-			EventPump * m_pump;
+			PostTarget * m_target;
 			ThreadCascader * m_that;
 
 		public:

@@ -10,11 +10,12 @@ namespace kr
 		class BufferedIStream 
 			:public FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>
 		{
+			CLASS_HEADER(BufferedIStream, FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>);
+		public:
+			INHERIT_COMPONENT();
+
 		private:
-			using Super = FilterIStream<BufferedIStream<Base, autoClose, BUFFER_SIZE>, Base, autoClose>;
-			using Component = typename Base::Component;
 			using m = memt<sizeof(Component)>;
-			using Ref = View<Component>;
 			using TSZ = TempSzText<Component>;
 			using AText = Array<Component>;
 

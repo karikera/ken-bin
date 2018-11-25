@@ -9,8 +9,10 @@ namespace kr
 	class WebCanvas2D :public Application
 	{
 	public:
-		WebCanvas2D(int width, int height) noexcept;
+		WebCanvas2D() noexcept;
 		~WebCanvas2D() noexcept;
+
+		void create(int width, int height) noexcept;
 
 		struct Composite
 		{
@@ -20,12 +22,17 @@ namespace kr
 		{
 			StrokeStyle& operator =(uint32_t style) noexcept;
 		};
+		struct LineWidth
+		{
+			LineWidth& operator =(float width) noexcept;
+		};
 		struct FillStyle
 		{
 			FillStyle& operator =(uint32_t style) noexcept;
 		};
 		StrokeStyle strokeStyle;
 		FillStyle fillStyle;
+		LineWidth lineWidth;
 		Composite globalCompositeOperation;
 
 		void save() noexcept;
@@ -44,7 +51,7 @@ namespace kr
 		void drawImage(WebImage * image, float x, float y) noexcept;
 		void drawImage(WebImage * image, float x, float y, float width, float height) noexcept;
 		void drawImage(WebImage * image, float srcX, float srcY, float srcWidth, float srcHeight, float destX, float destY, float destWidth, float destHeight) noexcept;
-		bool putImageData(const gl::ImageData& image, int x, int y) noexcept;
+		bool putImageData(const image::ImageData& image, int x, int y) noexcept;
 
 		void beginPath() noexcept;
 		void closePath() noexcept;
@@ -57,5 +64,8 @@ namespace kr
 		void quadraticCurveTo(float cpx, float cpy, float x, float y) noexcept;
 
 		void exRoundRect(float x, float y, float width, float height, float radius) noexcept;
+
+	protected:
+		void _flush() noexcept override;
 	};
 }

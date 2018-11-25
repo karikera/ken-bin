@@ -5,16 +5,17 @@
 
 namespace kr
 {
-	namespace gl
+	namespace image
 	{
 		class Jpeg;
 	}
 }
 
-class kr::gl::Jpeg
+class kr::image::Jpeg
 {
 public:
 	static constexpr int QUALITY_MAX = 100;
+	static ImageData load(io::VIStream<void> is) noexcept;
 	static ImageData load(FILE * infile) noexcept;
 	static bool save(const ImageData & data, pcstr16 filename, int quality) noexcept;
 };

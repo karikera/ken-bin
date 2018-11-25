@@ -227,8 +227,6 @@
   <Type Name="kr::EventPump">
     <Expand>
       <Item Name="[Thread ID]">m_threadId</Item>
-      <Item Name="[onAfterProcess]">m_onAfterProcess</Item>
-      <Item Name="[onFinish]">m_onFinish</Item>
       <LinkedListItems>
         <HeadPointer>m_start.m_next</HeadPointer>
         <NextPointer>m_next</NextPointer>

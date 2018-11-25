@@ -50,10 +50,10 @@ namespace kr
 	{
 	private:
 		const View<C> m_text;
-		const LAMBDA & m_lambda;
+		LAMBDA & m_lambda;
 
 	public:
-		CustomAddSlashes(View<C> text, const LAMBDA & lambda) noexcept
+		CustomAddSlashes(View<C> text, LAMBDA & lambda) noexcept
 			: m_text(text), m_lambda(lambda)
 		{
 		}
@@ -146,17 +146,17 @@ namespace kr
 	};
 
 	template <typename LAMBDA>
-	inline auto addSlashesCustom(Text text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char, LAMBDA>
+	inline auto addSlashesCustom(Text text, LAMBDA& lambda) noexcept->CustomAddSlashes<char, LAMBDA>
 	{
 		return CustomAddSlashes<char, LAMBDA>(text, lambda);
 	}
 	template <typename LAMBDA>
-	inline auto addSlashesCustom(Text16 text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char16, LAMBDA>
+	inline auto addSlashesCustom(Text16 text, LAMBDA& lambda) noexcept->CustomAddSlashes<char16, LAMBDA>
 	{
 		return CustomAddSlashes<char16, LAMBDA>(text, lambda);
 	}
 	template <typename LAMBDA>
-	inline auto addSlashesCustom(Text32 text, const LAMBDA& lambda) noexcept->CustomAddSlashes<char32, LAMBDA>
+	inline auto addSlashesCustom(Text32 text, LAMBDA& lambda) noexcept->CustomAddSlashes<char32, LAMBDA>
 	{
 		return CustomAddSlashes<char32, LAMBDA>(text, lambda);
 	}

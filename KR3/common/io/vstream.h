@@ -1,6 +1,7 @@
 #pragma once
 
 #include <KR3/main.h>
+
 #include "istream.h"
 #include "ostream.h"
 
@@ -15,6 +16,10 @@ namespace kr
 		template <typename C, class Parent>
 		class VIStream : public InStream<VIStream<C, Parent>, C, StreamInfo<false, Parent>>
 		{
+			CLASS_HEADER(VIStream, InStream<VIStream<C, Parent>, C, StreamInfo<false, Parent>>);
+		public:
+			INHERIT_COMPONENT();
+
 		private:
 			void * m_stream;
 			size_t(*m_read)(void * stream, C * data, size_t sz);
@@ -23,6 +28,14 @@ namespace kr
 			VIStream() noexcept
 			{
 				reset();
+			}
+
+			VIStream(FILE * file) noexcept
+				: m_stream(file)
+			{
+				m_read = [](void * stream, C * data, size_t sz)->size_t {
+					return fread(data, sizeof(InternalComponent), sz, (FILE*)stream);
+				};
 			}
 
 			template <typename Derived, typename Info>
@@ -53,6 +66,9 @@ namespace kr
 		template <typename C, class Parent>
 		class VOStream : public OutStream<VOStream<C, Parent>, C, StreamInfo<false, Parent>>
 		{
+			CLASS_HEADER(VOStream, OutStream<VOStream<C, Parent>, C, StreamInfo<false, Parent>>);
+		public:
+			INHERIT_COMPONENT();
 		private:
 			void * m_stream;
 			void(*m_write)(void * stream, const C * data, size_t sz);
@@ -61,6 +77,14 @@ namespace kr
 			VOStream() noexcept
 			{
 				reset();
+			}
+
+			VOStream(FILE * file) noexcept
+				: m_stream(file)
+			{
+				m_write = [](void * stream, C * data, size_t sz)->size_t {
+					return fwrite(data, sizeof(InternalComponent), sz, (FILE*)stream);
+				};
 			}
 
 			template <typename Derived, typename Info>

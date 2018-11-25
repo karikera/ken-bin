@@ -58,7 +58,7 @@ namespace DirectX
 	HRESULT LoadImageFromFile(
 		_In_ ID3D11Device * d3dDevice,
 		_In_z_ const wchar_t* szFileName,
-		_Out_ kr::gl::ImageData* image,
+		_Out_ kr::image::ImageData* image,
 		_In_ size_t maxsize = 0
 		);
 

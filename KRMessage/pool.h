@@ -6,9 +6,9 @@
 #include <KR3/util/callable.h>
 #include <KR3/mt/thread.h>
 #include <KR3/mt/criticalsection.h>
+#include "poster.h"
 
-#include "promise.h"
-#include "pump.h"
+#include <KRMessage/promise.h>
 
 namespace kr
 {
@@ -40,9 +40,9 @@ namespace kr
 	private:
 		int _thread() noexcept;
 
-		Array<ThreadHandle*> m_threads;
+		Array<ThreadObject> m_threads;
 		Chain<Node<ThreadTaskBase>> m_works;
-		Event m_event;
+		Cond m_event;
 		CriticalSection m_cs;
 		
 		std::atomic<uint> m_leftWorks;
@@ -116,35 +116,36 @@ namespace kr
 		class PromiseImpl: public Promise<T>
 		{
 		private:
-			EventPump * m_pump;
+			PostTarget * m_target;
 			using Promise<T>::_resolveCommit;
 			using Promise<T>::_rejectCommit;
 
 		public:
 			using Promise<T>::_resolveValue;
+			using Promise<T>::_rejectValue;
 
 			PromiseImpl() noexcept
 			{
-				m_pump = EventPump::getInstance();
+				m_target = PostTarget::getCurrent();
 			}
 
 			void resolve() noexcept
 			{
-				m_pump->postL([this](void*) {
+				m_target->postL([this](void*) {
 					_resolveCommit();
 				});
 			}
 			void reject() noexcept
 			{
 				new(_rejectValue()) std::exception_ptr(std::current_exception());
-				m_pump->postL([this](void*) {
+				m_target->postL([this](void*) {
 					_rejectCommit();
 				});
 			}
 			void quit() noexcept
 			{
 				new(_rejectValue()) std::exception_ptr(make_exception_ptr(ThrowAbort()));
-				m_pump->postL([this](void*) {
+				m_target->postL([this](void*) {
 					_rejectCommit();
 				});
 			}

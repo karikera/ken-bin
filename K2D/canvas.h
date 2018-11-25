@@ -3,8 +3,8 @@
 #include "common.h"
 #include "image.h"
 
-template <kr::gl::PixelFormat pf> 
-class kr::gl::MemCanvas :public ImageData
+template <kr::image::PixelFormat pf> 
+class kr::image::MemCanvas :public ImageData
 {
 public:
 	void point(ivec2 pt) noexcept;
@@ -21,8 +21,8 @@ public:
 	void triangle(ivec2 pt1, ivec2 pt2, ivec2 pt3) noexcept;
 	void ellipse(const irectwh &rect) noexcept;
 };
-template <kr::gl::PixelFormat pf>
-class kr::gl::MemBitmap :public kr::gl::MemCanvas<pf>
+template <kr::image::PixelFormat pf>
+class kr::image::MemBitmap :public kr::image::MemCanvas<pf>
 {
 public:
 	MemBitmap(nullptr_t) noexcept;
@@ -38,7 +38,7 @@ public:
 
 #define WRAP(v)	v
 #define DECL(format) \
-extern template kr::gl::MemCanvas<kr::gl::PixelFormat::format>;\
-extern template kr::gl::MemBitmap<kr::gl::PixelFormat::format>;
+extern template kr::image::MemCanvas<kr::image::PixelFormat::format>;\
+extern template kr::image::MemBitmap<kr::image::PixelFormat::format>;
 
 #include "formatlist.h"

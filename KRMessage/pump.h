@@ -132,8 +132,6 @@ namespace kr
 		int messageLoop() noexcept;
 		int messageLoopWith(View<EventProcedure> proc) noexcept;
 
-		Callable* onAfterProcess(CallablePtr callable) noexcept;
-		Callable* onFinish(CallablePtr callable) noexcept;
 		static EventPump * getInstance() noexcept;
 
 	private:
@@ -150,8 +148,6 @@ namespace kr
 		CriticalSection m_timercs;
 		EventHandle* m_msgevent;
 		NodeHead m_start;
-		Array<Callable*> m_onAfterProcess;
-		Array<Callable*> m_onFinish;
 		ThreadId m_threadId;
 	};
 

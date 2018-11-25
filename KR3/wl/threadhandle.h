@@ -93,13 +93,11 @@ namespace kr
 			return createRaw<NLAMBDA>([](NLAMBDA * p)->int { int ret = (*p)(); delete p; return ret; }, plambda, id);
 		}
 
-#if WINVER >= 0x502
 		ThreadId getId() noexcept;
-#endif
 		void suspend() noexcept;
 		void terminate() noexcept;
 		void detach() noexcept;
-		void join() noexcept;
+		dword join() noexcept;
 		void setPriority(ThreadPriority priority) noexcept;
 
 		static ThreadHandle * getCurrent() noexcept;

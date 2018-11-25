@@ -4,7 +4,7 @@
 #include <KR3/math/coord.h>
 #include "common.h"
 
-class kr::gl::Palette :public kr::Bufferable<Palette, kr::BufferInfo<color, true, false, false> >
+class kr::image::Palette :public kr::Bufferable<Palette, kr::BufferInfo<color, true, false, false> >
 {
 	using Super = WRefArray<color>;
 public:

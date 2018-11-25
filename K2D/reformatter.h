@@ -11,7 +11,7 @@
 
 namespace kr
 {
-	namespace gl
+	namespace image
 	{
 		template <PixelFormat pf> struct Pixel;
 
@@ -616,5 +616,6 @@ namespace kr
 		PixelFormat getFromD3D9Format(int format) noexcept;
 		PixelFormat getFromDXGIFormat(int format) noexcept;
 		void reformat(ImageData * dest, const ImageData * src) noexcept;
+		const ImageData * reformat(ImageData * buffer, const ImageData * src, image::PixelFormat format) noexcept;
 	}
 }

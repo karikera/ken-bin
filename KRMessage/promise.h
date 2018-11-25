@@ -2,7 +2,6 @@
 
 #include <KR3/main.h>
 #include <KR3/meta/function.h>
-#include "message.h"
 
 namespace kr
 {
@@ -103,13 +102,13 @@ namespace kr
 		friend class PromiseThen;
 		template <typename InType, typename OutType, typename LAMBDA>
 		friend class PromiseKatch;
-		template <typename T>
+		template <typename T2>
 		friend class PromisePass;
 	public:
 		using ResultType = T;
 		virtual ~Promise() noexcept override;
 		template <typename LAMBDA>
-		auto then(LAMBDA &&lambda) noexcept->Promise<unwrap_promise_t<decltype(lambda((T&&)*(T*)0))> >*;
+		auto then(LAMBDA &&lambda) noexcept->Promise<unwrap_promise_t<decltype(lambda((T&)*(T*)0))> >*;
 		template <typename LAMBDA>
 		auto katch(LAMBDA &&lambda) noexcept->Promise<unwrap_promise_t<decltype(lambda(nullref))>>*;
 		static Promise<T> * resolve(T data) noexcept;
@@ -268,6 +267,7 @@ namespace kr
 		using Super::_reject;
 		using Super::_callLambda;
 		using Super::_resolveValue;
+		using Super::_rejectException;
 
 	public:
 		PromiseThen(LAMBDA&& lambda) noexcept
@@ -365,6 +365,8 @@ namespace kr
 
 	private:
 		using PromiseRaw::_resolveCommit;
+		using Super::_resolveValue;
+		using Super::_rejectException;
 		using Super::_reject;
 		using Super::_callLambda;
 		bool m_reposted;
@@ -413,8 +415,11 @@ namespace kr
 
 	private:
 		using PromiseRaw::_resolveCommit;
-		using PromiseRaw::_reject;
+		using Super::_reject;
 		using Super::_callLambdaKatch;
+		using Super::_resolveValue;
+		using Super::_rejectValue;
+		using Super::_rejectCommit;
 		bool m_reposted;
 
 	public:
@@ -441,6 +446,7 @@ namespace kr
 		{
 			if (m_reposted)
 			{
+				using RealOutType = unwrap_promise_t<OutType>;
 				*_rejectValue() = *static_cast<Promise<RealOutType>*>(from)->_rejectValue();
 				_rejectCommit();
 				return;
@@ -478,7 +484,7 @@ namespace kr
 	};
 
 	template <typename ... ARGS>
-	static Promise<void>* PromiseRaw::all(Promise<ARGS>* ... proms) noexcept
+	Promise<void>* PromiseRaw::all(Promise<ARGS>* ... proms) noexcept
 	{
 		size_t count = sizeof ... (ARGS);
 		if (count == 0) return Promise<void>::resolve();
@@ -530,7 +536,7 @@ namespace kr
 		return rejectException(make_exception_ptr(rej));
 	}
 	template <typename T>
-	static Promise<void>* Promise<T>::all(View<Promise<T>*> proms) noexcept
+	Promise<void>* Promise<T>::all(View<Promise<T>*> proms) noexcept
 	{
 		size_t count = proms.size();
 		if (count == 0) return Promise<void>::resolve();
@@ -553,9 +559,9 @@ namespace kr
 
 	template <typename T>
 	template <typename LAMBDA>
-	auto Promise<T>::then(LAMBDA &&lambda) noexcept->Promise<unwrap_promise_t<decltype(lambda((T&&)*(T*)0))> >*
+	auto Promise<T>::then(LAMBDA &&lambda) noexcept->Promise<unwrap_promise_t<decltype(lambda((T&)*(T*)0))> >*
 	{
-		using OutType = decltype(lambda((T&&)*(T*)0));
+		using OutType = decltype(lambda((T&)*(T*)0));
 		using OutTypeRes = typename PromiseThen<T, OutType, LAMBDA>::ResultType;
 		Promise<OutTypeRes> * next = _new PromiseThen<T, OutType, LAMBDA>(move(lambda));
 		_addNext(next);
