@@ -30,8 +30,8 @@ namespace kr
 		template <typename T>
 		static const T coslinear(const T * arr, int W, int H, int _pitch, float x, float y) noexcept
 		{
-			float tx = x % W;
-			float ty = y % H;
+			float tx = fmodf(x, (float)W);
+			float ty = fmodf(y, (float)H);
 
 			int nx = math::suspectedFloor(tx);
 			int ny = math::suspectedFloor(ty);

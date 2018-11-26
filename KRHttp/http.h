@@ -6,8 +6,8 @@
 #include <KR3/io/selfbufferedstream.h>
 #include <KR3/data/crypt.h>
 #include <KRUtil/net/socket.h>
+#include <KRUtil/httpstatus.h>
 
-#include "common/httpstatus.h"
 #include "common/header.h"
 
 

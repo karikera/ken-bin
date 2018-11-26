@@ -39,10 +39,6 @@ namespace kr
 	};
 	struct Error : Exception {};
 	struct SqlException : Exception {};
-	struct CurlError : Error {
-		uint value;
-		inline CurlError(uint value) noexcept :value(value) {}
-	};
 	struct MciError : Error {
 		uint value;
 		inline MciError(uint value) noexcept :value(value) {}

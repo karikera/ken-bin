@@ -57,10 +57,10 @@ namespace kr
 		{
 			switch (chr)
 			{
-			case sep: return true;
 #ifdef WIN32
-			case '/': return true;
+			case '\\': return true;
 #endif
+			case '/': return true;
 			default: return false;
 			}
 		}
@@ -114,9 +114,80 @@ namespace kr
 
 		// "dirname/basename.ext.name" -> ".ext.name"
 		// "dirname/basename" -> ""
+		// "http://dirname/basename" -> ""
 		static Text extname(Text text) noexcept
 		{
 			return basename(text).find_e((C)'.');
+		}
+
+		struct ProtocolInfo
+		{
+			Text protocol;
+			bool isAbsolute;
+			bool hasSeperator;
+		};
+
+		static ProtocolInfo getProtocolInfo(Text path) noexcept
+		{
+			ProtocolInfo out;
+			Text seppos;
+#ifdef WIN32
+			seppos = path.find_y(SEPERATOR);
+#else
+			seppos = path.find(sep);
+#endif
+			Text protocol;
+			if (seppos != nullptr)
+			{
+				if (seppos.begin() == path.begin())
+				{
+					out.protocol = nullptr;
+					out.isAbsolute = true;
+					return out;
+				}
+				else
+				{
+					protocol = Text(path.cut(seppos).find(':').data(), path.end());
+				}
+			}
+			else
+			{
+				protocol = path.find(':');
+			}
+			if (protocol != nullptr)
+			{
+				out.isAbsolute = true;
+				protocol++;
+#ifdef WIN32
+				if (protocol.startsWith('\\'))
+				{
+					protocol++;
+					out.protocol = path.cut(protocol);
+					out.hasSeperator = true;
+					return out;
+				}
+#endif
+				if (protocol.startsWith('/'))
+				{
+					out.hasSeperator = true;
+					protocol++;
+					if (protocol.startsWith('/'))
+					{
+						protocol++;
+					}
+				}
+				else
+				{
+					out.hasSeperator = false;
+				}
+				out.protocol = path.cut(protocol);
+			}
+			else
+			{
+				out.isAbsolute = false;
+				out.protocol = nullptr;
+			}
+			return out;
 		}
 
 		template <typename ... T>
@@ -128,38 +199,97 @@ namespace kr
 			const Text * end = texts.end();
 			if (iter == end) return;
 
-			Text text = *iter;
-			if (startsWithSeperator(text))
+			size_t protocolIdx;
+
 			{
-				text++;
-				*dest << sep;
+				auto info = getProtocolInfo(*dest);
+
+				if (info.protocol != nullptr)
+				{
+					protocolIdx = info.protocol.begin() - dest->begin();
+				}
+				else
+				{
+					protocolIdx = 0;
+				}
 			}
-			bool sep_end = false;
-			if ((sep_end = endsWithSeperator(text)))
-			{
-				text.cut_self(text.end() - 1);
-			}
-			*dest << text;
-			iter++;
+			
+			bool skip_sep = endsWithSeperator(*dest);
+
 			for (; iter != end; iter++)
 			{
-				text = *iter;
-				if (startsWithSeperator(text))
+				Text text = *iter;
+
+				auto info = getProtocolInfo(text);
+				if (info.isAbsolute)
 				{
-					text++;
+					if (info.protocol != nullptr)
+					{
+						dest->clear();
+						*dest << info.protocol;
+						protocolIdx = info.protocol.size();
+						text.setBegin(info.protocol.end());
+						skip_sep = info.hasSeperator;
+					}
+					else
+					{
+						skip_sep = false;
+						dest->cut_self(protocolIdx);
+						text++;
+					}
 				}
-				*dest << sep;
-				if ((sep_end = endsWithSeperator(text)))
+				else
 				{
-					text.cut_self(text.end() - 1);
+					if (dest->empty())
+					{
+						skip_sep = true;
+					}
 				}
-				*dest << text;
+				
+				bool sep_end = endsWithSeperator(text);
+
+				for (;;)
+				{
+#ifdef WIN32
+					Text name = text.readwith_y(SEPERATOR);
+#else
+					Text name = text.readwith(sep);
+#endif
+					if (name != nullptr)
+					{
+						if (!name.empty())
+						{
+							if (skip_sep) skip_sep = false;
+							else *dest << sep;
+							*dest << name;
+						}
+					}
+					else
+					{
+						if (!text.empty())
+						{
+							if (skip_sep) skip_sep = false;
+							else *dest << sep;
+							*dest << text;
+						}
+						break;
+					}
+				}
+
+				if (sep_end)
+				{
+					*dest << sep;
+					skip_sep = true;
+				}
 			}
-			if (sep_end) *dest << sep;
 		}
 
-		// ("dir/", "/name" ,"basename.ext") -> "dir/name/basename.ext"
-		// ("/dir/", "/name" ,"nextdir/") -> "/dir/name/nextdir/"
+		// ("dir", "name" ,"nextdir") -> "dir/name/nextdir"
+		// ("dir", "name" ,"nextdir/") -> "dir/name/nextdir/"
+		// ("dir/", "name/" ,"nextdir/") -> "dir/name/nextdir/"
+		// ("/dir", "name" ,"nextdir") -> "/dir/name/nextdir"
+		// ("dir", "/name" ,"nextdir") -> "/name/nextdir"
+		// ("/dir", "/name" ,"nextdir") -> "/name/nextdir"
 		template <typename ... T>
 		static TSZ join(const T & ... inputs) noexcept
 		{

@@ -22,8 +22,6 @@ namespace kr
 			struct PixelBitInfo: public PixelBitInfo<_bitcount, -1>
 			{
 				using Super = PixelBitInfo<_bitcount, -1>;
-				using Super::fromComponent;
-				using Super::toComponent;
 
 				static constexpr int offset = _offset;
 				static constexpr int bitcount = _bitcount;
@@ -32,13 +30,13 @@ namespace kr
 				template <int _tobit>
 				static int fromValue(int _rawValue) noexcept
 				{
-					return fromComponent<_tobit>((_rawValue& mask) >> _offset);
+					return Super::template fromComponent<_tobit>((_rawValue& mask) >> _offset);
 				}
 
 				template <int _frombit>
 				static int toValue(int _fromValue) noexcept
 				{
-					return toComponent<_frombit>(_fromValue) << offset;
+					return Super::template toComponent<_frombit>(_fromValue) << offset;
 				}
 
 				static float floatFromValue(int _rawValue) noexcept
@@ -137,10 +135,12 @@ namespace kr
 
 			using PixelBit8 = PixelBitInfo<8>;
 
-			template <typename Derived, int pxsz> 
+			template <typename Derived, int pxsz, bool _hasAlpha>
 			struct PixelCommon
 			{
 				static constexpr int size = pxsz;
+				static constexpr bool hasAlpha = _hasAlpha;
+
 				byte data[pxsz];
 
 				const Derived* base() const noexcept
@@ -189,9 +189,9 @@ namespace kr
 			};
 
 			template <typename Derived, typename Type, int pxsz, int abit, int rbit, int gbit, int bbit>
-			struct BitPixel: PixelCommon<Derived, pxsz>
+			struct BitPixel: PixelCommon<Derived, pxsz, abit != 0>
 			{
-				using Super = PixelCommon<Derived, pxsz>;
+				using Super = PixelCommon<Derived, pxsz, abit != 0>;
 
 				using Super::data;
 
@@ -211,22 +211,22 @@ namespace kr
 				template <int _tobit>
 				int alpha() const noexcept
 				{
-					return A::fromValue<_tobit>(rawValue());
+					return A::template fromValue<_tobit>(rawValue());
 				}
 				template <int _tobit>
 				int red() const noexcept
 				{
-					return R::fromValue<_tobit>(rawValue());
+					return R::template fromValue<_tobit>(rawValue());
 				}
 				template <int _tobit>
 				int green() const noexcept
 				{
-					return G::fromValue<_tobit>(rawValue());
+					return G::template fromValue<_tobit>(rawValue());
 				}
 				template <int _tobit>
 				int blue() const noexcept
 				{
-					return B::fromValue<_tobit>(rawValue());
+					return B::template fromValue<_tobit>(rawValue());
 				}
 				float alphaf() const noexcept
 				{
@@ -247,7 +247,7 @@ namespace kr
 
 				void setAlpha(byte _alpha) noexcept
 				{
-					rawValue() = (Type)((*(Type*)data & (R::mask | G::mask | B::mask)) | A::toValue<8>(_alpha));
+					rawValue() = (Type)((*(Type*)data & (R::mask | G::mask | B::mask)) | A::template toValue<8>(_alpha));
 				}
 				void set(const vec4a & _color) noexcept
 				{
@@ -257,8 +257,8 @@ namespace kr
 					res |= B::floatToValue(_color.b);
 					rawValue() = (Type)res;
 				}
-				template <typename _Parent, int _pxsize>
-				void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
+				template <typename _Parent, int _pxsize, bool _hasalpha>
+				void set(const px::PixelCommon<_Parent, _pxsize, _hasalpha> &_src) noexcept
 				{
 					int res = _src.base()->template alpha<abit>() << A::offset;
 					res |= _src.base()->template red<rbit>() << R::offset;
@@ -301,9 +301,9 @@ namespace kr
 			using color_byte = typename ColorByteData<offset>::type;
 
 			template <typename Derived, int pxsz, int a, int r, int g, int b>
-			struct BytePixel: PixelCommon<Derived, pxsz>
+			struct BytePixel: PixelCommon<Derived, pxsz, a != 0>
 			{
-				using Super = PixelCommon<Derived, pxsz>;
+				using Super = PixelCommon<Derived, pxsz, a != 0>;
 
 				using Super::base;
 				using Super::data;
@@ -395,8 +395,8 @@ namespace kr
 					rawAlpha() = _alpha;
 				}
 				using Super::set;
-				template <typename _Parent, int _pxsize>
-				void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
+				template <typename _Parent, int _pxsize, bool _hasalpha>
+				void set(const px::PixelCommon<_Parent, _pxsize, _hasalpha> &_src) noexcept
 				{
 					if (is_same<Derived, _Parent>::value)
 					{
@@ -412,9 +412,9 @@ namespace kr
 		}
 
 		template <> struct Pixel<PixelFormat::Index>
-			: px::PixelCommon<Pixel<PixelFormat::Index>, 1>
+			: px::PixelCommon<Pixel<PixelFormat::Index>, 1, true>
 		{
-			using Super = PixelCommon<Pixel<PixelFormat::Index>, 1>;
+			using Super = PixelCommon<Pixel<PixelFormat::Index>, 1, true>;
 
 			vec4a getf() noexcept
 			{
@@ -453,8 +453,8 @@ namespace kr
 			}
 
 			using Super::set;
-			template <typename _Parent, int _pxsize>
-			void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
+			template <typename _Parent, int _pxsize, bool _hasalpha>
+			void set(const px::PixelCommon<_Parent, _pxsize, _hasalpha> &_src) noexcept
 			{
 				color c;
 				c.r = (byte)_src.base()->template red<8>();
@@ -541,9 +541,9 @@ namespace kr
 			}
 		};
 		template <> struct Pixel<PixelFormat::RGBA32F> :
-			px::PixelCommon<Pixel<PixelFormat::RGBA32F>, 4>
+			px::PixelCommon<Pixel<PixelFormat::RGBA32F>, 4, true>
 		{	
-			using Super = px::PixelCommon<Pixel<PixelFormat::RGBA32F>, 4>;
+			using Super = px::PixelCommon<Pixel<PixelFormat::RGBA32F>, 4, true>;
 
 			template <int _tobit> int alpha() const noexcept
 			{
@@ -585,8 +585,8 @@ namespace kr
 			}
 
 			using Super::set;
-			template <typename _Parent, int _pxsize>
-			void set(const px::PixelCommon<_Parent, _pxsize> &_src) noexcept
+			template <typename _Parent, int _pxsize, bool _hasalpha>
+			void set(const px::PixelCommon<_Parent, _pxsize, _hasalpha> &_src) noexcept
 			{
 				((float*)data)[0] = _src.base()->redf();
 				((float*)data)[1] = _src.base()->greenf();
@@ -599,9 +599,11 @@ namespace kr
 		struct FormatInfo
 		{
 			int size;
+			bool hasAlpha;
+#ifdef WIN32
 			int d3d9Format;
 			int dxgiFormat;
-			bool hasAlpha;
+#endif
 
 			void(*reformat[(size_t)PixelFormat::Count])(ImageData * _dest, const ImageData * _src);
 			dword(*makeColor)(color);
@@ -613,8 +615,10 @@ namespace kr
 		};
 
 		const FormatInfo * getFormatInfo(PixelFormat pf) noexcept;
+#ifdef WIN32
 		PixelFormat getFromD3D9Format(int format) noexcept;
 		PixelFormat getFromDXGIFormat(int format) noexcept;
+#endif
 		void reformat(ImageData * dest, const ImageData * src) noexcept;
 		const ImageData * reformat(ImageData * buffer, const ImageData * src, image::PixelFormat format) noexcept;
 	}

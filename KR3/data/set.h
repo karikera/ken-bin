@@ -12,6 +12,7 @@ namespace kr
 	class SetWrapper :public std::unordered_set<TK>
 	{
 	private:
+		using ComponentTV = typename TV::Component;
 		using ComponentTK = typename TK::Component;
 	public:
 		using super = std::unordered_set<TK>;
@@ -22,23 +23,129 @@ namespace kr
 		using super::end;
 		using super::size;
 
-		std::pair<iterator, bool> insert(const TV & value)
+		class ConstIterator
+		{
+		private:
+			const_iterator m_raw;
+
+		public:
+			ConstIterator(const_iterator raw) noexcept
+				:m_raw(raw)
+			{
+			}
+
+			TV operator *() noexcept
+			{
+				return (TV)m_raw->first;
+			}
+
+			ConstIterator &operator ++() noexcept
+			{
+				++m_raw;
+				return *this;
+			}
+			ConstIterator operator ++(int) noexcept
+			{
+				iterator ori = m_raw;
+				++m_raw;
+				return ori;
+			}
+
+			bool operator ==(const ConstIterator & other) noexcept
+			{
+				return m_raw == other.m_raw;
+			}
+			bool operator !=(const ConstIterator & other) noexcept
+			{
+				return m_raw != other.m_raw;
+			}
+		};
+
+		class Iterator
+		{
+		private:
+			iterator m_raw;
+
+		public:
+			Iterator(iterator raw) noexcept
+				:m_raw(raw)
+			{
+			}
+
+			const TV operator *() noexcept
+			{
+				return m_raw->template cast<ComponentTV>();
+			}
+
+			Iterator &operator ++() noexcept
+			{
+				++m_raw;
+				return *this;
+			}
+			Iterator operator ++(int) noexcept
+			{
+				iterator ori = m_raw;
+				++m_raw;
+				return ori;
+			}
+
+			bool operator ==(const Iterator & other) noexcept
+			{
+				return m_raw == other.m_raw;
+			}
+			bool operator !=(const Iterator & other) noexcept
+			{
+				return m_raw != other.m_raw;
+			}
+		};
+
+		SetWrapper() noexcept
+		{
+		}
+
+		SetWrapper(initializer_list<TV> values) noexcept
+		{
+			for (const TV &v : values)
+			{
+				insert(v);
+			}
+		}
+
+		Iterator begin() noexcept
+		{
+			return super::begin();
+		}
+		Iterator end() noexcept
+		{
+			return super::end();
+		}
+
+		const Iterator begin() const noexcept
+		{
+			return super::begin();
+		}
+		const Iterator end() const noexcept
+		{
+			return super::end();
+		}
+
+		std::pair<iterator, bool> insert(const TV & value) noexcept
 		{
 			return super::insert(value.template cast<ComponentTK>());
 		}
-		size_type erase(const TV &key)
+		size_type erase(const TV &key) noexcept
 		{
 			return super::erase(key.template cast<ComponentTK>());
 		}
-		iterator erase(iterator iter)
+		Iterator erase(Iterator iter) noexcept
 		{
 			return super::erase(iter);
 		}
-		iterator find(const TV& key)
+		Iterator find(const TV& key) noexcept
 		{
 			return super::find(key.template cast<ComponentTK>());
 		}
-		const_iterator find(const TV& key) const
+		ConstIterator find(const TV& key) const noexcept
 		{
 			return super::find(key.template cast<ComponentTK>());
 		}

@@ -28,6 +28,7 @@ namespace kr
 		const void* const __junk;
 
 	public:
+		Handle() = delete;
 		inline void operator delete(void * v) noexcept
 		{
 			_pri_::closeHandle(v);

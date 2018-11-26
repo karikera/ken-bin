@@ -34,11 +34,17 @@ public:
 
 	bool operator ==(const MemBitmap &img) const noexcept;
 	bool operator !=(const MemBitmap &img) const noexcept;
+
+protected:
+	using ImageData::m_image;
+	using ImageData::m_width;
+	using ImageData::m_height;
+	using ImageData::m_pitch;
 };
 
 #define WRAP(v)	v
 #define DECL(format) \
-extern template kr::image::MemCanvas<kr::image::PixelFormat::format>;\
-extern template kr::image::MemBitmap<kr::image::PixelFormat::format>;
+extern template class kr::image::MemCanvas<kr::image::PixelFormat::format>;\
+extern template class kr::image::MemBitmap<kr::image::PixelFormat::format>;
 
 #include "formatlist.h"

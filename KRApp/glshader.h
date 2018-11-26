@@ -38,7 +38,7 @@ namespace kr
 			AttribLocation(GLint id) noexcept;
 			AttribLocation & operator =(GLint id) noexcept;
 			void enable() noexcept;
-			void pointer(GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLsizei offset) noexcept;
+			void pointer(GLint size, GLenum type, GLboolean normalized, GLsizei stride, uintptr_t offset) noexcept;
 			GLint getId() noexcept;
 			operator GLint() noexcept;
 		

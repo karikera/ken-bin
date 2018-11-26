@@ -5,8 +5,8 @@
 #include <KRMessage/net/mtnet.h>
 #include <KR3/mt/thread.h>
 #include <KR3/data/map.h>
+#include <KRUtil/httpstatus.h>
 
-#include "common/httpstatus.h"
 #include "common/header.h"
 
 namespace kr
