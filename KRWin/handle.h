@@ -58,7 +58,7 @@ namespace kr
 				template <typename C>
 				inline size_t copyTo(C * dest) const noexcept
 				{
-					return m_owner->getName<C>(dest, m_module->getNameLength<C>() + 1);
+					return m_owner->getName<C>(dest, m_owner->getNameLength<C>() + 1);
 				}
 			};
 
